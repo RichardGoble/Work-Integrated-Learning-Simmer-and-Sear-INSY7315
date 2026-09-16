@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SimmerAndSear.Application/SimmerAndSear.Application.csproj" />
+    <Project Path="src/SimmerAndSear.Contracts/SimmerAndSear.Contracts.csproj" />
+    <Project Path="src/SimmerAndSear.Domain/SimmerAndSear.Domain.csproj" />
+    <Project Path="src/SimmerAndSear.Infrastructure/SimmerAndSear.Infrastructure.csproj" />
+    <Project Path="src/SimmerAndSear.Seeder/SimmerAndSear.Seeder.csproj" />
+    <Project Path="src/SimmerAndSear.Web/SimmerAndSear.Web.csproj" />
+    <Project Path="tests/SimmerAndSear.ArchitectureTests/SimmerAndSear.ArchitectureTests.csproj" />
+    <Project Path="tests/SimmerAndSear.IntegrationTests/SimmerAndSear.IntegrationTests.csproj" />
+    <Project Path="tests/SimmerAndSear.UnitTests/SimmerAndSear.UnitTests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,27 @@
+<Project>
+
+  <!--
+    Solution-wide build settings. One TFM for the whole team: a mixed-TFM
+    solution is the classic "works on my machine" time sink.
+    Change TargetFramework here and nowhere else.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <!-- XML docs are how we name the design patterns for the Programming Skills criterion. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- ...but we do not want a warning for every undocumented member. -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+
+    <!--
+      TreatWarningsAsErrors is deliberately NOT set here: it blocks local
+      iteration under deadline. CI passes -warnaserror instead, so the quality
+      gate exists without anyone fighting their editor at 11pm.
+    -->
+  </PropertyGroup>
+
+</Project>

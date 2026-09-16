@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\SimmerAndSear.Domain\SimmerAndSear.Domain.csproj" />
+    <ProjectReference Include="..\SimmerAndSear.Contracts\SimmerAndSear.Contracts.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+  </PropertyGroup>
+
+</Project>

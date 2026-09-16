@@ -1,0 +1,30 @@
+# Normalise line endings.
+#
+# Five people on Windows machines, a Linux CI runner and a Linux App Service.
+# Without this, a file saved by one person shows as entirely rewritten in
+# someone else's diff, which makes review useless and merges painful.
+* text=auto eol=lf
+
+# Windows-only tooling that genuinely wants CRLF.
+*.sln       text eol=crlf
+*.slnx      text eol=crlf
+*.cmd       text eol=crlf
+*.bat       text eol=crlf
+*.ps1       text eol=crlf
+
+# Binary: never normalise, never diff as text.
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.webp      binary
+*.gif       binary
+*.ico       binary
+*.pdf       binary
+*.woff      binary
+*.woff2     binary
+*.ttf       binary
+*.otf       binary
+*.zip       binary
+
+# Keep vendored front-end libraries out of diffs and language statistics.
+src/SimmerAndSear.Web/wwwroot/lib/** linguist-vendored

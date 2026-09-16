@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\SimmerAndSear.Application\SimmerAndSear.Application.csproj" />
+    <ProjectReference Include="..\SimmerAndSear.Contracts\SimmerAndSear.Contracts.csproj" />
+    <ProjectReference Include="..\SimmerAndSear.Infrastructure\SimmerAndSear.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.LibraryManager.Build" />
+  </ItemGroup>
+
+  <PropertyGroup>
+  </PropertyGroup>
+
+</Project>

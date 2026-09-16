@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SimmerAndSear.Domain\SimmerAndSear.Domain.csproj" />
+    <ProjectReference Include="..\..\src\SimmerAndSear.Application\SimmerAndSear.Application.csproj" />
+    <ProjectReference Include="..\..\src\SimmerAndSear.Infrastructure\SimmerAndSear.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\SimmerAndSear.Contracts\SimmerAndSear.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

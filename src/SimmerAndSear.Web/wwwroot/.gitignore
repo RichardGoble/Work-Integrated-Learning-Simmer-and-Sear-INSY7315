@@ -1,0 +1,11 @@
+# Client-side libraries are referenced, not committed.
+#
+# libman.json is the manifest; Microsoft.Web.LibraryManager.Build restores these
+# as part of `dotnet build`, so a fresh clone, the CI runner and `dotnet publish`
+# all get them automatically with no extra step.
+#
+# Restoring to disk rather than linking a CDN is deliberate: the Task 2
+# presentation is a live demonstration, and a CDN that campus wifi blocks would
+# make the site look broken in front of the marker. The published application is
+# self-contained; only git is kept clean.
+lib/
