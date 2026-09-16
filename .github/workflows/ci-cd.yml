@@ -98,8 +98,7 @@ jobs:
 
   # --------------------------------------------------------- secrets-scan
   # Two minutes of configuration that directly evidences the secrets-handling
-  # requirement, and stops a service-account key or connection string ever
-  # reaching the history.
+  # requirement, and stops a connection string ever reaching the history.
   #
   # The gitleaks BINARY, not gitleaks/gitleaks-action: the action requires a paid
   # licence key for repositories owned by a GitHub Organisation.
@@ -119,23 +118,27 @@ jobs:
           tar -xzf gitleaks.tar.gz gitleaks
           ./gitleaks detect --source . --no-banner --redact --exit-code 1
 
-  # ------------------------------------------------------- deploy staging
-  # Skipped until AZURE_WEBAPP_NAME_STG is set as a repository variable, so the
-  # pipeline is green before Azure exists and activates the moment it does.
-  deploy-staging:
-    name: deploy-staging
-    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+  # --------------------------------------------------------------- deploy
+  # One environment, one web app. `develop` is where work integrates and is
+  # tested; merging to `main` is the deliberate act that updates the live site.
+  # That keeps a buffer between day-to-day work and the application the marker
+  # will be looking at, without the overhead of a second environment.
+  #
+  # Skipped entirely until AZURE_WEBAPP_NAME is set as a repository variable, so
+  # the pipeline is green before Azure exists and activates the moment it does.
+  deploy:
+    name: deploy
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: [integration, secrets-scan]
     runs-on: ubuntu-latest
-    environment: staging
 
     steps:
       - name: Check Azure is configured
         id: guard
         run: |
-          if [ -z "${{ vars.AZURE_WEBAPP_NAME_STG }}" ]; then
+          if [ -z "${{ vars.AZURE_WEBAPP_NAME }}" ]; then
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::AZURE_WEBAPP_NAME_STG is not set. Skipping deployment."
+            echo "::notice::AZURE_WEBAPP_NAME is not set. Skipping deployment."
           else
             echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
@@ -156,81 +159,26 @@ jobs:
         if: steps.guard.outputs.configured == 'true'
         uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ vars.AZURE_WEBAPP_NAME_STG }}
-          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE_STG }}
+          app-name: ${{ vars.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
           package: ./publish
 
       # The smoke gate. A deploy step that cannot tell you whether the
-      # application actually came up is not a deployment pipeline.
+      # application actually came up is not a deployment pipeline - and it is
+      # what turns "we have a deploy action" into evidence of deployment success.
       - name: Smoke test
         if: steps.guard.outputs.configured == 'true'
         run: |
-          URL="https://${{ vars.AZURE_WEBAPP_NAME_STG }}.azurewebsites.net/health/ready"
-          for i in $(seq 1 12); do
+          URL="https://${{ vars.AZURE_WEBAPP_NAME }}.azurewebsites.net/health/ready"
+          for i in $(seq 1 18); do
             CODE=$(curl -s -o /dev/null -w '%{http_code}' "$URL" || true)
             echo "attempt $i -> $CODE"
             if [ "$CODE" = "200" ]; then
-              echo "Staging is up."
+              echo "Application is up."
               exit 0
             fi
             sleep 10
           done
           echo "::error::Smoke test failed - /health/ready never returned 200."
-          exit 1
-
-  # ---------------------------------------------------- deploy production
-  # Triggered by a version tag, gated by the 'production' environment so a human
-  # approves the release. Promotes the same commit that passed staging.
-  deploy-production:
-    name: deploy-production
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: [integration, secrets-scan]
-    runs-on: ubuntu-latest
-    environment: production
-
-    steps:
-      - name: Check Azure is configured
-        id: guard
-        run: |
-          if [ -z "${{ vars.AZURE_WEBAPP_NAME_PROD }}" ]; then
-            echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::AZURE_WEBAPP_NAME_PROD is not set. Skipping deployment."
-          else
-            echo "configured=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - uses: actions/checkout@v4
-        if: steps.guard.outputs.configured == 'true'
-
-      - uses: actions/setup-dotnet@v4
-        if: steps.guard.outputs.configured == 'true'
-        with:
-          global-json-file: global.json
-
-      - name: Publish
-        if: steps.guard.outputs.configured == 'true'
-        run: dotnet publish ${{ env.WEB_PROJECT }} -c Release -o ./publish
-
-      - name: Deploy to Azure App Service
-        if: steps.guard.outputs.configured == 'true'
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: ${{ vars.AZURE_WEBAPP_NAME_PROD }}
-          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE_PROD }}
-          package: ./publish
-
-      - name: Smoke test
-        if: steps.guard.outputs.configured == 'true'
-        run: |
-          URL="https://${{ vars.AZURE_WEBAPP_NAME_PROD }}.azurewebsites.net/health/ready"
-          for i in $(seq 1 18); do
-            CODE=$(curl -s -o /dev/null -w '%{http_code}' "$URL" || true)
-            echo "attempt $i -> $CODE"
-            if [ "$CODE" = "200" ]; then
-              echo "Production is up."
-              exit 0
-            fi
-            sleep 10
-          done
-          echo "::error::Smoke test failed - rolling back by redeploying the previous tag."
+          echo "::error::Roll back by re-running the previous successful deploy."
           exit 1
