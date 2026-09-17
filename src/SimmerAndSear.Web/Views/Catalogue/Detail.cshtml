@@ -1,0 +1,113 @@
+@using SimmerAndSear.Web.ViewModels.Components
+@model BreadcrumbVm
+
+<div class="animate-fade-in">
+    <div class="section-light" style="min-height: 80vh; padding-top: 2rem;">
+        <div class="container">
+            <a href="/Catalogue" style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--ss-ink-muted); margin-bottom: 2rem; font-size: 0.9rem; font-weight: 500; text-decoration: none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> Back
+            </a>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 4rem;">
+                <!-- Image Gallery -->
+                <div style="flex: 1 1 400px;">
+                    <div style="position: relative; border-radius: var(--ss-radius); overflow: hidden; background: #e5e9f0; border: 2px dashed #c2c9d6; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; color: #4c566a; font-weight: 500;">
+                        [Main Product Image]
+                        
+                        <button style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; box-shadow: var(--ss-shadow-2); z-index: 2;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                        </button>
+                        <button style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; box-shadow: var(--ss-shadow-2); z-index: 2;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                        </button>
+                    </div>
+                    
+                    <!-- Thumbnails -->
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem; overflow-x: auto; padding-bottom: 0.5rem;">
+                        <button style="width: 80px; height: 80px; flex-shrink: 0; border-radius: var(--ss-radius-sm); overflow: hidden; border: 2px solid var(--ss-brand); padding: 0; background: #e5e9f0; color: #4c566a; font-size: 0.8rem; display: flex; align-items: center; justify-content: center;">
+                            [Thumb 1]
+                        </button>
+                        <button style="width: 80px; height: 80px; flex-shrink: 0; border-radius: var(--ss-radius-sm); overflow: hidden; border: 2px dashed #c2c9d6; padding: 0; background: #e5e9f0; color: #4c566a; font-size: 0.8rem; display: flex; align-items: center; justify-content: center;">
+                            [Thumb 2]
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Product Details -->
+                <div style="flex: 1 1 400px; display: flex; flex-direction: column;">
+                    <div style="font-size: 0.85rem; color: var(--ss-ink-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                        [Brand Name] • [Material Name]
+                    </div>
+                    <h1 style="font-size: 2.5rem; margin: 0 0 1rem 0;">[Product Title Goes Here]</h1>
+                    
+                    <div style="font-size: 2rem; font-weight: 700; color: var(--ss-brand); margin-bottom: 1.5rem;">
+                        [Product Price]
+                    </div>
+                    
+                    <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+                        <div style="background: var(--ss-surface-solid); padding: 0.5rem 1rem; border-radius: var(--ss-radius-sm); font-size: 0.9rem; font-weight: 500;">
+                            <span style="color: var(--ss-ink-muted);">Size:</span> [Size Name]
+                        </div>
+                        <div style="background: var(--ss-surface-solid); padding: 0.5rem 1rem; border-radius: var(--ss-radius-sm); font-size: 0.9rem; font-weight: 500;">
+                            <span style="color: var(--ss-ink-muted);">Range:</span> [Range Name]
+                        </div>
+                    </div>
+
+                    <p style="font-size: 1.1rem; color: var(--ss-ink-muted); line-height: 1.6; margin-bottom: 3rem;">
+                        [Product Full Description Goes Here. The backend team will supply the paragraph data explaining all the features and details of the product.]
+                    </p>
+
+                    <form method="post" action="/api/cart" style="display: flex; gap: 1rem; margin-bottom: 3rem; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; border: 1px solid var(--ss-border); border-radius: var(--ss-radius-sm); overflow: hidden;">
+                            <button type="button" style="padding: 1rem; background: var(--ss-surface-solid); border: none; cursor: pointer;">-</button>
+                            <span style="padding: 0 1rem; font-weight: 600; min-width: 40px; text-align: center;">1</span>
+                            <button type="button" style="padding: 1rem; background: var(--ss-surface-solid); border: none; cursor: pointer;">+</button>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" style="flex: 1 1 200px; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg> Add to Cart
+                        </button>
+                        
+                        <button type="button" class="btn btn-outline" style="width: 60px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Add to Wishlist">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                        </button>
+                    </form>
+
+                    <!-- Reviews Section -->
+                    <div style="border-top: 1px solid var(--ss-border); padding-top: 2rem;">
+                        <h3 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg> Customer Reviews (1)
+                        </h3>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; max-height: 300px; overflow-y: auto;">
+                            <div style="background: var(--ss-surface); border: 1px solid var(--ss-border); padding: 1rem; border-radius: var(--ss-radius-sm);">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                    <strong style="font-weight: 600;">Sarah J.</strong>
+                                    <div style="display: flex; color: #f59e0b;">
+                                        ★★★★★
+                                    </div>
+                                </div>
+                                <p style="margin: 0; color: var(--ss-ink);">Absolutely love this skillet! I use it almost every day for everything from eggs to searing steaks.</p>
+                            </div>
+                        </div>
+
+                        <div class="card" style="padding: 1.5rem; background: var(--ss-surface-solid);">
+                            <h4 style="margin-bottom: 1rem;">Write a Review</h4>
+                            <form style="display: flex; flex-direction: column; gap: 1rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-weight: 500;">Rating:</span>
+                                    <select class="input-field" style="width: auto; padding: 0.5rem 2rem 0.5rem 1rem;">
+                                        <option value="5">5 Stars</option>
+                                        <option value="4">4 Stars</option>
+                                    </select>
+                                </div>
+                                <textarea class="input-field" rows="3" placeholder="Share your thoughts on this product..." required></textarea>
+                                <button type="button" class="btn btn-secondary">Submit Review</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
