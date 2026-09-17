@@ -40,7 +40,7 @@ public static class DependencyInjection
         services.AddSingleton<IMongoClient>(sp =>
             new MongoClient(sp.GetRequiredService<IOptions<MongoOptions>>().Value.ConnectionString));
 
-        services.AddScoped(sp => sp.GetRequiredService<IMongoClient>()
+        services.AddSingleton(sp => sp.GetRequiredService<IMongoClient>()
             .GetDatabase(sp.GetRequiredService<IOptions<MongoOptions>>().Value.Database));
 
         services.AddSingleton<IGridFSBucket>(sp =>
