@@ -1,0 +1,31 @@
+@using SimmerAndSear.Web.ViewModels.Components
+@model AlertVm
+
+@{
+    var bgColor = Model.Severity switch
+    {
+        "error" => "rgba(220, 38, 38, 0.1)",
+        "success" => "rgba(22, 163, 74, 0.1)",
+        "warning" => "rgba(202, 138, 4, 0.1)",
+        _ => "rgba(100, 116, 139, 0.1)"
+    };
+    
+    var textColor = Model.Severity switch
+    {
+        "error" => "var(--ss-danger)",
+        "success" => "var(--ss-success)",
+        "warning" => "var(--ss-warning)",
+        _ => "var(--ss-ink)"
+    };
+
+    var role = Model.Severity == "error" ? "alert" : "status";
+}
+
+<div role="@role" style="background: @bgColor; color: @textColor; padding: var(--ss-space-4); border-radius: var(--ss-radius-sm); border-left: 4px solid @textColor; display: flex; gap: var(--ss-space-4); align-items: flex-start; margin-bottom: var(--ss-space-4);">
+    <!-- Simulating Icon -->
+    <div style="font-weight: bold; font-size: 1.25rem;">!</div>
+    <div>
+        <h4 style="color: @textColor; margin-bottom: var(--ss-space-1); font-size: var(--ss-text-base);">@Model.Title</h4>
+        <div style="font-size: var(--ss-text-sm);">@Model.Message</div>
+    </div>
+</div>

@@ -1,0 +1,18 @@
+@using SimmerAndSear.Web.ViewModels.Components
+@model ModalVm
+
+<dialog id="@Model.Id" aria-modal="true" aria-labelledby="modal_title_@Model.Id" style="border: none; border-radius: var(--ss-radius-lg); padding: 0; max-width: 500px; width: 100%; box-shadow: var(--ss-shadow-3); background: var(--ss-surface);">
+    <div style="padding: var(--ss-space-6); border-bottom: 1px solid var(--ss-border); display: flex; justify-content: space-between; align-items: center;">
+        <h2 id="modal_title_@Model.Id" style="margin: 0; font-size: var(--ss-text-xl);">@Model.Title</h2>
+        <form method="dialog">
+            <button value="cancel" style="padding: var(--ss-space-2); background: transparent; border: none; font-size: 1.5rem; line-height: 1; cursor: pointer; color: var(--ss-ink-muted);" aria-label="Close modal">&times;</button>
+        </form>
+    </div>
+    <div style="padding: var(--ss-space-6);">
+        @Html.Raw(Model.Body)
+    </div>
+</dialog>
+
+<script>
+    // Note: To open this modal, you'd use document.getElementById('@Model.Id').showModal();
+</script>

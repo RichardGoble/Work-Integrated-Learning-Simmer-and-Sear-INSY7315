@@ -1,0 +1,14 @@
+@using SimmerAndSear.Web.ViewModels.Components
+@model EmptyStateVm
+
+<div style="text-align: center; padding: var(--ss-space-16) var(--ss-space-8); background: var(--ss-surface); border: 1px dashed var(--ss-border); border-radius: var(--ss-radius-lg);">
+    <!-- Icon Placeholder -->
+    <div style="font-size: 3rem; color: var(--ss-border); margin-bottom: var(--ss-space-4);">📦</div>
+    <h2 style="font-size: var(--ss-text-xl); margin-bottom: var(--ss-space-2);">@Model.Heading</h2>
+    <p style="color: var(--ss-ink-muted); margin-bottom: var(--ss-space-6); max-width: 400px; margin-left: auto; margin-right: auto;">@Model.Body</p>
+    
+    @if (!string.IsNullOrEmpty(Model.ActionText) && !string.IsNullOrEmpty(Model.ActionHref))
+    {
+        <a href="@Model.ActionHref" class="btn btn-primary">@Model.ActionText</a>
+    }
+</div>
