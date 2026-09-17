@@ -9,4 +9,10 @@ public class AdminController : Controller
         ViewData["Title"] = "Admin Dashboard";
         return View();
     }
+
+    public IActionResult Login()
+    {
+        ViewData["Title"] = "Admin Login";
+        return View();
+    }
 }

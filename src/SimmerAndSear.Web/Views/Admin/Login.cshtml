@@ -1,0 +1,27 @@
+@{
+    ViewData["Title"] = "Admin Login";
+}
+
+<div style="background-color: #e2e8f0; min-height: calc(100vh - 160px); display: flex; align-items: center; justify-content: center; padding: 2rem 1.5rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+    <div class="card" style="background: white; border-radius: 8px; padding: 3rem; width: 100%; max-width: 420px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+        
+        <h2 style="text-align: center; font-size: 2rem; font-weight: 700; color: #1f2937; margin: 0 0 2rem 0;">Admin Portal</h2>
+        
+        <form action="/Admin/Index" method="get">
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-size: 0.9rem; font-weight: 600; color: #4b5563; margin-bottom: 0.5rem;">Username</label>
+                <input type="text" name="username" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 4px; font-size: 0.95rem; color: #374151; outline: none;" required />
+            </div>
+            
+            <div style="margin-bottom: 2rem;">
+                <label style="display: block; font-size: 0.9rem; font-weight: 600; color: #4b5563; margin-bottom: 0.5rem;">Password</label>
+                <input type="password" name="password" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 4px; font-size: 0.95rem; color: #374151; outline: none;" required />
+            </div>
+            
+            <button type="submit" style="width: 100%; padding: 0.75rem; background: #c26938; color: white; border: none; border-radius: 4px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: background 0.2s;">
+                Login securely
+            </button>
+        </form>
+        
+    </div>
+</div>
