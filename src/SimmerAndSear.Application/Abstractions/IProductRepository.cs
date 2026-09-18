@@ -3,12 +3,6 @@ using SimmerAndSear.Contracts.Paging;
 using SimmerAndSear.Domain.Entities;
 
 namespace SimmerAndSear.Application.Abstractions;
-
-/// <summary>
-/// Repository - the catalogue aggregate's only route to storage. Defined here in
-/// the application layer so that services and their unit tests depend on this
-/// contract rather than on MongoDB.
-/// </summary>
 public interface IProductRepository
 {
     Task<Product?> GetAsync(string id, CancellationToken ct = default);

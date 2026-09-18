@@ -4,8 +4,6 @@ using SimmerAndSear.Domain.Entities;
 using SimmerAndSear.Infrastructure.Persistence;
 
 namespace SimmerAndSear.Infrastructure.Repositories;
-
-/// <summary>Metadata for binaries held in GridFS.</summary>
 public sealed class MediaAssetRepository(IMongoDatabase database)
     : MongoRepositoryBase<MediaAsset>(database, MongoCollections.MediaAssets), IMediaAssetRepository
 {
@@ -21,12 +19,6 @@ public sealed class MediaAssetRepository(IMongoDatabase database)
 
     public async Task DeleteAsync(string id, CancellationToken ct = default) =>
         await Collection.DeleteOneAsync(Filter.Eq(m => m.Id, id), ct);
-
-    /// <summary>
-    /// Candidate orphans: assets older than the cut-off that no product image
-    /// references. Uploading a file and writing its metadata are two operations,
-    /// so a failure between them leaks a blob; this is how the sweeper finds them.
-    /// </summary>
     public async Task<IReadOnlyList<MediaAsset>> FindOrphansAsync(
         DateTime olderThanUtc, CancellationToken ct = default)
     {

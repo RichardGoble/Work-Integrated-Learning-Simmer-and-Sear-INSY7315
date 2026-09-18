@@ -6,14 +6,6 @@ using SimmerAndSear.Domain.Enums;
 using SimmerAndSear.Infrastructure.Persistence;
 
 namespace SimmerAndSear.UnitTests.Persistence;
-
-/// <summary>
-/// Guards the BSON mapping. Each of these catches a bug that is silent in
-/// development and expensive in production: money quietly stored as a double,
-/// timestamps that drift by the local UTC offset, field names that match nothing
-/// in the documented schema, and a duplicate registration that kills the
-/// integration suite on its second test.
-/// </summary>
 public sealed class MongoConventionsTests
 {
     public MongoConventionsTests() => MongoConventions.Register();
@@ -33,8 +25,6 @@ public sealed class MongoConventionsTests
     public void Money_is_stored_as_decimal128_never_as_double()
     {
         var bson = SampleProduct().ToBsonDocument();
-
-        // A double here would mean order totals accumulate rounding error.
         bson["price"].BsonType.ShouldBe(BsonType.Decimal128);
     }
 
@@ -62,9 +52,6 @@ public sealed class MongoConventionsTests
     public void Dates_round_trip_as_utc()
     {
         var restored = BsonSerializer.Deserialize<Product>(SampleProduct().ToBsonDocument());
-
-        // DateTimeKind.Unspecified here is how an audit log silently becomes
-        // untrustworthy: entries drift by the host's UTC offset.
         restored.CreatedAt.Kind.ShouldBe(DateTimeKind.Utc);
     }
 
@@ -81,8 +68,6 @@ public sealed class MongoConventionsTests
             summary: "Refused catalogue edit.");
 
         var bson = entry.ToBsonDocument();
-
-        // Ordinals would mean reordering the enum silently rewrites history.
         bson["action"].AsString.ShouldBe(nameof(AuditAction.AccessDenied));
         bson["actorRole"].AsString.ShouldBe(nameof(RoleName.MasterAdmin));
     }
@@ -91,18 +76,12 @@ public sealed class MongoConventionsTests
     public void Site_settings_keeps_its_literal_id_rather_than_an_object_id()
     {
         var bson = new SiteSettings { SalesNotificationEmail = "sales@example.com" }.ToBsonDocument();
-
-        // Giving the singleton an ObjectId representation would throw on first write.
         bson["_id"].AsString.ShouldBe(SiteSettings.SingletonId);
     }
 
     [Fact]
     public void An_entity_that_has_not_been_inserted_yet_is_still_serialisable()
     {
-        // A new entity's Id is empty until the driver's id generator fills it in
-        // on insert. Serialising one before that - in a test, a log line, or a
-        // bulk-write builder - must not throw a FormatException from inside the
-        // driver.
         var fresh = new Product
         {
             Name = "Unsaved",
@@ -117,8 +96,6 @@ public sealed class MongoConventionsTests
     [Fact]
     public void Register_is_idempotent()
     {
-        // WebApplicationFactory builds several hosts per integration-test run.
-        // Without the guard, the second registration throws and the suite dies.
         Should.NotThrow(() =>
         {
             MongoConventions.Register();

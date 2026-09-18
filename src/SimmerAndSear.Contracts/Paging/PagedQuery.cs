@@ -1,14 +1,4 @@
 namespace SimmerAndSear.Contracts.Paging;
-
-/// <summary>
-/// Base for every query that reads a collection.
-/// <para>
-/// The page size is clamped in the setter rather than validated by a caller, so
-/// an unbounded query is structurally impossible. That is both the performance
-/// NFR and the main cost control: an accidental unlimited read is the single
-/// most expensive mistake available in a document database.
-/// </para>
-/// </summary>
 public abstract record PagedQuery
 {
     public const int MaxPageSize = 60;

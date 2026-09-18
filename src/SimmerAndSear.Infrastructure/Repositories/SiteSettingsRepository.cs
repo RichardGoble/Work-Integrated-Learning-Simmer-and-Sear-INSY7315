@@ -4,11 +4,6 @@ using SimmerAndSear.Domain.Entities;
 using SimmerAndSear.Infrastructure.Persistence;
 
 namespace SimmerAndSear.Infrastructure.Repositories;
-
-/// <summary>
-/// Singleton - the id is the fixed literal "global", so a second settings
-/// document cannot be created even by accident.
-/// </summary>
 public sealed class SiteSettingsRepository(IMongoDatabase database)
     : MongoRepositoryBase<SiteSettings>(database, MongoCollections.SiteSettings), ISiteSettingsRepository
 {
@@ -23,9 +18,6 @@ public sealed class SiteSettingsRepository(IMongoDatabase database)
         {
             return existing;
         }
-
-        // First run: materialise the defaults so callers never have to handle null
-        // and the admin screen always has something to edit.
         var defaults = new SiteSettings
         {
             Id = SiteSettings.SingletonId,

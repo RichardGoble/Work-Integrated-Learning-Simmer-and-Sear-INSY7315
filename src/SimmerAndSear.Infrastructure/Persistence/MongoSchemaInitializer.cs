@@ -6,18 +6,6 @@ using MongoDB.Driver;
 using SimmerAndSear.Domain.Entities;
 
 namespace SimmerAndSear.Infrastructure.Persistence;
-
-/// <summary>
-/// Creates collections, applies $jsonSchema validators, and builds indexes at
-/// start-up. Idempotent, so it runs safely on every boot and in every environment.
-///
-/// <para>
-/// Indexes and constraints as code, reviewable in one file, is deliberate: a
-/// document database with no indexes and no validation is the default state most
-/// projects ship in, and it forfeits the data-integrity and query-efficiency
-/// marks entirely.
-/// </para>
-/// </summary>
 public sealed class MongoSchemaInitializer(
     IMongoDatabase database,
     IOptions<MongoOptions> options,
@@ -45,8 +33,6 @@ public sealed class MongoSchemaInitializer(
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
-    // ---------------------------------------------------------------- collections
-
     private async Task EnsureCollectionsAsync(CancellationToken ct)
     {
         foreach (var name in new[]
@@ -64,19 +50,12 @@ public sealed class MongoSchemaInitializer(
             }
             catch (MongoCommandException ex) when (ex.Code == NamespaceExists)
             {
-                // Already there. collMod below still applies the current validator.
             }
         }
     }
 
-    // ---------------------------------------------------------------- validators
-
     private async Task EnsureValidatorsAsync(CancellationToken ct)
     {
-        // A product must carry at least one image. The rule comes straight from
-        // the client's requirements, and it is enforced in the domain, again at
-        // the API boundary, and here in the database - so no code path, migration
-        // or console session can create a listing that breaks it.
         await ApplyValidatorAsync(MongoCollections.Products, new BsonDocument
         {
             { "bsonType", "object" },
@@ -101,16 +80,12 @@ public sealed class MongoSchemaInitializer(
             {
                 "properties", new BsonDocument
                 {
-                    // Format-checked here as well as by FluentValidation: the store
-                    // should not depend on the application to stay coherent.
                     { "email", new BsonDocument { { "bsonType", "string" }, { "pattern", @"^\S+@\S+\.\S+$" } } },
                     { "passwordHash", Str(minLength: 1) },
                     { "isActive", new BsonDocument("bsonType", "bool") }
                 }
             }
         }, ct);
-
-        // The append-only guarantee, restated at the storage layer.
         await ApplyValidatorAsync(MongoCollections.AuditLog, new BsonDocument
         {
             { "bsonType", "object" },
@@ -147,13 +122,10 @@ public sealed class MongoSchemaInitializer(
         {
             { "collMod", collection },
             { "validator", new BsonDocument("$jsonSchema", schema) },
-            // A fresh database has no legacy documents, so nothing needs grandfathering.
             { "validationLevel", "strict" },
             { "validationAction", "error" }
         }, cancellationToken: ct);
     }
-
-    // ---------------------------------------------------------------- indexes
 
     private async Task EnsureIndexesAsync(CancellationToken ct)
     {
@@ -161,18 +133,12 @@ public sealed class MongoSchemaInitializer(
 
         await products.Indexes.CreateManyAsync(
         [
-            // Serves the catalogue filter and sort in one index. Collated, so
-            // brand and category compare case-insensitively - queries must pass
-            // the same collation to use it.
             new CreateIndexModel<Product>(
                 Builders<Product>.IndexKeys
                     .Ascending(p => p.Category)
                     .Ascending(p => p.Brand)
                     .Ascending(p => p.Price),
                 new CreateIndexOptions { Name = "ix_products_category_brand_price", Collation = CaseInsensitive }),
-
-            // Free-text search across name and description. Only ONE text index is
-            // permitted per collection, and a text index cannot take a collation.
             new CreateIndexModel<Product>(
                 Builders<Product>.IndexKeys.Text(p => p.Name).Text(p => p.Description),
                 new CreateIndexOptions { Name = "tx_products_search" }),
@@ -190,8 +156,6 @@ public sealed class MongoSchemaInitializer(
 
         await users.Indexes.CreateManyAsync(
         [
-            // Collated and unique: "Bob@example.com" and "bob@example.com" cannot
-            // both be registered, which is an account-takeover vector otherwise.
             new CreateIndexModel<User>(
                 Builders<User>.IndexKeys.Ascending(u => u.Email),
                 new CreateIndexOptions { Name = "ux_users_email", Unique = true, Collation = CaseInsensitive }),

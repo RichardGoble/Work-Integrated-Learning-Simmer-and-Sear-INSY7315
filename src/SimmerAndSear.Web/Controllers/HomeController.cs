@@ -9,8 +9,6 @@ public class HomeController : Controller
     public IActionResult Index()
     {
         ViewData["Title"] = "Premium Cookware";
-        
-        // Hardcoded view models as per Stage 1
         var featuredProducts = new List<CardVm>
         {
             new CardVm("[Dynamic Product Title 1]", "/Catalogue/Detail", "/images/skillet.jpg", "Product Image", "[Material] • [Price]", "[Badge]"),

@@ -15,7 +15,6 @@ public class CatalogueController : Controller
         
         if (filter == "empty")
         {
-            // Empty state view
             return View((products, pagination));
         }
 

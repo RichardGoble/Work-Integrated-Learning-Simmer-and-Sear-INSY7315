@@ -7,26 +7,11 @@ using SimmerAndSear.Infrastructure.Persistence;
 using SimmerAndSear.Web.Infrastructure;
 
 namespace SimmerAndSear.ArchitectureTests;
-
-/// <summary>
-/// Executable proof of the three-tier separation.
-///
-/// <para>
-/// The application ships as a single deployable, so "the presentation tier never
-/// touches the data store" can no longer be demonstrated by pointing at two
-/// separate Azure apps. These tests demonstrate it instead - and a test that
-/// fails the build is stronger evidence than a diagram that cannot.
-/// </para>
-/// </summary>
 public sealed class LayeringTests
 {
     private static readonly Assembly Domain = typeof(Product).Assembly;
     private static readonly Assembly Application = typeof(IProductRepository).Assembly;
     private static readonly Assembly Infrastructure = typeof(MongoConventions).Assembly;
-
-    // Anchored on a named type rather than Program: test projects generate their
-    // own entry point, and two Program types in scope is an ambiguity waiting to
-    // happen.
     private static readonly Assembly Web = typeof(IModule).Assembly;
 
     private const string MongoNamespace = "MongoDB";
@@ -62,8 +47,6 @@ public sealed class LayeringTests
     [Fact]
     public void Controllers_never_reach_past_the_application_layer()
     {
-        // Program.cs is the one sanctioned exception: composing the object graph
-        // is precisely its job. Everything that serves a request is bound by this.
         var result = Types.InAssembly(Web)
             .That()
             .ResideInNamespaceStartingWith("SimmerAndSear.Web.Controllers")
@@ -81,9 +64,6 @@ public sealed class LayeringTests
             .That()
             .ResideInNamespaceStartingWith("SimmerAndSear.Web.Api")
             .GetTypes();
-
-        // No API modules exist yet; the rule is here so the first one is born
-        // under it rather than audited later.
         if (apiTypes.Any() is false)
         {
             return;

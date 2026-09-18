@@ -6,19 +6,6 @@ using SimmerAndSear.Domain.Entities;
 using SimmerAndSear.Domain.Enums;
 
 namespace SimmerAndSear.Seeder;
-
-/// <summary>
-/// Populates a database with the demonstration catalogue and the three role
-/// accounts.
-///
-/// <para>
-/// Idempotent by design: everything is matched on a natural key (SKU for
-/// products, email for accounts, the fixed id for settings), so running it twice
-/// changes nothing. That matters because it runs against staging and against a
-/// developer's machine repeatedly, and a seeder that duplicates its own data is
-/// worse than no seeder at all.
-/// </para>
-/// </summary>
 public sealed class SeedRunner(
     IProductRepository products,
     IUserRepository users,
@@ -32,8 +19,6 @@ public sealed class SeedRunner(
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     private readonly SeedOptions _options = options.Value;
-
-    /// <summary>Returns the number of problems encountered; zero means a clean run.</summary>
     public async Task<int> RunAsync(CancellationToken ct = default)
     {
         await SeedSettingsAsync(ct);
@@ -43,16 +28,9 @@ public sealed class SeedRunner(
         return accountProblems + catalogueProblems;
     }
 
-    // ------------------------------------------------------------------ settings
-
     private async Task SeedSettingsAsync(CancellationToken ct)
     {
         var current = await settings.GetAsync(ct);
-
-        // Only fill in a threshold on first run. Overwriting it every time would
-        // undo whatever the client configured through the admin screen, which is
-        // exactly the behaviour the "configurable without a code change"
-        // requirement exists to prevent.
         if (current.BulkOrderThreshold > 0)
         {
             logger.LogInformation("Site settings already configured; left untouched.");
@@ -69,8 +47,6 @@ public sealed class SeedRunner(
         logger.LogInformation("Site settings seeded. Bulk-order threshold R{Threshold}.",
             _options.BulkOrderThreshold);
     }
-
-    // ------------------------------------------------------------------ accounts
 
     private async Task<int> SeedAccountsAsync(CancellationToken ct)
     {
@@ -123,8 +99,6 @@ public sealed class SeedRunner(
         return problems;
     }
 
-    // ----------------------------------------------------------------- catalogue
-
     private async Task<int> SeedCatalogueAsync(CancellationToken ct)
     {
         var manifestPath = Path.Combine(AppContext.BaseDirectory, "SeedData", "products.json");
@@ -141,10 +115,6 @@ public sealed class SeedRunner(
 
         if (!Directory.Exists(imagesPath) || Directory.GetFiles(imagesPath).Length == 0)
         {
-            // Deliberately a hard stop rather than a placeholder image. Every
-            // product must carry a real photograph - the database validator
-            // enforces at least one image, and a catalogue of grey rectangles
-            // throws away the visual-design marks the CSS has already earned.
             logger.LogError(
                 "No product photography found in {Path}. Add the images named in " +
                 "products.json and run again. Accounts and settings were still seeded.",
@@ -236,8 +206,6 @@ public sealed class SeedRunner(
             UploadedBy = "seeder"
         }, ct);
     }
-
-    /// <summary>One entry in SeedData/products.json.</summary>
     private sealed record SeedProduct(
         string Sku,
         string Name,

@@ -6,8 +6,6 @@ using SimmerAndSear.Domain.Enums;
 using SimmerAndSear.Infrastructure.Persistence;
 
 namespace SimmerAndSear.Infrastructure.Repositories;
-
-/// <summary>Repository for accounts.</summary>
 public sealed class UserRepository(IMongoDatabase database)
     : MongoRepositoryBase<User>(database, MongoCollections.Users), IUserRepository
 {
@@ -38,12 +36,6 @@ public sealed class UserRepository(IMongoDatabase database)
 
     public async Task UpdateAsync(User user, CancellationToken ct = default) =>
         await Collection.ReplaceOneAsync(Filter.Eq(u => u.Id, user.Id), user, cancellationToken: ct);
-
-    /// <summary>
-    /// Increments the failure counter atomically and applies a lockout once the
-    /// threshold is crossed. Together with the rate limiter on the login route
-    /// this is the "rate-limiting on failed logins" NFR.
-    /// </summary>
     public async Task RecordFailedLoginAsync(
         string userId, int lockoutThreshold, TimeSpan lockoutDuration, CancellationToken ct = default)
     {
