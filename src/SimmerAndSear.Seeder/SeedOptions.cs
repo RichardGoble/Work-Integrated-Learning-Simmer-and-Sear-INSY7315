@@ -2,6 +2,7 @@ namespace SimmerAndSear.Seeder;
 public sealed class SeedOptions
 {
     public const string SectionName = "Seed";
+    public bool AccountsOnly { get; set; }
     public string MasterAdminPassword { get; set; } = string.Empty;
 
     public string SalesAdminPassword { get; set; } = string.Empty;

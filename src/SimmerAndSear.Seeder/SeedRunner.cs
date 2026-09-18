@@ -21,6 +21,7 @@ public sealed class SeedRunner(
     private readonly SeedOptions _options = options.Value;
     public async Task<int> RunAsync(CancellationToken ct = default)
     {
+        if (_options.AccountsOnly) return await SeedAccountsAsync(ct);
         await SeedSettingsAsync(ct);
         var accountProblems = await SeedAccountsAsync(ct);
         var catalogueProblems = await SeedCatalogueAsync(ct);
@@ -77,9 +78,8 @@ public sealed class SeedRunner(
             if (string.IsNullOrWhiteSpace(account.Password) || account.Password.Length is < 12 or > 128)
             {
                 logger.LogError(
-                    "No password configured for {Email}. Set Seed__{Key} - the seeder will not " +
-                    "invent a credential for an account that can administer the site.",
-                    account.Email, account.Role);
+                    "Set Seed__{Key}Password to a password of 12-128 characters for {Email}.",
+                    account.Role, account.Email);
 
                 problems++;
                 continue;
