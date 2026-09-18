@@ -4,11 +4,12 @@ using Microsoft.AspNetCore.Mvc;
 using SimmerAndSear.Application.Accounts;
 using SimmerAndSear.Contracts.Accounts;
 using SimmerAndSear.Web.Security;
+using SimmerAndSear.Domain.Enums;
 
 namespace SimmerAndSear.Web.Controllers;
 
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public class AuthController(AccountService accounts) : Controller
+public class AuthController(AccountService accounts, AuditWriter audit) : Controller
 {
     [HttpGet, AllowAnonymous]
     public IActionResult Login(string? returnUrl = null)
@@ -25,9 +26,11 @@ public class AuthController(AccountService accounts) : Controller
         var user = await accounts.LoginAsync(request, ct);
         if (user is null)
         {
+            await audit.WriteAsync(AuditAction.AccessDenied, "ACCESS_DENIED login failed");
             ModelState.AddModelError(string.Empty, "Unable to sign in. Check your details or try again later.");
             return View(request);
         }
+        await audit.WriteAsync(AuditAction.Login, "Signed in", user);
         await HttpContext.SignInAsync(AccountCookies.CreatePrincipal(user));
         return LocalRedirect(Url.IsLocalUrl(returnUrl) ? returnUrl! : "/Auth/Profile");
     }
@@ -46,12 +49,14 @@ public class AuthController(AccountService accounts) : Controller
             ModelState.AddModelError(string.Empty, "Unable to register with these details.");
             return View(request);
         }
+        await audit.WriteAsync(AuditAction.Create, "Account registered", user);
         return RedirectToAction(nameof(Login));
     }
 
     [HttpPost, Authorize]
     public async Task<IActionResult> Logout()
     {
+        await audit.WriteAsync(AuditAction.Logout, "Signed out");
         await HttpContext.SignOutAsync();
         return RedirectToAction("Index", "Home");
     }

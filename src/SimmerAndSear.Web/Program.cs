@@ -18,6 +18,7 @@ if (builder.Environment.IsDevelopment() &&
 builder.Services.AddControllersWithViews();
 builder.Services.AddProblemDetails();
 builder.Services.AddAccountIdentity();
+builder.Services.AddAccountAuthorization();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddModulesFrom(typeof(Program).Assembly, builder.Configuration);
 builder.Services.Configure<ForwardedHeadersOptions>(o =>

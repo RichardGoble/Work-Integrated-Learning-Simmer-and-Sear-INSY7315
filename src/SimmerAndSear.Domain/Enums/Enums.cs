@@ -14,4 +14,4 @@ public enum PostStatus { Draft, Published, Archived }
 public enum BookingStatus { Requested, Confirmed, Completed, Cancelled }
 
 public enum ContactStatus { New, InProgress, Resolved, Closed }
-public enum AuditAction { Create, Update, Delete, Publish, Login, AccessDenied }
+public enum AuditAction { Create, Update, Delete, Publish, Login, AccessDenied, Logout }
