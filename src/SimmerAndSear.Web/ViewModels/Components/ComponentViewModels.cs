@@ -22,7 +22,7 @@ public record FieldVm(
 );
 
 public record AlertVm(
-    string Severity, // "error", "info", "success", "warning"
+    string Severity,
     string Title,
     string Message
 );

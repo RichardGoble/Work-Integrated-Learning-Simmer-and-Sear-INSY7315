@@ -30,7 +30,11 @@ public sealed class UserRepository(IMongoDatabase database)
     public async Task<string> CreateAsync(User user, CancellationToken ct = default)
     {
         user.CreatedAt = DateTime.UtcNow;
-        await Collection.InsertOneAsync(user, cancellationToken: ct);
+        try { await Collection.InsertOneAsync(user, cancellationToken: ct); }
+        catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
+        {
+            throw new DuplicateEmailException();
+        }
         return user.Id;
     }
 
@@ -39,8 +43,13 @@ public sealed class UserRepository(IMongoDatabase database)
     public async Task RecordFailedLoginAsync(
         string userId, int lockoutThreshold, TimeSpan lockoutDuration, CancellationToken ct = default)
     {
+        await Collection.UpdateOneAsync(
+            Filter.Eq(u => u.Id, userId) & Filter.Ne(u => u.LockedOutUntil, null) &
+            Filter.Lte(u => u.LockedOutUntil, DateTime.UtcNow),
+            Update.Set(u => u.FailedLoginAttempts, 0).Set(u => u.LockedOutUntil, null),
+            cancellationToken: ct);
         var updated = await Collection.FindOneAndUpdateAsync(
-            Filter.Eq(u => u.Id, userId),
+            Filter.Eq(u => u.Id, userId) & Filter.Eq(u => u.LockedOutUntil, null),
             Update.Inc(u => u.FailedLoginAttempts, 1),
             new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After },
             ct);
@@ -48,7 +57,7 @@ public sealed class UserRepository(IMongoDatabase database)
         if (updated is not null && updated.FailedLoginAttempts >= lockoutThreshold)
         {
             await Collection.UpdateOneAsync(
-                Filter.Eq(u => u.Id, userId),
+                Filter.Eq(u => u.Id, userId) & Filter.Gte(u => u.FailedLoginAttempts, lockoutThreshold),
                 Update.Set(u => u.LockedOutUntil, DateTime.UtcNow.Add(lockoutDuration)),
                 cancellationToken: ct);
         }
@@ -56,7 +65,9 @@ public sealed class UserRepository(IMongoDatabase database)
 
     public async Task RecordSuccessfulLoginAsync(string userId, CancellationToken ct = default) =>
         await Collection.UpdateOneAsync(
-            Filter.Eq(u => u.Id, userId),
+            Filter.Eq(u => u.Id, userId) & Filter.Eq(u => u.IsActive, true) &
+            (Filter.Eq(u => u.LockedOutUntil, null) | Filter.Lte(u => u.LockedOutUntil, DateTime.UtcNow)) &
+            (Filter.Lt(u => u.FailedLoginAttempts, 5) | Filter.Lte(u => u.LockedOutUntil, DateTime.UtcNow)),
             Update.Set(u => u.FailedLoginAttempts, 0)
                   .Set(u => u.LockedOutUntil, null)
                   .Set(u => u.LastLogin, DateTime.UtcNow),

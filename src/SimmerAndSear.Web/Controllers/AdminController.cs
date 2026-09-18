@@ -12,7 +12,6 @@ public class AdminController : Controller
 
     public IActionResult Login()
     {
-        ViewData["Title"] = "Admin Login";
-        return View();
+        return RedirectToAction("Login", "Auth", new { returnUrl = "/Admin" });
     }
 }

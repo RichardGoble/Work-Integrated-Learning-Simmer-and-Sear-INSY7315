@@ -3,6 +3,7 @@ using SimmerAndSear.Application.Abstractions;
 using SimmerAndSear.Infrastructure;
 using SimmerAndSear.Infrastructure.Persistence;
 using SimmerAndSear.Web.Infrastructure;
+using SimmerAndSear.Web.Security;
 MongoConventions.Register();
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +17,7 @@ if (builder.Environment.IsDevelopment() &&
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddProblemDetails();
+builder.Services.AddAccountIdentity();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddModulesFrom(typeof(Program).Assembly, builder.Configuration);
 builder.Services.Configure<ForwardedHeadersOptions>(o =>
@@ -43,6 +45,7 @@ else
 
 app.UseHttpsRedirection();
 app.UseRouting();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();

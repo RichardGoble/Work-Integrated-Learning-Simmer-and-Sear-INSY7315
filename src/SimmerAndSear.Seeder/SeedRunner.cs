@@ -64,7 +64,17 @@ public sealed class SeedRunner(
 
         foreach (var account in wanted)
         {
-            if (string.IsNullOrWhiteSpace(account.Password))
+            var existing = await users.GetByEmailAsync(account.Email.Trim(), ct);
+            if (existing is not null)
+            {
+                if (existing.Role != account.Role || existing.UserType != account.Type || !existing.IsActive)
+                {
+                    logger.LogError("The configured {Role} account exists with different permissions or is inactive.", account.Role);
+                    problems++;
+                }
+                continue;
+            }
+            if (string.IsNullOrWhiteSpace(account.Password) || account.Password.Length is < 12 or > 128)
             {
                 logger.LogError(
                     "No password configured for {Email}. Set Seed__{Key} - the seeder will not " +
@@ -75,15 +85,9 @@ public sealed class SeedRunner(
                 continue;
             }
 
-            if (await users.GetByEmailAsync(account.Email, ct) is not null)
-            {
-                logger.LogInformation("Account {Email} already present.", account.Email);
-                continue;
-            }
-
             await users.CreateAsync(new User
             {
-                Email = account.Email,
+                Email = account.Email.Trim().ToLowerInvariant(),
                 PasswordHash = hasher.Hash(account.Password),
                 FirstName = account.First,
                 LastName = account.Last,

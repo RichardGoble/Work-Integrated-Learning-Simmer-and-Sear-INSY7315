@@ -1,0 +1,18 @@
+@model SimmerAndSear.Contracts.Accounts.RegisterRequest
+@{ ViewData["Title"] = "Register"; }
+<section class="container section-light" style="max-width: 480px; padding: 3rem 1rem;">
+    <h1>Create an account</h1>
+    <form asp-controller="Auth" asp-action="Register" method="post">
+        <div asp-validation-summary="All" role="alert"></div>
+        <label asp-for="FirstName">First name</label>
+        <input asp-for="FirstName" autocomplete="given-name" class="input-field" required maxlength="80" />
+        <label asp-for="LastName">Last name</label>
+        <input asp-for="LastName" autocomplete="family-name" class="input-field" required maxlength="80" />
+        <label asp-for="Email">Email</label>
+        <input asp-for="Email" type="email" autocomplete="email" class="input-field" required maxlength="254" />
+        <label asp-for="Password">Password (12–128 characters)</label>
+        <input name="Password" id="Password" type="password" autocomplete="new-password" class="input-field" required minlength="12" maxlength="128" />
+        <button type="submit" class="btn btn-primary">Register</button>
+    </form>
+    <p><a asp-action="Login">Back to sign in</a></p>
+</section>
