@@ -9,6 +9,16 @@ using Microsoft.AspNetCore.RateLimiting;
 
 namespace SimmerAndSear.Web.Controllers;
 
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Handle requests with controllers in ASP.NET Core MVC [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/controllers/actions?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Use cookie authentication without ASP.NET Core Identity [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Prevent Cross-Site Request Forgery (XSRF/CSRF) attacks in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-10.0> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public class AuthController(AccountService accounts, AuditWriter audit) : Controller
 {

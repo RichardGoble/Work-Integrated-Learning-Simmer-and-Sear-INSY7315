@@ -5,6 +5,13 @@ using SimmerAndSear.Domain.Entities;
 using SimmerAndSear.Infrastructure.Persistence;
 
 namespace SimmerAndSear.Infrastructure.Repositories;
+// ── References ──────────────────────────────────────────────────────────────
+//MongoDB, n.d. CRUD Operations [Source code].
+//Available at: <https://www.mongodb.com/docs/drivers/csharp/current/crud/> [Accessed 18 September 2026].
+//
+//Microsoft, 2025. Asynchronous programming [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class AuditLogRepository(IMongoDatabase database)
     : MongoRepositoryBase<AuditLogEntry>(database, MongoCollections.AuditLog), IAuditLogRepository
 {

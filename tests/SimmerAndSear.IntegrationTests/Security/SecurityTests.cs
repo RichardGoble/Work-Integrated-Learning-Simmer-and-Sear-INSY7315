@@ -10,6 +10,16 @@ using SimmerAndSear.Web.Security;
 
 namespace SimmerAndSear.IntegrationTests.Security;
 
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Integration tests in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Use cookie authentication without ASP.NET Core Identity [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Prevent Cross-Site Request Forgery (XSRF/CSRF) attacks in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-10.0> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class SecurityTests
 {
     public const string Password = "correct horse battery staple";

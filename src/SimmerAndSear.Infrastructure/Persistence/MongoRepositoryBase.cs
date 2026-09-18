@@ -2,6 +2,13 @@ using MongoDB.Driver;
 using SimmerAndSear.Contracts.Paging;
 
 namespace SimmerAndSear.Infrastructure.Persistence;
+// ── References ──────────────────────────────────────────────────────────────
+//MongoDB, n.d. CRUD Operations [Source code].
+//Available at: <https://www.mongodb.com/docs/drivers/csharp/current/crud/> [Accessed 18 September 2026].
+//
+//Microsoft, 2025. Asynchronous programming [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public abstract class MongoRepositoryBase<TEntity> where TEntity : class
 {
     protected static readonly Collation CaseInsensitive =

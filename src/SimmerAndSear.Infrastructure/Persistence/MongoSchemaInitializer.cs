@@ -6,6 +6,16 @@ using MongoDB.Driver;
 using SimmerAndSear.Domain.Entities;
 
 namespace SimmerAndSear.Infrastructure.Persistence;
+// ── References ──────────────────────────────────────────────────────────────
+//MongoDB, n.d. Schema Validation [Source code].
+//Available at: <https://www.mongodb.com/docs/manual/core/schema-validation/> [Accessed 18 September 2026].
+//
+//MongoDB, n.d. Create and Manage Indexes [Source code].
+//Available at: <https://www.mongodb.com/docs/drivers/csharp/current/indexes/> [Accessed 18 September 2026].
+//
+//MongoDB, n.d. Run a Database Command [Source code].
+//Available at: <https://www.mongodb.com/docs/drivers/csharp/current/run-command/> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class MongoSchemaInitializer(
     IMongoDatabase database,
     IOptions<MongoOptions> options,

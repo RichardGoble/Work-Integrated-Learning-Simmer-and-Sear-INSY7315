@@ -4,6 +4,13 @@ using MongoDB.Driver;
 using Shouldly;
 
 namespace SimmerAndSear.IntegrationTests;
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Integration tests in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//MongoDB, n.d. Schema Validation [Source code].
+//Available at: <https://www.mongodb.com/docs/manual/core/schema-validation/> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class SchemaValidationTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     private IMongoCollection<BsonDocument> Products()

@@ -69,4 +69,14 @@ app.MapControllerRoute(
     .WithStaticAssets();
 
 app.Run();
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Dependency injection in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Use cookie authentication without ASP.NET Core Identity [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Health checks in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/health-checks?view=aspnetcore-10.0> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public partial class Program;

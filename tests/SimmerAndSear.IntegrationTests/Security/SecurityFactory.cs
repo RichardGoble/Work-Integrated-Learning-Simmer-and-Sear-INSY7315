@@ -11,6 +11,13 @@ using SimmerAndSear.Domain.Enums;
 
 namespace SimmerAndSear.IntegrationTests.Security;
 
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Integration tests in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Dependency injection in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-10.0> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class SecurityFactory : WebApplicationFactory<Program>
 {
     public MemoryUsers Users { get; } = new();
@@ -53,6 +60,13 @@ public sealed class SecurityFactory : WebApplicationFactory<Program>
     }
 }
 
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Integration tests in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Dependency injection in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-10.0> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class RemoteAddressFilter : IStartupFilter
 {
     public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next) => app =>
@@ -66,6 +80,13 @@ public sealed class RemoteAddressFilter : IStartupFilter
     };
 }
 
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Integration tests in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Interfaces - define behavior for multiple types [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/interfaces> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class MemoryUsers : IUserRepository
 {
     public List<User> Items { get; } = [];
@@ -109,6 +130,13 @@ public sealed class MemoryUsers : IUserRepository
     }
 }
 
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Integration tests in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Interfaces - define behavior for multiple types [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/interfaces> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class MemoryAudit : IAuditLogRepository
 {
     public List<AuditLogEntry> Items { get; } = [];

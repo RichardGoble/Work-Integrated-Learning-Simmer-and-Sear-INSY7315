@@ -6,6 +6,13 @@ using SimmerAndSear.Domain.Enums;
 using SimmerAndSear.Infrastructure.Persistence;
 
 namespace SimmerAndSear.UnitTests.Persistence;
+// ── References ──────────────────────────────────────────────────────────────
+//MongoDB, n.d. Serialization [Source code].
+//Available at: <https://www.mongodb.com/docs/drivers/csharp/current/serialization/> [Accessed 18 September 2026].
+//
+//xUnit.net, 2025. Getting Started with xUnit.net v2 [Source code].
+//Available at: <https://xunit.net/docs/getting-started/v2/getting-started> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class MongoConventionsTests
 {
     public MongoConventionsTests() => MongoConventions.Register();

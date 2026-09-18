@@ -10,6 +10,13 @@ using SimmerAndSear.Infrastructure.Security;
 using SimmerAndSear.Infrastructure.Storage;
 
 namespace SimmerAndSear.Infrastructure;
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Dependency injection in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Options pattern [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/core/extensions/options> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(

@@ -4,6 +4,13 @@ using SimmerAndSear.Domain.Enums;
 
 namespace SimmerAndSear.Web.Security;
 
+// ── References ──────────────────────────────────────────────────────────────
+//OWASP Foundation, n.d. Logging - OWASP Cheat Sheet Series [Online guide].
+//Available at: <https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html> [Accessed 18 September 2026].
+//
+//Microsoft, 2025. Asynchronous programming [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class AuditWriter(IAuditLogRepository repository, CurrentUser current,
     IHttpContextAccessor accessor, ILogger<AuditWriter> logger)
 {

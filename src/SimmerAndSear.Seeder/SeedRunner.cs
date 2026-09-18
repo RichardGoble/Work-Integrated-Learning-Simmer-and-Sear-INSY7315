@@ -6,6 +6,13 @@ using SimmerAndSear.Domain.Entities;
 using SimmerAndSear.Domain.Enums;
 
 namespace SimmerAndSear.Seeder;
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2025. How to deserialize JSON in C# [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/deserialization> [Accessed 18 September 2026].
+//
+//Microsoft, 2025. Asynchronous programming [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class SeedRunner(
     IProductRepository products,
     IUserRepository users,
@@ -210,6 +217,13 @@ public sealed class SeedRunner(
             UploadedBy = "seeder"
         }, ct);
     }
+    // ── References ──────────────────────────────────────────────────────────────
+    //Microsoft, 2026. C# record types [Source code].
+    //Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/records> [Accessed 18 September 2026].
+    //
+    //Microsoft, 2025. How to deserialize JSON in C# [Source code].
+    //Available at: <https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/deserialization> [Accessed 18 September 2026].
+    // ────────────────────────────────────────────────────────────────────────────
     private sealed record SeedProduct(
         string Sku,
         string Name,

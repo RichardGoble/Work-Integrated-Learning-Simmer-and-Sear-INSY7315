@@ -8,6 +8,13 @@ using SimmerAndSear.Domain.Entities;
 
 namespace SimmerAndSear.Web.Security;
 
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Use cookie authentication without ASP.NET Core Identity [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//OWASP Foundation, n.d. Authentication - OWASP Cheat Sheet Series [Online guide].
+//Available at: <https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class AccountCookies(IUserRepository users) : CookieAuthenticationEvents
 {
     public static ClaimsPrincipal CreatePrincipal(User user) => new(new ClaimsIdentity(

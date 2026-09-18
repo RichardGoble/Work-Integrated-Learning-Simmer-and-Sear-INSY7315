@@ -6,6 +6,13 @@ using MongoDB.Bson.Serialization.Serializers;
 using SimmerAndSear.Domain.Entities;
 
 namespace SimmerAndSear.Infrastructure.Persistence;
+// ── References ──────────────────────────────────────────────────────────────
+//MongoDB, n.d. Serialization [Source code].
+//Available at: <https://www.mongodb.com/docs/drivers/csharp/current/serialization/> [Accessed 18 September 2026].
+//
+//MongoDB, n.d. Customize Class Mapping [Source code].
+//Available at: <https://www.mongodb.com/docs/drivers/csharp/current/serialization/class-mapping/> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public static class MongoConventions
 {
     private static int _registered;

@@ -3,6 +3,13 @@ using SimmerAndSear.Domain.Enums;
 
 namespace SimmerAndSear.Web.Security;
 
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Policy-based authorization in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/security/authorization/policies?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Dependency injection in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-10.0> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public static class Permissions
 {
     public const string Customer = "Customer";

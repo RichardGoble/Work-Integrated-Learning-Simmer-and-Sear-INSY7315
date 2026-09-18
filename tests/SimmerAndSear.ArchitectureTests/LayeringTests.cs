@@ -7,6 +7,13 @@ using SimmerAndSear.Infrastructure.Persistence;
 using SimmerAndSear.Web.Infrastructure;
 
 namespace SimmerAndSear.ArchitectureTests;
+// ── References ──────────────────────────────────────────────────────────────
+//Ben Morris, n.d. NetArchTest [Source code].
+//Available at: <https://github.com/BenMorris/NetArchTest> [Accessed 18 September 2026].
+//
+//xUnit.net, 2025. Getting Started with xUnit.net v2 [Source code].
+//Available at: <https://xunit.net/docs/getting-started/v2/getting-started> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class LayeringTests
 {
     private static readonly Assembly Domain = typeof(Product).Assembly;

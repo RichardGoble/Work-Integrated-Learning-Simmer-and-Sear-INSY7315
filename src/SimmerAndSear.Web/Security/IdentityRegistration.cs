@@ -4,6 +4,16 @@ using SimmerAndSear.Application.Accounts;
 
 namespace SimmerAndSear.Web.Security;
 
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Use cookie authentication without ASP.NET Core Identity [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Prevent Cross-Site Request Forgery (XSRF/CSRF) attacks in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Dependency injection in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-10.0> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public static class IdentityRegistration
 {
     public static IServiceCollection AddAccountIdentity(this IServiceCollection services)

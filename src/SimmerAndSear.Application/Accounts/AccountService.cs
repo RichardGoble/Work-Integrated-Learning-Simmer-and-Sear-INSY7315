@@ -5,6 +5,16 @@ using SimmerAndSear.Domain.Enums;
 
 namespace SimmerAndSear.Application.Accounts;
 
+// ── References ──────────────────────────────────────────────────────────────
+//OWASP Foundation, n.d. Authentication - OWASP Cheat Sheet Series [Online guide].
+//Available at: <https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html> [Accessed 18 September 2026].
+//
+//Microsoft, 2025. Asynchronous programming [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Dependency injection in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-10.0> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class AccountService(IUserRepository users, IPasswordHasher hasher, LoginTiming timing)
 {
 

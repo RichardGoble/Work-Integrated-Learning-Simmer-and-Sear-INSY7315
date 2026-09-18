@@ -8,6 +8,16 @@ using SimmerAndSear.Domain.Enums;
 
 namespace SimmerAndSear.Web.Security;
 
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Rate limiting middleware in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Prevent Cross-Site Request Forgery (XSRF/CSRF) attacks in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Handle errors in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-handling?view=aspnetcore-10.0> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public static class SecurityHardening
 {
     public const string AccountPolicy = "accounts";
@@ -65,6 +75,13 @@ public static class SecurityHardening
     });
 }
 
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Handle errors in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-handling?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//OWASP Foundation, n.d. Logging - OWASP Cheat Sheet Series [Online guide].
+//Available at: <https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class SafeExceptionHandler(ILogger<SafeExceptionHandler> logger) : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken ct)
@@ -77,6 +94,13 @@ public sealed class SafeExceptionHandler(ILogger<SafeExceptionHandler> logger) :
     }
 }
 
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Prevent Cross-Site Request Forgery (XSRF/CSRF) attacks in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//OWASP Foundation, n.d. Logging - OWASP Cheat Sheet Series [Online guide].
+//Available at: <https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class AntiforgeryFailureFilter(AuditWriter audit) : IAsyncAlwaysRunResultFilter, IOrderedFilter
 {
     public int Order => -3000;

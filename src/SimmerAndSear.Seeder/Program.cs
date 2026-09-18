@@ -41,4 +41,14 @@ else
     logger.LogWarning("Seeding finished with {Count} problem(s). See the messages above.", problems);
 }
 return problems == 0 ? 0 : 1;
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. .NET Generic Host [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/core/extensions/generic-host> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Options pattern [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/core/extensions/options> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Dependency injection in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-10.0> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public partial class Program;

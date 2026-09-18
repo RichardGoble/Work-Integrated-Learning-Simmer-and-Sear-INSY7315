@@ -5,6 +5,13 @@ using SimmerAndSear.Domain.Entities;
 
 namespace SimmerAndSear.IntegrationTests;
 
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Integration tests in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//MongoDB, n.d. CRUD Operations [Source code].
+//Available at: <https://www.mongodb.com/docs/drivers/csharp/current/crud/> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class LoginPersistenceTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     private static User NewUser() => new()

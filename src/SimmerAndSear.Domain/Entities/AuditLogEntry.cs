@@ -2,6 +2,13 @@ using SimmerAndSear.Domain.Abstractions;
 using SimmerAndSear.Domain.Enums;
 
 namespace SimmerAndSear.Domain.Entities;
+// ── References ──────────────────────────────────────────────────────────────
+//OWASP Foundation, n.d. Logging - OWASP Cheat Sheet Series [Online guide].
+//Available at: <https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html> [Accessed 18 September 2026].
+//
+//Microsoft, 2025. Properties [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/properties> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class AuditLogEntry : IEntity
 {
     public string Id { get; set; } = string.Empty;
