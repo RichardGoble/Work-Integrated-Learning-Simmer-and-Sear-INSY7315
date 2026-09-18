@@ -5,6 +5,7 @@ using SimmerAndSear.Application.Accounts;
 using SimmerAndSear.Contracts.Accounts;
 using SimmerAndSear.Web.Security;
 using SimmerAndSear.Domain.Enums;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace SimmerAndSear.Web.Controllers;
 
@@ -19,6 +20,7 @@ public class AuthController(AccountService accounts, AuditWriter audit) : Contro
     }
 
     [HttpPost, AllowAnonymous]
+    [EnableRateLimiting(SecurityHardening.AccountPolicy)]
     public async Task<IActionResult> Login(LoginRequest request, string? returnUrl, CancellationToken ct)
     {
         ViewData["ReturnUrl"] = Url.IsLocalUrl(returnUrl) ? returnUrl : null;
@@ -39,6 +41,7 @@ public class AuthController(AccountService accounts, AuditWriter audit) : Contro
     public IActionResult Register() => View(new RegisterRequest());
 
     [HttpPost, AllowAnonymous]
+    [EnableRateLimiting(SecurityHardening.AccountPolicy)]
     public async Task<IActionResult> Register(RegisterRequest request, CancellationToken ct)
     {
         if ((request.Password?.Length ?? 0) < 12) ModelState.AddModelError(nameof(request.Password), "Use at least 12 characters.");

@@ -5,15 +5,13 @@ using SimmerAndSear.Domain.Enums;
 
 namespace SimmerAndSear.Application.Accounts;
 
-public sealed class AccountService(IUserRepository users, IPasswordHasher hasher)
+public sealed class AccountService(IUserRepository users, IPasswordHasher hasher, LoginTiming timing)
 {
-    private static readonly Lazy<string> DummyPassword = new(() => Guid.NewGuid().ToString());
-    private string DummyHash => hasher.Hash(DummyPassword.Value);
 
     public async Task<User?> LoginAsync(LoginRequest request, CancellationToken ct)
     {
         var user = await users.GetByEmailAsync(request.Email.Trim(), ct);
-        var valid = hasher.Verify(user?.PasswordHash ?? DummyHash, request.Password);
+        var valid = hasher.Verify(user?.PasswordHash ?? timing.DummyHash, request.Password);
         if (user is null || !user.IsActive || user.IsLockedOut(DateTime.UtcNow)) return null;
         if (!valid)
         {
@@ -21,7 +19,8 @@ public sealed class AccountService(IUserRepository users, IPasswordHasher hasher
             return null;
         }
         await users.RecordSuccessfulLoginAsync(user.Id, ct);
-        return await users.GetAsync(user.Id, ct) is { IsActive: true, FailedLoginAttempts: < 5 } current && !current.IsLockedOut(DateTime.UtcNow)
+        return await users.GetAsync(user.Id, ct) is { IsActive: true, FailedLoginAttempts: < 5 } current &&
+            !current.IsLockedOut(DateTime.UtcNow) && current.PasswordHash == user.PasswordHash
             ? current : null;
     }
 

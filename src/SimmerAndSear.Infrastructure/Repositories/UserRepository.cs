@@ -1,4 +1,5 @@
 using MongoDB.Driver;
+using MongoDB.Bson;
 using SimmerAndSear.Application.Abstractions;
 using SimmerAndSear.Contracts.Paging;
 using SimmerAndSear.Domain.Entities;
@@ -43,31 +44,34 @@ public sealed class UserRepository(IMongoDatabase database)
     public async Task RecordFailedLoginAsync(
         string userId, int lockoutThreshold, TimeSpan lockoutDuration, CancellationToken ct = default)
     {
-        await Collection.UpdateOneAsync(
-            Filter.Eq(u => u.Id, userId) & Filter.Ne(u => u.LockedOutUntil, null) &
-            Filter.Lte(u => u.LockedOutUntil, DateTime.UtcNow),
-            Update.Set(u => u.FailedLoginAttempts, 0).Set(u => u.LockedOutUntil, null),
-            cancellationToken: ct);
-        var updated = await Collection.FindOneAndUpdateAsync(
-            Filter.Eq(u => u.Id, userId) & Filter.Eq(u => u.LockedOutUntil, null),
-            Update.Inc(u => u.FailedLoginAttempts, 1),
-            new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After },
-            ct);
-
-        if (updated is not null && updated.FailedLoginAttempts >= lockoutThreshold)
+        var now = DateTime.UtcNow;
+        var expired = new BsonDocument("$and", new BsonArray
         {
-            await Collection.UpdateOneAsync(
-                Filter.Eq(u => u.Id, userId) & Filter.Gte(u => u.FailedLoginAttempts, lockoutThreshold),
-                Update.Set(u => u.LockedOutUntil, DateTime.UtcNow.Add(lockoutDuration)),
-                cancellationToken: ct);
-        }
+            new BsonDocument("$ne", new BsonArray { "$lockedOutUntil", BsonNull.Value }),
+            new BsonDocument("$lte", new BsonArray { "$lockedOutUntil", now })
+        });
+        PipelineDefinition<User, User> pipeline = new BsonDocument[]
+        {
+            new("$set", new BsonDocument("failedLoginAttempts", new BsonDocument("$add", new BsonArray
+            {
+                new BsonDocument("$cond", new BsonArray { expired, 0,
+                    new BsonDocument("$ifNull", new BsonArray { "$failedLoginAttempts", 0 }) }), 1
+            }))),
+            new("$set", new BsonDocument("lockedOutUntil", new BsonDocument("$cond", new BsonArray
+            {
+                new BsonDocument("$gte", new BsonArray { "$failedLoginAttempts", lockoutThreshold }),
+                now.Add(lockoutDuration), BsonNull.Value
+            })))
+        };
+        await Collection.UpdateOneAsync(
+            Filter.Eq(u => u.Id, userId) & Filter.Eq(u => u.IsActive, true) &
+            (Filter.Eq(u => u.LockedOutUntil, null) | Filter.Lte(u => u.LockedOutUntil, now)),
+            Update.Pipeline(pipeline), cancellationToken: ct);
     }
-
     public async Task RecordSuccessfulLoginAsync(string userId, CancellationToken ct = default) =>
         await Collection.UpdateOneAsync(
             Filter.Eq(u => u.Id, userId) & Filter.Eq(u => u.IsActive, true) &
-            (Filter.Eq(u => u.LockedOutUntil, null) | Filter.Lte(u => u.LockedOutUntil, DateTime.UtcNow)) &
-            (Filter.Lt(u => u.FailedLoginAttempts, 5) | Filter.Lte(u => u.LockedOutUntil, DateTime.UtcNow)),
+            (Filter.Eq(u => u.LockedOutUntil, null) | Filter.Lte(u => u.LockedOutUntil, DateTime.UtcNow)),
             Update.Set(u => u.FailedLoginAttempts, 0)
                   .Set(u => u.LockedOutUntil, null)
                   .Set(u => u.LastLogin, DateTime.UtcNow),

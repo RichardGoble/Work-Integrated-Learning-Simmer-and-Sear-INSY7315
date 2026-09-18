@@ -6,6 +6,7 @@ using SimmerAndSear.Application.Accounts;
 using SimmerAndSear.Contracts.Accounts;
 using SimmerAndSear.Domain.Enums;
 using SimmerAndSear.Web.Security;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace SimmerAndSear.Web.Controllers;
 
@@ -18,6 +19,7 @@ public sealed class AccountsController(AccountService accounts, AuditWriter audi
         Ok(new { token = antiforgery.GetAndStoreTokens(HttpContext).RequestToken });
 
     [HttpPost("register"), AllowAnonymous]
+    [EnableRateLimiting(SecurityHardening.AccountPolicy)]
     public async Task<IActionResult> Register(RegisterRequest request, CancellationToken ct)
     {
         if (request.Password.Length < 12)
@@ -29,6 +31,7 @@ public sealed class AccountsController(AccountService accounts, AuditWriter audi
     }
 
     [HttpPost("login"), AllowAnonymous]
+    [EnableRateLimiting(SecurityHardening.AccountPolicy)]
     public async Task<IActionResult> Login(LoginRequest request, CancellationToken ct)
     {
         var user = await accounts.LoginAsync(request, ct);

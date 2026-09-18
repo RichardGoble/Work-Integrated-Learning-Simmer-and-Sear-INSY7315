@@ -9,6 +9,7 @@ public static class IdentityRegistration
     public static IServiceCollection AddAccountIdentity(this IServiceCollection services)
     {
         services.AddScoped<AccountService>();
+        services.AddSingleton<LoginTiming>();
         services.AddScoped<AccountCookies>();
         services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
         {

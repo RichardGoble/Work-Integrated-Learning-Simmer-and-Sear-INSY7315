@@ -19,6 +19,12 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddProblemDetails();
 builder.Services.AddAccountIdentity();
 builder.Services.AddAccountAuthorization();
+builder.Services.AddSecurityHardening();
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.AddServerHeader = false;
+    options.Limits.MaxRequestBodySize = 10 * 1024 * 1024;
+});
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddModulesFrom(typeof(Program).Assembly, builder.Configuration);
 builder.Services.Configure<ForwardedHeadersOptions>(o =>
@@ -26,26 +32,23 @@ builder.Services.Configure<ForwardedHeadersOptions>(o =>
     o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
 
 
-    o.KnownIPNetworks.Clear();
-    o.KnownProxies.Clear();
+    foreach (var proxy in builder.Configuration.GetSection("Security:KnownProxies").Get<string[]>() ?? [])
+        o.KnownProxies.Add(System.Net.IPAddress.Parse(proxy));
 });
 
 var app = builder.Build();
 
 app.UseForwardedHeaders();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();
-}
-else
-{
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
-}
+app.UseSecurityHeaders();
+app.UseExceptionHandler();
+if (!app.Environment.IsDevelopment()) app.UseHsts();
+app.UseStatusCodePages(async context =>
+    await Results.Problem(statusCode: context.HttpContext.Response.StatusCode).ExecuteAsync(context.HttpContext));
 
 app.UseHttpsRedirection();
 app.UseRouting();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
