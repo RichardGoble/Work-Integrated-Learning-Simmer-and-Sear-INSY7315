@@ -1,0 +1,15 @@
+@model SimmerAndSear.Contracts.Accounts.LoginRequest
+@{ ViewData["Title"] = "Sign in"; }
+<section class="container section-light" style="max-width: 480px; padding: 3rem 1rem;">
+    <h1>Sign in</h1>
+    <form asp-controller="Auth" asp-action="Login" method="post">
+        <div asp-validation-summary="All" role="alert"></div>
+        <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+        <label asp-for="Email">Email</label>
+        <input asp-for="Email" type="email" autocomplete="username" class="input-field" required maxlength="254" />
+        <label asp-for="Password">Password</label>
+        <input name="Password" id="Password" type="password" autocomplete="current-password" class="input-field" required maxlength="128" />
+        <button type="submit" class="btn btn-primary">Sign in</button>
+    </form>
+    <p><a asp-action="Register">Create an account</a></p>
+</section>

@@ -2,18 +2,16 @@ using SimmerAndSear.Contracts.Paging;
 using SimmerAndSear.Domain.Entities;
 
 namespace SimmerAndSear.Application.Abstractions;
-
-/// <summary>
-/// Append-only by construction. There is deliberately no Update and no Delete on
-/// this interface: the guarantee that audit history cannot be rewritten is made
-/// here, in the repository contract, and again by the collection's validator -
-/// not left to the discipline of whoever writes the next feature.
-/// </summary>
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Interfaces - define behavior for multiple types [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/interfaces> [Accessed 18 September 2026].
+//
+//Microsoft, 2025. Asynchronous programming [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public interface IAuditLogRepository
 {
     Task AppendAsync(AuditLogEntry entry, CancellationToken ct = default);
-
-    /// <summary>Readable only by the Master Admin; the policy is enforced at the endpoint.</summary>
     Task<Page<AuditLogEntry>> ListAsync(int pageNumber, int pageSize, CancellationToken ct = default);
 
     Task<Page<AuditLogEntry>> ListForEntityAsync(

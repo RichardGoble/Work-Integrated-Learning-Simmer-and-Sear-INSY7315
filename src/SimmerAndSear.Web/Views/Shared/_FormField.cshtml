@@ -1,0 +1,52 @@
+@using SimmerAndSear.Web.ViewModels.Components
+@model FieldVm
+
+@{
+    var inputId = $"field_{Model.Name}";
+    var hintId = $"hint_{Model.Name}";
+    var errorId = $"error_{Model.Name}";
+    var isInvalid = !string.IsNullOrEmpty(Model.Error);
+    var describedBy = new List<string>();
+    if (!string.IsNullOrEmpty(Model.Hint)) describedBy.Add(hintId);
+    if (isInvalid) describedBy.Add(errorId);
+    var ariaDescribedBy = describedBy.Any() ? string.Join(" ", describedBy) : null;
+}
+
+<div style="margin-bottom: var(--ss-space-4);">
+    <label for="@inputId" style="display: block; margin-bottom: var(--ss-space-2); font-weight: 500;">
+        @Model.Label
+        @if (Model.Required)
+        {
+            <span style="color: var(--ss-danger);" aria-hidden="true">*</span>
+        }
+    </label>
+    
+    @if (Model.Type == "textarea")
+    {
+        <textarea id="@inputId" name="@Model.Name" class="input-field" 
+                  aria-invalid="@(isInvalid ? "true" : "false")"
+                  aria-describedby="@ariaDescribedBy"
+                  @(Model.Required ? "required" : "")>@Model.Value</textarea>
+    }
+    else
+    {
+        <input type="@Model.Type" id="@inputId" name="@Model.Name" value="@Model.Value" class="input-field" 
+               aria-invalid="@(isInvalid ? "true" : "false")"
+               aria-describedby="@ariaDescribedBy"
+               @(Model.Required ? "required" : "") />
+    }
+
+    @if (!string.IsNullOrEmpty(Model.Hint))
+    {
+        <div id="@hintId" style="color: var(--ss-ink-muted); font-size: var(--ss-text-sm); margin-top: var(--ss-space-2);">
+            @Model.Hint
+        </div>
+    }
+
+    @if (isInvalid)
+    {
+        <div id="@errorId" style="color: var(--ss-danger); font-size: var(--ss-text-sm); margin-top: var(--ss-space-2); font-weight: 500;">
+            @Model.Error
+        </div>
+    }
+</div>

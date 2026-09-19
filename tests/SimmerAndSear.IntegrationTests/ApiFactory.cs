@@ -3,18 +3,13 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 
 namespace SimmerAndSear.IntegrationTests;
-
-/// <summary>
-/// Boots the real application against a real MongoDB.
-///
-/// <para>
-/// Integration tests run against an actual database - a container locally
-/// (<c>docker run -d -p 27017:27017 mongo:7</c>) and a service container in CI -
-/// so queries, indexes, GridFS and $jsonSchema rejections all behave exactly as
-/// they will in production. Nothing here needs a secret, which is what lets the
-/// pipeline run these on every pull request.
-/// </para>
-/// </summary>
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Integration tests in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//xUnit.net, 2025. Getting Started with xUnit.net v2 [Source code].
+//Available at: <https://xunit.net/docs/getting-started/v2/getting-started> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class ApiFactory : WebApplicationFactory<Program>
 {
     private const string DefaultConnectionString = "mongodb://localhost:27017";
@@ -22,8 +17,6 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        // Not Development: that would enable the developer exception page and
-        // mask the error responses these tests are meant to assert on.
         builder.UseEnvironment("Testing");
 
         builder.ConfigureAppConfiguration((_, config) =>

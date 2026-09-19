@@ -1,0 +1,58 @@
+@{
+    ViewData["Title"] = "Order Confirmed";
+}
+
+<div style="background: #f3f4f6; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 4rem 1.5rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+    <div class="card" style="background: white; border-radius: 12px; padding: 4rem 3rem; text-align: center; max-width: 650px; width: 100%; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+        
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#2a7a14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 1.5rem;">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>
+        </svg>
+
+        <h1 style="font-size: 2.25rem; font-weight: 800; color: #111827; margin: 0 0 1rem 0;">Order Confirmed!</h1>
+        <p style="color: #6b7280; font-size: 1.05rem; margin: 0 auto 3rem auto; line-height: 1.5; max-width: 450px;">
+            Thank you for your purchase, [Customer Name]. Your order has been placed successfully.
+        </p>
+        
+        <div style="background: #f1f5f9; padding: 2.5rem; border-radius: 12px; text-align: left; margin-bottom: 3rem;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2.5rem;">
+                <div>
+                    <div style="color: #64748b; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">Order Number</div>
+                    <div style="font-size: 1.15rem; font-weight: 700; color: #334155;">#[Order ID]</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="color: #64748b; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">Date</div>
+                    <div style="font-size: 1.15rem; font-weight: 700; color: #334155;">[Date]</div>
+                </div>
+            </div>
+
+            <h3 style="margin: 0 0 1.5rem 0; font-size: 1.25rem; font-weight: 700; color: #1e293b;">Order Summary</h3>
+            
+            <div style="display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 2.5rem;">
+                <div style="display: flex; justify-content: space-between; color: #475569; font-size: 0.95rem;">
+                    <span>[Qty]x [Product Name]</span>
+                    <span style="font-weight: 700; color: #334155;">[Price]</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; color: #475569; font-size: 0.95rem;">
+                    <span>[Qty]x [Product Name]</span>
+                    <span style="font-weight: 700; color: #334155;">[Price]</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; color: #475569; font-size: 0.95rem;">
+                    <span>[Qty]x [Product Name]</span>
+                    <span style="font-weight: 700; color: #334155;">[Price]</span>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; font-size: 1.15rem; font-weight: 700; color: #334155;">
+                <span>Total Paid</span>
+                <span>[Total Price]</span>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1.5rem; justify-content: center;">
+            <a href="/Catalogue" style="background: white; border: 1px solid #111827; color: #111827; padding: 0.8rem 2rem; border-radius: 6px; font-weight: 600; text-decoration: none; font-size: 0.95rem; display: inline-block;">Continue Shopping</a>
+            <a href="/Auth/Profile" style="background: #cd6228; color: white; border: none; padding: 0.8rem 2rem; border-radius: 6px; font-weight: 600; text-decoration: none; font-size: 0.95rem; display: inline-block;">View Order History</a>
+        </div>
+    </div>
+</div>

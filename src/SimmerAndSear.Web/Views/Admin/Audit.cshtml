@@ -1,0 +1,25 @@
+@model SimmerAndSear.Contracts.Paging.Page<SimmerAndSear.Domain.Entities.AuditLogEntry>
+@{ ViewData["Title"] = "Audit log"; }
+<section class="container section-light" style="padding: 3rem 1rem;">
+    <h1>Audit log</h1>
+    <div style="overflow-x: auto;">
+        <table>
+            <thead><tr><th>Time (UTC)</th><th>User</th><th>Role</th><th>Action</th><th>Details</th></tr></thead>
+            <tbody>
+            @foreach (var entry in Model.Items)
+            {
+                <tr>
+                    <td>@entry.OccurredAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    <td>@entry.ActorName</td><td>@entry.ActorRole</td>
+                    <td>@(entry.Action == SimmerAndSear.Domain.Enums.AuditAction.AccessDenied ? "ACCESS_DENIED" : entry.Action.ToString())</td>
+                    <td>@entry.Summary</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.Items.Count == 0) { <p>No events to display.</p> }
+    @if (Model.HasPrevious) { <a asp-action="Audit" asp-route-pageNumber="@(Model.PageNumber - 1)">Previous</a> }
+    @if (Model.HasNext) { <a asp-action="Audit" asp-route-pageNumber="@(Model.PageNumber + 1)">Next</a> }
+    <p><a asp-action="Index">Back to dashboard</a></p>
+</section>

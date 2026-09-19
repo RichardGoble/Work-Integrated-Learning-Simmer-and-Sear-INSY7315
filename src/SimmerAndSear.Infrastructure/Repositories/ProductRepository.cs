@@ -6,13 +6,13 @@ using SimmerAndSear.Domain.Entities;
 using SimmerAndSear.Infrastructure.Persistence;
 
 namespace SimmerAndSear.Infrastructure.Repositories;
-
-/// <summary>
-/// Repository for the catalogue aggregate. This is the reference implementation:
-/// every other repository in the solution follows the same shape - translate the
-/// filter, choose the sort, page through the base class, never return unbounded
-/// results, never leak a driver type past this assembly.
-/// </summary>
+// ── References ──────────────────────────────────────────────────────────────
+//MongoDB, n.d. CRUD Operations [Source code].
+//Available at: <https://www.mongodb.com/docs/drivers/csharp/current/crud/> [Accessed 18 September 2026].
+//
+//Microsoft, 2025. Asynchronous programming [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class ProductRepository(IMongoDatabase database)
     : MongoRepositoryBase<Product>(database, MongoCollections.Products), IProductRepository
 {
@@ -28,10 +28,6 @@ public sealed class ProductRepository(IMongoDatabase database)
     public Task<Page<Product>> SearchAsync(ProductFilter filter, CancellationToken ct = default)
     {
         var query = BuildFilter(filter);
-
-        // A $text query cannot carry a collation, so the two index strategies are
-        // mutually exclusive: free-text search uses the text index, everything
-        // else uses the collated compound index.
         var useCollation = !filter.HasSearchTerm;
 
         return PageAsync(query, BuildSort(filter), filter.PageNumber, filter.PageSize, useCollation, ct);
@@ -104,10 +100,6 @@ public sealed class ProductRepository(IMongoDatabase database)
         ProductSort.PriceAscending => SortBy.Ascending(p => p.Price),
         ProductSort.PriceDescending => SortBy.Descending(p => p.Price),
         ProductSort.Newest => SortBy.Descending(p => p.CreatedAt),
-
-        // Relevance currently falls back to newest-first. Ranking by $meta
-        // textScore is the catalogue slice's job - it needs the score projected,
-        // and getting it wrong is a runtime error rather than a compile error.
         _ => SortBy.Descending(p => p.CreatedAt)
     };
 }

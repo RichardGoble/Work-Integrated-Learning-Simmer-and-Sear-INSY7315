@@ -1,0 +1,11 @@
+@using System.Security.Claims
+@{ ViewData["Title"] = "My profile"; }
+<section class="container section-light" style="padding: 3rem 1rem;">
+    <h1>My profile</h1>
+    <p><strong>Name:</strong> @User.Identity?.Name</p>
+    <p><strong>Email:</strong> @User.FindFirstValue(ClaimTypes.Email)</p>
+    <p><strong>Role:</strong> @User.FindFirstValue(ClaimTypes.Role)</p>
+    <form asp-controller="Auth" asp-action="Logout" method="post">
+        <button class="btn btn-primary" type="submit">Sign out</button>
+    </form>
+</section>

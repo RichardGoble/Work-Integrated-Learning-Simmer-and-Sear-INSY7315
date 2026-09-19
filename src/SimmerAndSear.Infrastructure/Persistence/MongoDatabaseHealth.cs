@@ -4,11 +4,13 @@ using MongoDB.Driver;
 using SimmerAndSear.Application.Abstractions;
 
 namespace SimmerAndSear.Infrastructure.Persistence;
-
-/// <summary>
-/// Backs the readiness probe. Kept behind <see cref="IDatabaseHealth"/> so the
-/// web layer can report on the database without naming a MongoDB type.
-/// </summary>
+// ── References ──────────────────────────────────────────────────────────────
+//MongoDB, n.d. Run a Database Command [Source code].
+//Available at: <https://www.mongodb.com/docs/drivers/csharp/current/run-command/> [Accessed 18 September 2026].
+//
+//Microsoft, 2025. Asynchronous programming [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class MongoDatabaseHealth(IMongoDatabase database, ILogger<MongoDatabaseHealth> logger)
     : IDatabaseHealth
 {
@@ -23,8 +25,6 @@ public sealed class MongoDatabaseHealth(IMongoDatabase database, ILogger<MongoDa
         }
         catch (Exception ex)
         {
-            // Logged in full here; the endpoint returns nothing but a status, so
-            // that connection details never reach a public response.
             logger.LogError(ex, "Readiness probe failed: database unreachable.");
             return false;
         }

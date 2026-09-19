@@ -1,26 +1,27 @@
 using System.Reflection;
 
 namespace SimmerAndSear.Web.Infrastructure;
-
-/// <summary>
-/// A feature's own service registration.
-/// <para>
-/// Five people editing Program.cs to register their dependencies is a guaranteed
-/// daily merge conflict. Each feature implements this instead, is discovered by
-/// assembly scanning, and Program.cs never changes again.
-/// </para>
-/// </summary>
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Interfaces - define behavior for multiple types [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/interfaces> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Dependency injection in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-10.0> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public interface IModule
 {
     void Register(IServiceCollection services, IConfiguration configuration);
 }
 
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Dependency injection in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Interfaces - define behavior for multiple types [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/interfaces> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public static class ModuleExtensions
 {
-    /// <summary>
-    /// Finds every <see cref="IModule"/> in the assembly and lets each register
-    /// its own services. Called exactly once, from Program.cs.
-    /// </summary>
     public static IServiceCollection AddModulesFrom(
         this IServiceCollection services, Assembly assembly, IConfiguration configuration)
     {

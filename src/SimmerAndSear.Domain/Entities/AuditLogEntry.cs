@@ -2,12 +2,13 @@ using SimmerAndSear.Domain.Abstractions;
 using SimmerAndSear.Domain.Enums;
 
 namespace SimmerAndSear.Domain.Entities;
-
-/// <summary>
-/// An append-only record of who changed what, and when. There is deliberately no
-/// mutating behaviour on this type, no update or delete method on its repository,
-/// and a $jsonSchema validator guarding the collection.
-/// </summary>
+// ── References ──────────────────────────────────────────────────────────────
+//OWASP Foundation, n.d. Logging - OWASP Cheat Sheet Series [Online guide].
+//Available at: <https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html> [Accessed 18 September 2026].
+//
+//Microsoft, 2025. Properties [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/properties> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class AuditLogEntry : IEntity
 {
     public string Id { get; set; } = string.Empty;
@@ -23,11 +24,6 @@ public sealed class AuditLogEntry : IEntity
     public string? IpAddress { get; set; }
 
     public DateTime OccurredAt { get; set; } = DateTime.UtcNow;
-
-    /// <summary>
-    /// Factory Method - the only supported way to construct an audit entry, so
-    /// that the timestamp and required fields can never be omitted by a caller.
-    /// </summary>
     public static AuditLogEntry Create(
         string actorId,
         string actorName,

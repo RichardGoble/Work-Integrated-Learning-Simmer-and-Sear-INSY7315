@@ -1,50 +1,176 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - SimmerAndSear.Web</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/SimmerAndSear.Web.styles.css" asp-append-version="true" />
+    <title>@(ViewData["Title"] ?? "Home") - Simmer & Sear</title>
+    
+    <link rel="stylesheet" href="~/css/tokens.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/base.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">SimmerAndSear.Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+    <div class="app-container">
+        <a class="skip-link" href="#main">Skip to main content</a>
+        
+        <header>
+            <nav class="navbar">
+                <div class="container nav-content">
+                    <a href="/" class="logo" style="text-decoration: none;">
+                        <div class="logo-icon" style="display: flex; align-items: center; justify-content: flex-start; overflow: hidden; height: 80px; width: 280px;">
+                            <img src="/logo.png" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; object-position: left center; transform: scale(1.6); transform-origin: left center;" />
+                        </div>
+                    </a>
+                    
+                    <button class="mobile-menu-btn" id="mobile-menu-toggle" aria-expanded="false" aria-controls="nav-links-menu">
+                        Select Page 
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+                    </button>
+
+                    <div class="nav-links" id="nav-links-menu">
+                        <a href="/" class="nav-link" style="display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                            Home
+                        </a>
+                        <a href="/Catalogue" class="nav-link" style="display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+                            Collection
+                        </a>
+                        <a href="/About" class="nav-link" style="display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                            About Us
+                        </a>
+                        <a href="/News" class="nav-link" style="display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
+                            News
+                        </a>
+                        <a href="/Contact" class="nav-link" style="display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                            Contact
+                        </a>
+                        
+                        <a href="/Wishlist" class="nav-link" style="display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                            Wishlist
+                        </a>
+
+                        <a href="/Cart" class="nav-link" style="display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                            Cart
+                        </a>
+
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            <div style="display: flex; gap: 0.5rem;">
+                                <a href="/Auth/Profile" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                                    My Profile
+                                </a>
+                                <form method="post" asp-controller="Auth" asp-action="Logout" style="margin: 0;">
+                                    <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                                        Logout
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            <a href="/Auth/Login" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                                Login / Sign Up
+                            </a>
+                        }
+
+                        <!-- Accessibility Widget -->
+                        <div class="access-widget" tabindex="0">
+                            <button class="btn" style="padding: 0.4rem; border: 1px solid var(--color-border); color: var(--color-text-light); border-radius: var(--radius-sm); background: var(--color-surface);" aria-label="Preferences">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                            <div class="access-dropdown" style="width: 280px; padding: 1rem;">
+                                <div style="font-weight: 600; padding-bottom: 0.75rem; border-bottom: 1px solid var(--color-border); margin-bottom: 0.75rem; font-size: 0.9rem; color: var(--ss-ink);">
+                                    Site Preferences
+                                </div>
+                                
+                                <button class="access-btn" data-click-action="action23" style="display: flex; justify-content: space-between;">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg> Dark Mode</div>
+                                </button>
+
+                                <button class="access-btn" data-click-action="action24" style="display: flex; justify-content: space-between;">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg> High Contrast</div>
+                                </button>
+
+                                <button class="access-btn" data-click-action="action25" style="display: flex; justify-content: space-between;">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg> Large Text</div>
+                                </button>
+
+                                <button class="access-btn" data-click-action="action26" style="display: flex; justify-content: space-between;">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> Dyslexia Font</div>
+                                </button>
+
+                                <button class="access-btn" data-click-action="action27" style="display: flex; justify-content: space-between;">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Reduce Motion</div>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+            </nav>
+        </header>
+
+        <main id="main" tabindex="-1">
             @RenderBody()
         </main>
+
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div>
+                        <h3>Simmer & Sear</h3>
+                        <p style="color: #94a3b8; margin-bottom: 1rem;">
+                            Providing high-quality pots and pans to homes across Africa. Taste the difference in every meal.
+                        </p>
+                        <div style="display: flex; gap: 1rem;">
+                            <a href="#" class="footer-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg></a>
+                            <a href="#" class="footer-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></a>
+                            <a href="#" class="footer-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></a>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3>Quick Links</h3>
+                        <div class="footer-links">
+                            <a href="/Catalogue" class="footer-link">Products</a>
+                            <a href="/News" class="footer-link">News & Blog</a>
+                            <a href="/About" class="footer-link">About Us</a>
+                            <a href="/Privacy" class="footer-link">Privacy Policy</a>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3>Contact Info</h3>
+                        <div class="footer-links">
+                            <div style="display: flex; gap: 0.5rem; color: #94a3b8;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> 123 Culinary Ave, Johannesburg, SA
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; color: #94a3b8;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> +27 11 123 4567
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; color: #94a3b8;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg> info@simmerandsear.co.za
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="footer-bottom">
+                    <p>&copy; @DateTime.Now.Year Simmer & Sear. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - SimmerAndSear.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/shared-_layout-1.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+<script src="~/js/page-actions.js" asp-append-version="true"></script>
 </body>
 </html>

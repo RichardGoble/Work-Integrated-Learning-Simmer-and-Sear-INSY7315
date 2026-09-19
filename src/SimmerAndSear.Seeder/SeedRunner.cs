@@ -6,19 +6,13 @@ using SimmerAndSear.Domain.Entities;
 using SimmerAndSear.Domain.Enums;
 
 namespace SimmerAndSear.Seeder;
-
-/// <summary>
-/// Populates a database with the demonstration catalogue and the three role
-/// accounts.
-///
-/// <para>
-/// Idempotent by design: everything is matched on a natural key (SKU for
-/// products, email for accounts, the fixed id for settings), so running it twice
-/// changes nothing. That matters because it runs against staging and against a
-/// developer's machine repeatedly, and a seeder that duplicates its own data is
-/// worse than no seeder at all.
-/// </para>
-/// </summary>
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2025. How to deserialize JSON in C# [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/deserialization> [Accessed 18 September 2026].
+//
+//Microsoft, 2025. Asynchronous programming [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class SeedRunner(
     IProductRepository products,
     IUserRepository users,
@@ -32,10 +26,9 @@ public sealed class SeedRunner(
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     private readonly SeedOptions _options = options.Value;
-
-    /// <summary>Returns the number of problems encountered; zero means a clean run.</summary>
     public async Task<int> RunAsync(CancellationToken ct = default)
     {
+        if (_options.AccountsOnly) return await SeedAccountsAsync(ct);
         await SeedSettingsAsync(ct);
         var accountProblems = await SeedAccountsAsync(ct);
         var catalogueProblems = await SeedCatalogueAsync(ct);
@@ -43,16 +36,9 @@ public sealed class SeedRunner(
         return accountProblems + catalogueProblems;
     }
 
-    // ------------------------------------------------------------------ settings
-
     private async Task SeedSettingsAsync(CancellationToken ct)
     {
         var current = await settings.GetAsync(ct);
-
-        // Only fill in a threshold on first run. Overwriting it every time would
-        // undo whatever the client configured through the admin screen, which is
-        // exactly the behaviour the "configurable without a code change"
-        // requirement exists to prevent.
         if (current.BulkOrderThreshold > 0)
         {
             logger.LogInformation("Site settings already configured; left untouched.");
@@ -70,8 +56,6 @@ public sealed class SeedRunner(
             _options.BulkOrderThreshold);
     }
 
-    // ------------------------------------------------------------------ accounts
-
     private async Task<int> SeedAccountsAsync(CancellationToken ct)
     {
         var wanted = new[]
@@ -88,26 +72,29 @@ public sealed class SeedRunner(
 
         foreach (var account in wanted)
         {
-            if (string.IsNullOrWhiteSpace(account.Password))
+            var existing = await users.GetByEmailAsync(account.Email.Trim(), ct);
+            if (existing is not null)
+            {
+                if (existing.Role != account.Role || existing.UserType != account.Type || !existing.IsActive)
+                {
+                    logger.LogError("The configured {Role} account exists with different permissions or is inactive.", account.Role);
+                    problems++;
+                }
+                continue;
+            }
+            if (string.IsNullOrWhiteSpace(account.Password) || account.Password.Length is < 12 or > 128)
             {
                 logger.LogError(
-                    "No password configured for {Email}. Set Seed__{Key} - the seeder will not " +
-                    "invent a credential for an account that can administer the site.",
-                    account.Email, account.Role);
+                    "Set Seed__{Key}Password to a password of 12-128 characters for {Email}.",
+                    account.Role, account.Email);
 
                 problems++;
                 continue;
             }
 
-            if (await users.GetByEmailAsync(account.Email, ct) is not null)
-            {
-                logger.LogInformation("Account {Email} already present.", account.Email);
-                continue;
-            }
-
             await users.CreateAsync(new User
             {
-                Email = account.Email,
+                Email = account.Email.Trim().ToLowerInvariant(),
                 PasswordHash = hasher.Hash(account.Password),
                 FirstName = account.First,
                 LastName = account.Last,
@@ -122,8 +109,6 @@ public sealed class SeedRunner(
 
         return problems;
     }
-
-    // ----------------------------------------------------------------- catalogue
 
     private async Task<int> SeedCatalogueAsync(CancellationToken ct)
     {
@@ -141,10 +126,6 @@ public sealed class SeedRunner(
 
         if (!Directory.Exists(imagesPath) || Directory.GetFiles(imagesPath).Length == 0)
         {
-            // Deliberately a hard stop rather than a placeholder image. Every
-            // product must carry a real photograph - the database validator
-            // enforces at least one image, and a catalogue of grey rectangles
-            // throws away the visual-design marks the CSS has already earned.
             logger.LogError(
                 "No product photography found in {Path}. Add the images named in " +
                 "products.json and run again. Accounts and settings were still seeded.",
@@ -236,8 +217,13 @@ public sealed class SeedRunner(
             UploadedBy = "seeder"
         }, ct);
     }
-
-    /// <summary>One entry in SeedData/products.json.</summary>
+    // ── References ──────────────────────────────────────────────────────────────
+    //Microsoft, 2026. C# record types [Source code].
+    //Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/records> [Accessed 18 September 2026].
+    //
+    //Microsoft, 2025. How to deserialize JSON in C# [Source code].
+    //Available at: <https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/deserialization> [Accessed 18 September 2026].
+    // ────────────────────────────────────────────────────────────────────────────
     private sealed record SeedProduct(
         string Sku,
         string Name,
