@@ -1,8 +1,5 @@
 name: ci-cd
 
-# Job names here MUST match the required status checks configured in branch
-# protection (unit / integration / secrets-scan), or the checks never go green
-# and nothing can ever be merged.
 
 on:
   push:
@@ -11,8 +8,7 @@ on:
     branches: [main, develop]
 
 concurrency:
-  # A newer push supersedes an in-flight run on the same ref. Keeps the queue
-  # short when several people push in the same ten minutes.
+ 
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
@@ -20,10 +16,7 @@ env:
   WEB_PROJECT: src/SimmerAndSear.Web/SimmerAndSear.Web.csproj
 
 jobs:
-  # ---------------------------------------------------------------- unit
-  # No services, no secrets, no database. Business rules, validators, mappers
-  # and the BSON conventions. Should stay under two minutes for the whole life
-  # of the project.
+  
   unit:
     name: unit
     runs-on: ubuntu-latest
@@ -36,8 +29,7 @@ jobs:
 
       - run: dotnet restore
 
-      # -warnaserror lives here rather than in Directory.Build.props: the quality
-      # gate applies to everything that merges, without blocking local iteration.
+      
       - run: dotnet build --no-restore -c Release -warnaserror
 
       - name: Unit tests
@@ -56,10 +48,6 @@ jobs:
           path: "**/TestResults/**"
           if-no-files-found: ignore
 
-  # ---------------------------------------------------------- integration
-  # A real MongoDB in a service container: real queries, real indexes, real
-  # GridFS, real $jsonSchema rejections. Needs no secrets at all, which is
-  # precisely why these can run on every pull request.
   integration:
     name: integration
     runs-on: ubuntu-latest
@@ -96,12 +84,7 @@ jobs:
           dotnet test tests/SimmerAndSear.IntegrationTests --no-build -c Release
           --logger "trx;LogFileName=integration.trx"
 
-  # --------------------------------------------------------- secrets-scan
-  # Two minutes of configuration that directly evidences the secrets-handling
-  # requirement, and stops a connection string ever reaching the history.
-  #
-  # The gitleaks BINARY, not gitleaks/gitleaks-action: the action requires a paid
-  # licence key for repositories owned by a GitHub Organisation.
+
   secrets-scan:
     name: secrets-scan
     runs-on: ubuntu-latest
@@ -118,14 +101,6 @@ jobs:
           tar -xzf gitleaks.tar.gz gitleaks
           ./gitleaks detect --source . --no-banner --redact --exit-code 1
 
-  # --------------------------------------------------------------- deploy
-  # One environment, one web app. `develop` is where work integrates and is
-  # tested; merging to `main` is the deliberate act that updates the live site.
-  # That keeps a buffer between day-to-day work and the application the marker
-  # will be looking at, without the overhead of a second environment.
-  #
-  # Skipped entirely until AZURE_WEBAPP_NAME is set as a repository variable, so
-  # the pipeline is green before Azure exists and activates the moment it does.
   deploy:
     name: deploy
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -156,6 +131,7 @@ jobs:
         run: dotnet publish ${{ env.WEB_PROJECT }} -c Release -o ./publish
 
       - name: Deploy to Azure App Service
+        id: deploy
         if: steps.guard.outputs.configured == 'true'
         uses: azure/webapps-deploy@v3
         with:
@@ -163,15 +139,33 @@ jobs:
           publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
           package: ./publish
 
-      # The smoke gate. A deploy step that cannot tell you whether the
-      # application actually came up is not a deployment pipeline - and it is
-      # what turns "we have a deploy action" into evidence of deployment success.
+  
       - name: Smoke test
         if: steps.guard.outputs.configured == 'true'
+        env:
+          DEPLOYED_URL: ${{ steps.deploy.outputs.webapp-url }}
+          FALLBACK_HOST: ${{ vars.AZURE_WEBAPP_HOSTNAME }}
         run: |
-          URL="https://${{ vars.AZURE_WEBAPP_NAME }}.azurewebsites.net/health/ready"
+          BASE="${DEPLOYED_URL:-}"
+
+          if [ -z "$BASE" ] && [ -n "$FALLBACK_HOST" ]; then
+            BASE="https://${FALLBACK_HOST}"
+          fi
+
+          if [ -z "$BASE" ]; then
+            echo "::error::Cannot determine the deployed URL. The deploy action returned no"
+            echo "::error::webapp-url output and the AZURE_WEBAPP_HOSTNAME repository variable"
+            echo "::error::is not set. Set it to the app's Default domain from the Azure portal"
+            echo "::error::Overview blade, without the https:// prefix."
+            exit 1
+          fi
+
+          BASE="${BASE%/}"
+          URL="${BASE}/health/ready"
+          echo "Smoke testing ${URL}"
+
           for i in $(seq 1 18); do
-            CODE=$(curl -s -o /dev/null -w '%{http_code}' "$URL" || true)
+            CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$URL" || true)
             echo "attempt $i -> $CODE"
             if [ "$CODE" = "200" ]; then
               echo "Application is up."
@@ -179,6 +173,7 @@ jobs:
             fi
             sleep 10
           done
-          echo "::error::Smoke test failed - /health/ready never returned 200."
+
+          echo "::error::Smoke test failed - ${URL} never returned 200."
           echo "::error::Roll back by re-running the previous successful deploy."
           exit 1
