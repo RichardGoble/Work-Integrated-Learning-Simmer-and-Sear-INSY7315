@@ -54,6 +54,11 @@ public static class DependencyInjection
         services.AddScoped<IFileStore, GridFsFileStore>();
         services.AddScoped<IDatabaseHealth, MongoDatabaseHealth>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
+
+     
+        services.AddSingleton<SchemaStatus>();
+        services.AddSingleton<ISchemaStatus>(sp => sp.GetRequiredService<SchemaStatus>());
+
         services.AddHostedService<MongoSchemaInitializer>();
 
         return services;

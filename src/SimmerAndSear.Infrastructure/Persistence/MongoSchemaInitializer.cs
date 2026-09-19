@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using SimmerAndSear.Application.Abstractions;
 using SimmerAndSear.Domain.Entities;
 
 namespace SimmerAndSear.Infrastructure.Persistence;
@@ -19,9 +20,11 @@ namespace SimmerAndSear.Infrastructure.Persistence;
 public sealed class MongoSchemaInitializer(
     IMongoDatabase database,
     IOptions<MongoOptions> options,
+    SchemaStatus status,
     ILogger<MongoSchemaInitializer> logger) : IHostedService
 {
     private const int NamespaceExists = 48;
+    private const int Unauthorized = 13;
 
     private static readonly Collation CaseInsensitive =
         new("en", strength: CollationStrength.Secondary);
@@ -30,15 +33,39 @@ public sealed class MongoSchemaInitializer(
     {
         if (!options.Value.ApplySchemaOnStartup)
         {
-            logger.LogInformation("Schema initialisation skipped by configuration.");
+            const string reason = "Disabled by Mongo:ApplySchemaOnStartup.";
+            status.MarkSkipped(reason);
+            logger.LogInformation("Schema initialisation skipped. {Reason}", reason);
             return;
         }
 
-        await EnsureCollectionsAsync(cancellationToken);
-        await EnsureValidatorsAsync(cancellationToken);
-        await EnsureIndexesAsync(cancellationToken);
+        try
+        {
+            await EnsureCollectionsAsync(cancellationToken);
+            await EnsureValidatorsAsync(cancellationToken);
+            await EnsureIndexesAsync(cancellationToken);
 
-        logger.LogInformation("Mongo collections, validators and indexes verified.");
+            status.MarkApplied();
+            logger.LogInformation("Mongo collections, validators and indexes verified.");
+        }
+        catch (MongoCommandException ex) when (ex.Code == Unauthorized)
+        {
+        
+            var reason =
+                $"The database user is not permitted to apply schema: {ex.Message} " +
+                "Grant the collMod action (a custom role of readWrite + collMod, or dbAdmin) " +
+                "on this database, or set Mongo:ApplySchemaOnStartup to false and apply the " +
+                "schema separately.";
+
+            status.MarkFailed(reason);
+            logger.LogError(ex, "Schema initialisation refused. {Reason}", reason);
+        }
+        catch (Exception ex)
+        {
+            status.MarkFailed($"Schema initialisation failed: {ex.Message}");
+            logger.LogError(ex, "Schema initialisation failed. The application is still serving, " +
+                                "but the database may not be enforcing every constraint.");
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
