@@ -27,4 +27,17 @@ public sealed class HealthEndpointTests(ApiFactory factory) : IClassFixture<ApiF
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         (await response.Content.ReadAsStringAsync()).ShouldContain("up");
     }
+
+    [Fact]
+    public async Task Readiness_reports_the_state_of_the_database_schema()
+    {
+        var response = await factory.CreateClient().GetAsync("/health/ready");
+        var body = await response.Content.ReadAsStringAsync();
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        body.ShouldContain("\"schema\":\"applied\"");
+
+        body.ShouldContain("\"detail\":null");
+    }
 }

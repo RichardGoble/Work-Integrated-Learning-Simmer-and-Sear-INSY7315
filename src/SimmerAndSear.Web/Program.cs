@@ -55,12 +55,20 @@ app.UseAuthorization();
 app.MapStaticAssets();
 app.MapGet("/health/live", () => Results.Ok(new { status = "live" }))
    .WithName("HealthLive");
-app.MapGet("/health/ready", async (IDatabaseHealth health, CancellationToken ct) =>
+app.MapGet("/health/ready", async (IDatabaseHealth health, ISchemaStatus schema, CancellationToken ct) =>
 {
     var reachable = await health.IsReachableAsync(ct);
-    return reachable
-        ? Results.Ok(new { status = "ready", database = "up" })
-        : Results.Json(new { status = "degraded", database = "down" }, statusCode: 503);
+    var healthy = reachable && schema.State is not SchemaState.Failed;
+
+    var body = new
+    {
+        status = healthy ? "ready" : "degraded",
+        database = reachable ? "up" : "down",
+        schema = schema.State.ToString().ToLowerInvariant(),
+        detail = schema.Detail
+    };
+
+    return healthy ? Results.Ok(body) : Results.Json(body, statusCode: 503);
 }).WithName("HealthReady");
 
 app.MapControllerRoute(
