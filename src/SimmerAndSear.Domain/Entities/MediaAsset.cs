@@ -1,11 +1,13 @@
 using SimmerAndSear.Domain.Abstractions;
 
 namespace SimmerAndSear.Domain.Entities;
-
-/// <summary>
-/// Metadata for a binary held in GridFS. The bytes live in the file store; this
-/// record is what everything else references.
-/// </summary>
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. C# classes [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/classes> [Accessed 18 September 2026].
+//
+//Microsoft, 2025. Properties [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/properties> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class MediaAsset : IEntity
 {
     public string Id { get; set; } = string.Empty;
@@ -14,11 +16,6 @@ public sealed class MediaAsset : IEntity
     public long FileSizeBytes { get; set; }
 
     public string GridFsId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Generated on upload. Without it a twelve-product grid streams twelve
-    /// full-size images through App Service on every page load.
-    /// </summary>
     public string? ThumbnailGridFsId { get; set; }
 
     public int? Width { get; set; }

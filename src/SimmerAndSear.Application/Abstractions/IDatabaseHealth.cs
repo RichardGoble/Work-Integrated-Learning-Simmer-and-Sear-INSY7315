@@ -1,11 +1,11 @@
 namespace SimmerAndSear.Application.Abstractions;
-
-/// <summary>
-/// Lets the readiness probe prove the database is reachable without the web layer
-/// ever naming a MongoDB type. ArchitectureTests asserts exactly that, so this
-/// small abstraction is what keeps the health endpoint on the right side of the
-/// layering rule.
-/// </summary>
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Interfaces - define behavior for multiple types [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/interfaces> [Accessed 18 September 2026].
+//
+//Microsoft, 2025. Asynchronous programming [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public interface IDatabaseHealth
 {
     Task<bool> IsReachableAsync(CancellationToken ct = default);

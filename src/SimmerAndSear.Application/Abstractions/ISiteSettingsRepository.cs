@@ -1,14 +1,15 @@
 using SimmerAndSear.Domain.Entities;
 
 namespace SimmerAndSear.Application.Abstractions;
-
-/// <summary>
-/// Access to the single settings document. Singleton at the storage level: the
-/// document id is fixed, so a second one cannot be created by accident.
-/// </summary>
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Interfaces - define behavior for multiple types [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/interfaces> [Accessed 18 September 2026].
+//
+//Microsoft, 2025. Asynchronous programming [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public interface ISiteSettingsRepository
 {
-    /// <summary>Returns the stored settings, creating the defaults if absent.</summary>
     Task<SiteSettings> GetAsync(CancellationToken ct = default);
 
     Task UpdateAsync(SiteSettings settings, CancellationToken ct = default);

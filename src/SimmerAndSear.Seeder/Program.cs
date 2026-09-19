@@ -4,9 +4,6 @@ using Microsoft.Extensions.Logging;
 using SimmerAndSear.Infrastructure;
 using SimmerAndSear.Infrastructure.Persistence;
 using SimmerAndSear.Seeder;
-
-// FIRST, exactly as in the web application. The driver caches a class map on
-// first use, and conventions registered afterwards are silently ignored.
 MongoConventions.Register();
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -18,9 +15,6 @@ builder.Services.AddScoped<SeedRunner>();
 using var host = builder.Build();
 
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
-
-// Starting the host runs MongoSchemaInitializer, so the seeder creates the
-// collections, validators and indexes before it writes the first document.
 await host.StartAsync();
 
 int problems;
@@ -46,10 +40,15 @@ else
 {
     logger.LogWarning("Seeding finished with {Count} problem(s). See the messages above.", problems);
 }
-
-// Non-zero on any problem, so a pipeline step or a script can tell the
-// difference between "seeded" and "ran without doing very much".
 return problems == 0 ? 0 : 1;
-
-/// <summary>Marker for the logger category.</summary>
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. .NET Generic Host [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/core/extensions/generic-host> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Options pattern [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/core/extensions/options> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Dependency injection in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-10.0> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public partial class Program;

@@ -1,19 +1,79 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SimmerAndSear.Application.Accounts;
+using SimmerAndSear.Contracts.Accounts;
+using SimmerAndSear.Web.Security;
+using SimmerAndSear.Domain.Enums;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace SimmerAndSear.Web.Controllers;
 
-public class AuthController : Controller
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Handle requests with controllers in ASP.NET Core MVC [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/controllers/actions?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Use cookie authentication without ASP.NET Core Identity [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Prevent Cross-Site Request Forgery (XSRF/CSRF) attacks in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-10.0> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
+[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+public class AuthController(AccountService accounts, AuditWriter audit) : Controller
 {
-    public IActionResult Login(bool error = false)
+    [HttpGet, AllowAnonymous]
+    public IActionResult Login(string? returnUrl = null)
     {
-        ViewData["Title"] = "Sign In / Register";
-        ViewData["Error"] = error;
-        return View();
+        ViewData["ReturnUrl"] = Url.IsLocalUrl(returnUrl) ? returnUrl : null;
+        return View(new LoginRequest());
     }
 
-    public IActionResult Profile()
+    [HttpPost, AllowAnonymous]
+    [EnableRateLimiting(SecurityHardening.AccountPolicy)]
+    public async Task<IActionResult> Login(LoginRequest request, string? returnUrl, CancellationToken ct)
     {
-        ViewData["Title"] = "My Profile";
-        return View();
+        ViewData["ReturnUrl"] = Url.IsLocalUrl(returnUrl) ? returnUrl : null;
+        if (!ModelState.IsValid) return View(request);
+        var user = await accounts.LoginAsync(request, ct);
+        if (user is null)
+        {
+            await audit.WriteAsync(AuditAction.AccessDenied, "ACCESS_DENIED login failed");
+            ModelState.AddModelError(string.Empty, "Unable to sign in. Check your details or try again later.");
+            return View(request);
+        }
+        await audit.WriteAsync(AuditAction.Login, "Signed in", user);
+        await HttpContext.SignInAsync(AccountCookies.CreatePrincipal(user));
+        return LocalRedirect(Url.IsLocalUrl(returnUrl) ? returnUrl! : "/Auth/Profile");
     }
+
+    [HttpGet, AllowAnonymous]
+    public IActionResult Register() => View(new RegisterRequest());
+
+    [HttpPost, AllowAnonymous]
+    [EnableRateLimiting(SecurityHardening.AccountPolicy)]
+    public async Task<IActionResult> Register(RegisterRequest request, CancellationToken ct)
+    {
+        if ((request.Password?.Length ?? 0) < 12) ModelState.AddModelError(nameof(request.Password), "Use at least 12 characters.");
+        if (!ModelState.IsValid) return View(request);
+        var user = await accounts.RegisterAsync(request, ct);
+        if (user is null)
+        {
+            ModelState.AddModelError(string.Empty, "Unable to register with these details.");
+            return View(request);
+        }
+        await audit.WriteAsync(AuditAction.Create, "Account registered", user);
+        return RedirectToAction(nameof(Login));
+    }
+
+    [HttpPost, Authorize]
+    public async Task<IActionResult> Logout()
+    {
+        await audit.WriteAsync(AuditAction.Logout, "Signed out");
+        await HttpContext.SignOutAsync();
+        return RedirectToAction("Index", "Home");
+    }
+
+    [HttpGet, Authorize]
+    public IActionResult Profile() => View();
 }

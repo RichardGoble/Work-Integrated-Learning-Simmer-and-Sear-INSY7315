@@ -6,24 +6,26 @@
     <div class="container" style="padding: 3rem 1.5rem; max-width: 1400px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem;">
             <h2 style="font-size: 2.5rem; margin: 0;">Admin Dashboard</h2>
-            <button class="btn btn-outline" style="color: var(--ss-brand); border-color: var(--ss-brand); display: flex; align-items: center; gap: 0.5rem;">
+            <form asp-controller="Auth" asp-action="Logout" method="post"><button type="submit" class="btn btn-outline" style="color: var(--ss-brand); border-color: var(--ss-brand); display: flex; align-items: center; gap: 0.5rem;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg> Logout
-            </button>
+            </button></form>
         </div>
 
         <div style="display: flex; gap: 0.75rem; margin-bottom: 2rem; border-bottom: 1px solid var(--ss-border); padding-bottom: 1rem; overflow-x: auto; flex-wrap: nowrap; white-space: nowrap;">
-            <button id="btn-orders" class="btn btn-secondary admin-tab-btn" onclick="showTab('orders')">Manage Orders <span style="background: var(--ss-brand); color: white; padding: 0.1rem 0.5rem; border-radius: 50px; font-size: 0.75rem; margin-left: 0.5rem;">[#]</span></button>
-            <button id="btn-bulk" class="btn btn-outline admin-tab-btn" onclick="showTab('bulk')">Bulk Requests <span style="background: var(--ss-brand); color: white; padding: 0.1rem 0.5rem; border-radius: 50px; font-size: 0.75rem; margin-left: 0.5rem;">[#]</span></button>
-            <button id="btn-inquiries" class="btn btn-outline admin-tab-btn" onclick="showTab('inquiries')">Manage Inquiries <span style="background: var(--ss-brand); color: white; padding: 0.1rem 0.5rem; border-radius: 50px; font-size: 0.75rem; margin-left: 0.5rem;">[#]</span></button>
-            <button id="btn-products" class="btn btn-outline admin-tab-btn" onclick="showTab('products')">Manage Catalogue</button>
-            <button id="btn-attributes" class="btn btn-outline admin-tab-btn" onclick="showTab('attributes')">Manage Attributes</button>
-            <button id="btn-journal" class="btn btn-outline admin-tab-btn" onclick="showTab('journal')">Manage Journal</button>
-            <button id="btn-gallery" class="btn btn-outline admin-tab-btn" onclick="showTab('gallery')">Manage Gallery</button>
-            <button id="btn-reviews" class="btn btn-outline admin-tab-btn" onclick="showTab('reviews')">Manage Reviews</button>
-            <button id="btn-partners" class="btn btn-outline admin-tab-btn" onclick="showTab('partners')">Manage Partners</button>
-            <button id="btn-settings" class="btn btn-outline admin-tab-btn" onclick="showTab('settings')">Settings</button>
-            <button id="btn-admins" class="btn btn-outline admin-tab-btn" onclick="showTab('admins')">Manage Admins</button>
-            <button id="btn-audit" class="btn btn-outline admin-tab-btn" onclick="showTab('audit')">Audit Log</button>
+            <button id="btn-orders" class="btn btn-secondary admin-tab-btn" data-click-action="action1">Manage Orders <span style="background: var(--ss-brand); color: white; padding: 0.1rem 0.5rem; border-radius: 50px; font-size: 0.75rem; margin-left: 0.5rem;">[#]</span></button>
+            <button id="btn-bulk" class="btn btn-outline admin-tab-btn" data-click-action="action2">Bulk Requests <span style="background: var(--ss-brand); color: white; padding: 0.1rem 0.5rem; border-radius: 50px; font-size: 0.75rem; margin-left: 0.5rem;">[#]</span></button>
+            <button id="btn-inquiries" class="btn btn-outline admin-tab-btn" data-click-action="action3">Manage Inquiries <span style="background: var(--ss-brand); color: white; padding: 0.1rem 0.5rem; border-radius: 50px; font-size: 0.75rem; margin-left: 0.5rem;">[#]</span></button>
+            <button id="btn-products" class="btn btn-outline admin-tab-btn" data-click-action="action4">Manage Catalogue</button>
+            <button id="btn-attributes" class="btn btn-outline admin-tab-btn" data-click-action="action5">Manage Attributes</button>
+            <button id="btn-journal" class="btn btn-outline admin-tab-btn" data-click-action="action6">Manage Journal</button>
+            <button id="btn-gallery" class="btn btn-outline admin-tab-btn" data-click-action="action7">Manage Gallery</button>
+            <button id="btn-reviews" class="btn btn-outline admin-tab-btn" data-click-action="action8">Manage Reviews</button>
+            <button id="btn-partners" class="btn btn-outline admin-tab-btn" data-click-action="action9">Manage Partners</button>
+            <button id="btn-settings" class="btn btn-outline admin-tab-btn" data-click-action="action10">Settings</button>
+@if (User.IsInRole("MasterAdmin")) {
+            <button id="btn-admins" class="btn btn-outline admin-tab-btn" data-click-action="action11">Manage Admins</button>
+            <a class="btn btn-outline" href="/Admin/Audit">Audit log</a>
+}
         </div>
 
         <div id="tab-orders" class="admin-tab-content" style="display: block;">
@@ -122,7 +124,7 @@
         <div id="tab-products" class="admin-tab-content" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <h3 style="margin: 0;">Manage Catalogue</h3>
-                <button class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem;" onclick="document.getElementById('form-add-product').style.display='block'; document.getElementById('products-grid').style.display='none';">
+                <button class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem;" data-click-action="action13">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add New Product
                 </button>
             </div>
@@ -173,7 +175,7 @@
                         <textarea class="input-field" rows="4" required></textarea>
                     </div>
                     <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem;">
-                        <button type="button" class="btn btn-outline" onclick="document.getElementById('form-add-product').style.display='none'; document.getElementById('products-grid').style.display='block';">Cancel</button>
+                        <button type="button" class="btn btn-outline" data-click-action="action14">Cancel</button>
                         <button type="button" class="btn btn-primary">Save Product</button>
                     </div>
                 </form>
@@ -358,7 +360,7 @@
         <div id="tab-journal" class="admin-tab-content" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <h3 style="margin: 0;">Manage Journal</h3>
-                <button class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem;" onclick="document.getElementById('form-add-journal').style.display='block'; document.getElementById('journal-grid').style.display='none';">
+                <button class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem;" data-click-action="action15">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add New Entry
                 </button>
             </div>
@@ -383,7 +385,7 @@
                         <textarea class="input-field" rows="8" required></textarea>
                     </div>
                     <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem;">
-                        <button type="button" class="btn btn-outline" onclick="document.getElementById('form-add-journal').style.display='none'; document.getElementById('journal-grid').style.display='block';">Cancel</button>
+                        <button type="button" class="btn btn-outline" data-click-action="action16">Cancel</button>
                         <button type="button" class="btn btn-primary">Save Entry</button>
                     </div>
                 </form>
@@ -414,7 +416,7 @@
 
         <div id="tab-gallery" class="admin-tab-content" style="display: none;">
             <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 2rem;">
-                <button class="btn btn-primary" style="padding: 0.5rem 1.5rem; font-weight: 500; border: none; border-radius: var(--ss-radius-sm);" onclick="document.getElementById('form-add-gallery-image').style.display='block'; document.getElementById('gallery-container').style.display='none';">
+                <button class="btn btn-primary" style="padding: 0.5rem 1.5rem; font-weight: 500; border: none; border-radius: var(--ss-radius-sm);" data-click-action="action17">
                     Add New Image
                 </button>
             </div>
@@ -430,7 +432,7 @@
                     <small style="color: #94a3b8; display: block; margin-top: 0.5rem; font-size: 0.8rem;">Select an image file (under 2MB)</small>
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: 1rem;">
-                    <button type="button" style="background: black; color: white; border: none; padding: 0.6rem 2rem; border-radius: var(--ss-radius-sm); font-weight: 500; cursor: pointer;" onclick="document.getElementById('form-add-gallery-image').style.display='none'; document.getElementById('gallery-container').style.display='flex';">Cancel</button>
+                    <button type="button" style="background: black; color: white; border: none; padding: 0.6rem 2rem; border-radius: var(--ss-radius-sm); font-weight: 500; cursor: pointer;" data-click-action="action18">Cancel</button>
                     <button type="button" class="btn btn-primary" style="padding: 0.6rem 2rem; border-radius: var(--ss-radius-sm); border: none; font-weight: 500; cursor: pointer;">Save Changes</button>
                 </div>
             </div>
@@ -521,7 +523,7 @@
         <div id="tab-partners" class="admin-tab-content" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <h3 style="margin: 0;">Manage Partners</h3>
-                <button class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem;" onclick="document.getElementById('form-add-partner').style.display='block'; document.getElementById('partners-grid').style.display='none';">
+                <button class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem;" data-click-action="action19">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add New Partner
                 </button>
             </div>
@@ -544,7 +546,7 @@
                     <textarea style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm); font-size: 1rem; color: #1e293b; min-height: 120px;"></textarea>
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: 1rem;">
-                    <button type="button" style="background: black; color: white; border: none; padding: 0.6rem 2rem; border-radius: var(--ss-radius-sm); font-weight: 500; cursor: pointer;" onclick="document.getElementById('form-add-partner').style.display='none'; document.getElementById('partners-grid').style.display='block';">Cancel</button>
+                    <button type="button" style="background: black; color: white; border: none; padding: 0.6rem 2rem; border-radius: var(--ss-radius-sm); font-weight: 500; cursor: pointer;" data-click-action="action20">Cancel</button>
                     <button type="button" style="background: #e26a2c; color: white; border: none; padding: 0.6rem 2rem; border-radius: var(--ss-radius-sm); font-weight: 500; cursor: pointer;">Save Changes</button>
                 </div>
             </div>
@@ -597,6 +599,7 @@
             </div>
         </div>
 
+        @if (User.IsInRole("MasterAdmin")) {
         <div id="tab-admins" class="admin-tab-content" style="display: none;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
                 <!-- Admin Roles -->
@@ -661,47 +664,9 @@
             </div>
         </div>
 
-        <div id="tab-audit" class="admin-tab-content" style="display: none;">
-            <h3 style="margin-bottom: 2rem;">Audit Log</h3>
-            <div class="card" style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
-                    <thead>
-                        <tr style="background-color: rgba(0,0,0,0.02); border-bottom: 1px solid var(--ss-border); text-align: left;">
-                            <th style="padding: 1.5rem; font-weight: 600;">Date & Time</th>
-                            <th style="padding: 1.5rem; font-weight: 600;">Admin Role</th>
-                            <th style="padding: 1.5rem; font-weight: 600;">Action</th>
-                            <th style="padding: 1.5rem; font-weight: 600;">Details</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr style="border-bottom: 1px solid var(--ss-border);">
-                            <td style="padding: 1.5rem; color: var(--ss-ink-muted);">[Date & Time]</td>
-                            <td style="padding: 1.5rem;"><span style="background: var(--ss-surface-solid); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.9rem;">[Role]</span></td>
-                            <td style="padding: 1.5rem; font-weight: 500; color: var(--ss-brand);">[Action]</td>
-                            <td style="padding: 1.5rem;">[Details string...]</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        }
 
     </div>
 </div>
 
-<script>
-    function showTab(tabId) {
-        document.querySelectorAll('.admin-tab-content').forEach(el => el.style.display = 'none');
-        document.querySelectorAll('.admin-tab-btn').forEach(btn => {
-            btn.classList.remove('btn-secondary');
-            btn.classList.add('btn-outline');
-        });
-        document.getElementById('tab-' + tabId).style.display = 'block';
-        document.getElementById('btn-' + tabId).classList.remove('btn-outline');
-        document.getElementById('btn-' + tabId).classList.add('btn-secondary');
-    }
-    
-    // Ensure the orders tab is showing initially
-    window.onload = function() {
-        showTab('orders');
-    }
-</script>
+<script src="~/js/admin-index-1.js" asp-append-version="true"></script>

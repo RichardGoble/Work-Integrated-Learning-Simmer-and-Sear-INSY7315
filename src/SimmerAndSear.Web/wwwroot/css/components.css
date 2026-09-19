@@ -398,3 +398,5 @@ main {
     min-width: 0;
   }
 }
+
+.wishlist-card-button:hover { transform: scale(1.1); }

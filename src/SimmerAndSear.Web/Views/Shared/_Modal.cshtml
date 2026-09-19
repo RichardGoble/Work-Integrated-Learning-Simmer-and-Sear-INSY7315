@@ -9,10 +9,6 @@
         </form>
     </div>
     <div style="padding: var(--ss-space-6);">
-        @Html.Raw(Model.Body)
+        @Model.Body
     </div>
 </dialog>
-
-<script>
-    // Note: To open this modal, you'd use document.getElementById('@Model.Id').showModal();
-</script>

@@ -4,19 +4,13 @@ using MongoDB.Driver;
 using Shouldly;
 
 namespace SimmerAndSear.IntegrationTests;
-
-/// <summary>
-/// Proves the $jsonSchema validators are real.
-///
-/// <para>
-/// "A product must carry at least one image" is a client requirement. It is
-/// enforced in the domain, at the API boundary, and in the database. These tests
-/// cover the last of those three - the layer that holds even if someone writes to
-/// the collection from a console, a migration, or code that has not been written
-/// yet. Indexes and constraints that nobody verifies tend to quietly stop
-/// existing after the first schema change.
-/// </para>
-/// </summary>
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Integration tests in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//MongoDB, n.d. Schema Validation [Source code].
+//Available at: <https://www.mongodb.com/docs/manual/core/schema-validation/> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class SchemaValidationTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     private IMongoCollection<BsonDocument> Products()
@@ -83,8 +77,6 @@ public sealed class SchemaValidationTests(ApiFactory factory) : IClassFixture<Ap
                 .FirstOrDefaultAsync();
 
             found.ShouldNotBeNull();
-
-            // Money must come back as Decimal128, never as a double.
             found["price"].BsonType.ShouldBe(BsonType.Decimal128);
         }
         finally

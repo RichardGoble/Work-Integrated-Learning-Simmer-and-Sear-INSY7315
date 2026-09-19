@@ -5,15 +5,13 @@ using SimmerAndSear.Domain.Entities;
 using SimmerAndSear.Infrastructure.Persistence;
 
 namespace SimmerAndSear.Infrastructure.Repositories;
-
-/// <summary>
-/// Append-only store for the audit trail.
-/// <para>
-/// There is no update and no delete here, and none may be added. The collection's
-/// $jsonSchema validator is the second layer, and the database user's privileges
-/// are the third. An audit log that the application can rewrite is not an audit log.
-/// </para>
-/// </summary>
+// ── References ──────────────────────────────────────────────────────────────
+//MongoDB, n.d. CRUD Operations [Source code].
+//Available at: <https://www.mongodb.com/docs/drivers/csharp/current/crud/> [Accessed 18 September 2026].
+//
+//Microsoft, 2025. Asynchronous programming [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class AuditLogRepository(IMongoDatabase database)
     : MongoRepositoryBase<AuditLogEntry>(database, MongoCollections.AuditLog), IAuditLogRepository
 {

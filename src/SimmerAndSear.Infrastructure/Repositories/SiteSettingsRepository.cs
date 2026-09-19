@@ -4,11 +4,13 @@ using SimmerAndSear.Domain.Entities;
 using SimmerAndSear.Infrastructure.Persistence;
 
 namespace SimmerAndSear.Infrastructure.Repositories;
-
-/// <summary>
-/// Singleton - the id is the fixed literal "global", so a second settings
-/// document cannot be created even by accident.
-/// </summary>
+// ── References ──────────────────────────────────────────────────────────────
+//MongoDB, n.d. CRUD Operations [Source code].
+//Available at: <https://www.mongodb.com/docs/drivers/csharp/current/crud/> [Accessed 18 September 2026].
+//
+//Microsoft, 2025. Asynchronous programming [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public sealed class SiteSettingsRepository(IMongoDatabase database)
     : MongoRepositoryBase<SiteSettings>(database, MongoCollections.SiteSettings), ISiteSettingsRepository
 {
@@ -23,9 +25,6 @@ public sealed class SiteSettingsRepository(IMongoDatabase database)
         {
             return existing;
         }
-
-        // First run: materialise the defaults so callers never have to handle null
-        // and the admin screen always has something to edit.
         var defaults = new SiteSettings
         {
             Id = SiteSettings.SingletonId,

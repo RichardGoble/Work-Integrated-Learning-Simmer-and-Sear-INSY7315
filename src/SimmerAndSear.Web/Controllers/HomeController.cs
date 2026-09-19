@@ -4,13 +4,18 @@ using System.Collections.Generic;
 
 namespace SimmerAndSear.Web.Controllers;
 
+// ── References ──────────────────────────────────────────────────────────────
+//Microsoft, 2026. Handle requests with controllers in ASP.NET Core MVC [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/controllers/actions?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//
+//Microsoft, 2026. Views in ASP.NET Core MVC [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/views/overview?view=aspnetcore-10.0> [Accessed 18 September 2026].
+// ────────────────────────────────────────────────────────────────────────────
 public class HomeController : Controller
 {
     public IActionResult Index()
     {
         ViewData["Title"] = "Premium Cookware";
-        
-        // Hardcoded view models as per Stage 1
         var featuredProducts = new List<CardVm>
         {
             new CardVm("[Dynamic Product Title 1]", "/Catalogue/Detail", "/images/skillet.jpg", "Product Image", "[Material] • [Price]", "[Badge]"),
