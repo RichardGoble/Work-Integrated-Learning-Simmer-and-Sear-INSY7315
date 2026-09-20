@@ -99,18 +99,7 @@ public class CatalogueController(CatalogueService catalogue, CurrentUser current
         }
 
         ViewData["Title"] = product.Name;
-
-        // The detail view still renders its designed placeholders; sub-feature 3 binds the
-        // body to this product. Fetching it now gives the page a real 404 and real crumbs.
-        ViewData["Product"] = product;
-
-        return View(new BreadcrumbVm(
-        [
-            new BreadcrumbItem("Home", "/"),
-            new BreadcrumbItem("Catalogue", "/Catalogue"),
-            new BreadcrumbItem(product.Category, $"/Catalogue?category={Uri.EscapeDataString(product.Category)}"),
-            new BreadcrumbItem(product.Name, $"/Catalogue/Detail/{product.Id}")
-        ]));
+        return View(product);
     }
 
     private bool CanSeeDrafts =>
