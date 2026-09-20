@@ -32,6 +32,7 @@ public sealed record CartLineResponse(
     string ProductName,
     string Brand,
     string? Material,
+    string? ImageId,
     string? ImageAlt,
     decimal UnitPrice,
     int Quantity,

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using SimmerAndSear.Application.Accounts;
 using SimmerAndSear.Contracts.Accounts;
 using SimmerAndSear.Web.Security;
+using SimmerAndSear.Web.ViewModels;
 using SimmerAndSear.Domain.Enums;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -45,23 +46,38 @@ public class AuthController(AccountService accounts, AuditWriter audit, CartClai
         await audit.WriteAsync(AuditAction.Login, "Signed in", user);
         await HttpContext.SignInAsync(AccountCookies.CreatePrincipal(user));
         await cartClaim.OnSignedInAsync(user, ct);
-        return LocalRedirect(Url.IsLocalUrl(returnUrl) ? returnUrl! : "/Auth/Profile");
+
+   
+        if (Url.IsLocalUrl(returnUrl))
+        {
+            return LocalRedirect(returnUrl!);
+        }
+
+        return Redirect(user.Role == RoleName.Customer ? "/" : "/Admin");
     }
 
     [HttpGet, AllowAnonymous]
-    public IActionResult Register() => View(new RegisterRequest());
+    public IActionResult Register() => View(new RegisterForm());
 
     [HttpPost, AllowAnonymous]
     [EnableRateLimiting(SecurityHardening.AccountPolicy)]
-    public async Task<IActionResult> Register(RegisterRequest request, CancellationToken ct)
+    public async Task<IActionResult> Register(RegisterForm form, CancellationToken ct)
     {
-        if ((request.Password?.Length ?? 0) < 12) ModelState.AddModelError(nameof(request.Password), "Use at least 12 characters.");
-        if (!ModelState.IsValid) return View(request);
+        if (!ModelState.IsValid) return View(form);
+
+        var request = form.ToRequest();
+
+        if (request is null)
+        {
+            ModelState.AddModelError(nameof(form.FullName), "Enter both your first and last name.");
+            return View(form);
+        }
+
         var user = await accounts.RegisterAsync(request, ct);
         if (user is null)
         {
             ModelState.AddModelError(string.Empty, "Unable to register with these details.");
-            return View(request);
+            return View(form);
         }
         await audit.WriteAsync(AuditAction.Create, "Account registered", user);
         return RedirectToAction(nameof(Login));

@@ -1,8 +1,21 @@
 @using SimmerAndSear.Web.ViewModels.Components
+@using SimmerAndSear.Contracts.Catalogue
 @model (List<CardVm> Products, PaginationVm Pagination)
 
 @{
     var emptyState = new EmptyStateVm("No products found", "We couldn't find any products matching your current filters. Try broadening your search.", "Clear Filters", "/Catalogue");
+    var facets = ViewData["Facets"] as CatalogueFacets ?? CatalogueFacets.Empty;
+    var filter = ViewData["Filter"] as ProductFilter ?? new ProductFilter();
+
+    var sortOptions = new Dictionary<ProductSort, string>
+    {
+        [ProductSort.Relevance] = "Relevance",
+        [ProductSort.PriceAscending] = "Price: Low to High",
+        [ProductSort.PriceDescending] = "Price: High to Low",
+        [ProductSort.NameAscending] = "Name: A to Z",
+        [ProductSort.NameDescending] = "Name: Z to A",
+        [ProductSort.Newest] = "Newest first"
+    };
 }
 
 <div class="animate-fade-in">
@@ -23,64 +36,93 @@
                     <h3 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: #111827;">Filter Products</h3>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 1.5rem;">
+                <form method="get" action="/Catalogue" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 1.5rem;">
                     <!-- Text Search -->
                     <div>
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #4b5563; font-size: 0.85rem;">Search keyword</label>
+                        <label for="f-search" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #4b5563; font-size: 0.85rem;">Search keyword</label>
                         <div style="display: flex; align-items: center; background: #e5e7eb; padding: 0.75rem 1rem; border-radius: 6px;">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.5rem;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                            <input type="text" placeholder="Search..." style="flex: 1; border: none; background: transparent; outline: none; color: #4b5563; font-size: 0.95rem;" />
+                            <input id="f-search" type="text" name="searchTerm" value="@filter.SearchTerm" placeholder="Search..." style="flex: 1; border: none; background: transparent; outline: none; color: #4b5563; font-size: 0.95rem;" />
                         </div>
                     </div>
 
                     <!-- Type Dropdown -->
                     <div>
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #4b5563; font-size: 0.85rem;">Product Type</label>
-                        <select style="width: 100%; padding: 0.75rem 1rem; background: #e5e7eb; border: none; border-radius: 6px; color: #4b5563; font-size: 0.95rem; appearance: auto;">
-                            <option>All Types</option>
+                        <label for="f-type" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #4b5563; font-size: 0.85rem;">Product Type</label>
+                        <select id="f-type" name="cookwareType" style="width: 100%; padding: 0.75rem 1rem; background: #e5e7eb; border: none; border-radius: 6px; color: #4b5563; font-size: 0.95rem; appearance: auto;">
+                            <option value="">All Types</option>
+                            @foreach (var v in facets.CookwareTypes)
+                            {
+                                <option value="@v" selected="@(v == filter.CookwareType)">@v</option>
+                            }
                         </select>
                     </div>
 
                     <!-- Material Dropdown -->
                     <div>
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #4b5563; font-size: 0.85rem;">Material</label>
-                        <select style="width: 100%; padding: 0.75rem 1rem; background: #e5e7eb; border: none; border-radius: 6px; color: #4b5563; font-size: 0.95rem; appearance: auto;">
-                            <option>All Materials</option>
+                        <label for="f-material" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #4b5563; font-size: 0.85rem;">Material</label>
+                        <select id="f-material" name="material" style="width: 100%; padding: 0.75rem 1rem; background: #e5e7eb; border: none; border-radius: 6px; color: #4b5563; font-size: 0.95rem; appearance: auto;">
+                            <option value="">All Materials</option>
+                            @foreach (var v in facets.Materials)
+                            {
+                                <option value="@v" selected="@(v == filter.Material)">@v</option>
+                            }
                         </select>
                     </div>
 
                     <!-- Brand Dropdown -->
                     <div>
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #4b5563; font-size: 0.85rem;">Brand</label>
-                        <select style="width: 100%; padding: 0.75rem 1rem; background: #e5e7eb; border: none; border-radius: 6px; color: #4b5563; font-size: 0.95rem; appearance: auto;">
-                            <option>All Brands</option>
+                        <label for="f-brand" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #4b5563; font-size: 0.85rem;">Brand</label>
+                        <select id="f-brand" name="brand" style="width: 100%; padding: 0.75rem 1rem; background: #e5e7eb; border: none; border-radius: 6px; color: #4b5563; font-size: 0.95rem; appearance: auto;">
+                            <option value="">All Brands</option>
+                            @foreach (var v in facets.Brands)
+                            {
+                                <option value="@v" selected="@(v == filter.Brand)">@v</option>
+                            }
                         </select>
                     </div>
 
                     <!-- Range Dropdown -->
                     <div>
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #4b5563; font-size: 0.85rem;">Product Range</label>
-                        <select style="width: 100%; padding: 0.75rem 1rem; background: #e5e7eb; border: none; border-radius: 6px; color: #4b5563; font-size: 0.95rem; appearance: auto;">
-                            <option>All Ranges</option>
+                        <label for="f-range" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #4b5563; font-size: 0.85rem;">Product Range</label>
+                        <select id="f-range" name="category" style="width: 100%; padding: 0.75rem 1rem; background: #e5e7eb; border: none; border-radius: 6px; color: #4b5563; font-size: 0.95rem; appearance: auto;">
+                            <option value="">All Ranges</option>
+                            @foreach (var v in facets.Categories)
+                            {
+                                <option value="@v" selected="@(v == filter.Category)">@v</option>
+                            }
                         </select>
                     </div>
 
                     <!-- Size Dropdown -->
                     <div>
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #4b5563; font-size: 0.85rem;">Size</label>
-                        <select style="width: 100%; padding: 0.75rem 1rem; background: #e5e7eb; border: none; border-radius: 6px; color: #4b5563; font-size: 0.95rem; appearance: auto;">
-                            <option>All Sizes</option>
+                        <label for="f-size" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #4b5563; font-size: 0.85rem;">Size</label>
+                        <select id="f-size" name="sizeLabel" style="width: 100%; padding: 0.75rem 1rem; background: #e5e7eb; border: none; border-radius: 6px; color: #4b5563; font-size: 0.95rem; appearance: auto;">
+                            <option value="">All Sizes</option>
+                            @foreach (var v in facets.SizeLabels)
+                            {
+                                <option value="@v" selected="@(v == filter.SizeLabel)">@v</option>
+                            }
                         </select>
                     </div>
 
-                    <div></div> <!-- Empty column for spacing -->
+                    <!-- Sort Dropdown -->
+                    <div>
+                        <label for="f-sort" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #4b5563; font-size: 0.85rem;">Sort by</label>
+                        <select id="f-sort" name="sort" style="width: 100%; padding: 0.75rem 1rem; background: #e5e7eb; border: none; border-radius: 6px; color: #4b5563; font-size: 0.95rem; appearance: auto;">
+                            @foreach (var option in sortOptions)
+                            {
+                                <option value="@option.Key" selected="@(option.Key == filter.Sort)">@option.Value</option>
+                            }
+                        </select>
+                    </div>
 
                     <!-- Buttons aligned to the right bottom -->
                     <div style="display: flex; gap: 1rem; align-items: flex-end; justify-content: flex-end;">
-                        <button type="button" style="background: #cd6228; color: white; border: none; padding: 0.75rem; border-radius: 6px; font-weight: 600; font-size: 0.95rem; cursor: pointer; flex: 1;">Clear filters</button>
-                        <button type="button" style="background: #64748b; color: white; border: none; padding: 0.75rem; border-radius: 6px; font-weight: 600; font-size: 0.95rem; cursor: pointer; flex: 1;">Filter</button>
+                        <a href="/Catalogue" style="background: #cd6228; color: white; border: none; padding: 0.75rem; border-radius: 6px; font-weight: 600; font-size: 0.95rem; cursor: pointer; flex: 1; text-align: center; text-decoration: none;">Clear filters</a>
+                        <button type="submit" style="background: #64748b; color: white; border: none; padding: 0.75rem; border-radius: 6px; font-weight: 600; font-size: 0.95rem; cursor: pointer; flex: 1;">Filter</button>
                     </div>
-                </div>
+                </form>
             </div>
             
             <!-- Grouped Product Grid -->
@@ -89,14 +131,14 @@
                 <div style="text-align: center; padding: 8rem 0; color: var(--ss-ink-muted);">
                     <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.2; margin: 0 auto 1.5rem;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                     <h3 style="font-weight: 400; font-size: 1.5rem; margin-bottom: 1rem;">No products found matching your filters.</h3>
-                    <button class="btn btn-primary">Clear All Filters</button>
+                    <a href="/Catalogue" class="btn btn-primary">Clear All Filters</a>
                 </div>
             }
             else
             {
                 <div style="margin-bottom: 6rem;">
                     <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 3rem;">
-                        <h2 style="margin: 0; font-size: 2.5rem;">All Sizes</h2>
+                        <h2 style="margin: 0; font-size: 2.5rem;">@(filter.SizeLabel ?? "All Sizes")</h2>
                         <div style="height: 2px; flex: 1; background-color: var(--ss-border);"></div>
                     </div>
                     
@@ -114,3 +156,7 @@
         </div>
     </section>
 </div>
+
+@section Scripts {
+    <script src="~/js/catalogue.js" asp-append-version="true"></script>
+}

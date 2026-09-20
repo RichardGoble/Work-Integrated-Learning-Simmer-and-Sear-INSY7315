@@ -1,29 +1,35 @@
 @using SimmerAndSear.Web.ViewModels.Components
 @model PaginationVm
 
+@{
+    
+    var join = Model.BaseUrl.Contains('?') ? "&" : "?";
+    string Link(int page) => $"{Model.BaseUrl}{join}pageNumber={page}";
+}
+
 @if (Model.TotalPages > 1)
 {
     <nav aria-label="Pagination" style="display: flex; gap: var(--ss-space-2); justify-content: center; padding: var(--ss-space-8) 0;">
         @if (Model.Current > 1)
         {
-            <a href="@Model.BaseUrl?page=@(Model.Current - 1)" class="btn btn-outline" aria-label="Previous page">Previous</a>
+            <a href="@Link(Model.Current - 1)" class="btn btn-outline" aria-label="Previous page">Previous</a>
         }
         
         @for (int i = 1; i <= Model.TotalPages; i++)
         {
             if (i == Model.Current)
             {
-                <a href="@Model.BaseUrl?page=@i" class="btn btn-primary" aria-current="page" aria-label="Page @i">@i</a>
+                <a href="@Link(i)" class="btn btn-primary" aria-current="page" aria-label="Page @i">@i</a>
             }
             else
             {
-                <a href="@Model.BaseUrl?page=@i" class="btn btn-outline" aria-label="Page @i">@i</a>
+                <a href="@Link(i)" class="btn btn-outline" aria-label="Page @i">@i</a>
             }
         }
 
         @if (Model.Current < Model.TotalPages)
         {
-            <a href="@Model.BaseUrl?page=@(Model.Current + 1)" class="btn btn-outline" aria-label="Next page">Next</a>
+            <a href="@Link(Model.Current + 1)" class="btn btn-outline" aria-label="Next page">Next</a>
         }
     </nav>
 }
