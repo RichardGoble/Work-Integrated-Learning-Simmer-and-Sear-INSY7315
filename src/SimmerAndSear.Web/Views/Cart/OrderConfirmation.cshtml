@@ -1,52 +1,58 @@
+@using SimmerAndSear.Web.ViewModels
+@using SimmerAndSear.Contracts.Commerce
+@model OrderResponse
 @{
-    ViewData["Title"] = "Order Confirmed";
+    ViewData["Title"] = Model.IsQuotation ? "Quotation Requested" : "Order Confirmed";
 }
 
 <div style="background: #f3f4f6; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 4rem 1.5rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
     <div class="card" style="background: white; border-radius: 12px; padding: 4rem 3rem; text-align: center; max-width: 650px; width: 100%; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-        
+
         <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#2a7a14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 1.5rem;">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>
         </svg>
 
-        <h1 style="font-size: 2.25rem; font-weight: 800; color: #111827; margin: 0 0 1rem 0;">Order Confirmed!</h1>
+        <h1 style="font-size: 2.25rem; font-weight: 800; color: #111827; margin: 0 0 1rem 0;">@(Model.IsQuotation ? "Quotation Requested!" : "Order Confirmed!")</h1>
         <p style="color: #6b7280; font-size: 1.05rem; margin: 0 auto 3rem auto; line-height: 1.5; max-width: 450px;">
-            Thank you for your purchase, [Customer Name]. Your order has been placed successfully.
+            Thank you, @Model.CustomerName. @Model.NextStepMessage
         </p>
-        
+
         <div style="background: #f1f5f9; padding: 2.5rem; border-radius: 12px; text-align: left; margin-bottom: 3rem;">
-            
+
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2.5rem;">
                 <div>
                     <div style="color: #64748b; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">Order Number</div>
-                    <div style="font-size: 1.15rem; font-weight: 700; color: #334155;">#[Order ID]</div>
+                    <div style="font-size: 1.15rem; font-weight: 700; color: #334155;">#@Model.OrderReference</div>
                 </div>
                 <div style="text-align: right;">
                     <div style="color: #64748b; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">Date</div>
-                    <div style="font-size: 1.15rem; font-weight: 700; color: #334155;">[Date]</div>
+                    <div style="font-size: 1.15rem; font-weight: 700; color: #334155;">@Model.PlacedAt.ToLocalTime().ToString("d MMMM yyyy")</div>
                 </div>
             </div>
 
             <h3 style="margin: 0 0 1.5rem 0; font-size: 1.25rem; font-weight: 700; color: #1e293b;">Order Summary</h3>
-            
+
             <div style="display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 2.5rem;">
-                <div style="display: flex; justify-content: space-between; color: #475569; font-size: 0.95rem;">
-                    <span>[Qty]x [Product Name]</span>
-                    <span style="font-weight: 700; color: #334155;">[Price]</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; color: #475569; font-size: 0.95rem;">
-                    <span>[Qty]x [Product Name]</span>
-                    <span style="font-weight: 700; color: #334155;">[Price]</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; color: #475569; font-size: 0.95rem;">
-                    <span>[Qty]x [Product Name]</span>
-                    <span style="font-weight: 700; color: #334155;">[Price]</span>
-                </div>
+                @foreach (var item in Model.Items)
+                {
+                    <div style="display: flex; justify-content: space-between; color: #475569; font-size: 0.95rem;">
+                        <span>@item.Quantity x @item.ProductName</span>
+                        <span style="font-weight: 700; color: #334155;">@Money.Format(item.LineTotal, Model.Currency)</span>
+                    </div>
+                }
+
+                @if (!Model.IsQuotation)
+                {
+                    <div style="display: flex; justify-content: space-between; color: #475569; font-size: 0.95rem;">
+                        <span>Shipping</span>
+                        <span style="font-weight: 700; color: #334155;">@Money.Format(Model.ShippingCost, Model.Currency)</span>
+                    </div>
+                }
             </div>
-            
+
             <div style="display: flex; justify-content: space-between; font-size: 1.15rem; font-weight: 700; color: #334155;">
-                <span>Total Paid</span>
-                <span>[Total Price]</span>
+                <span>@(Model.IsQuotation ? "Estimated Total" : "Total Due")</span>
+                <span>@Money.Format(Model.Total, Model.Currency)</span>
             </div>
         </div>
 

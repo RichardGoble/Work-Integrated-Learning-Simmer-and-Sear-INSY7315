@@ -24,6 +24,8 @@ public static class Permissions
         services.AddScoped<CartSession>();
         services.AddScoped<CartService>();
         services.AddScoped<CartClaim>();
+        services.AddScoped<OrderService>();
+        services.AddSingleton<OrderStrategyFactory>();
         services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuditedAuthorizationResultHandler>();
         services.AddAuthorization(options =>
         {

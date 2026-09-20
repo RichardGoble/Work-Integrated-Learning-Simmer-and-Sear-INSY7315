@@ -99,14 +99,14 @@
 
                             <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
                                 <span style="color: var(--ss-ink-muted); font-size: 0.95rem;">Shipping</span>
-                                <span>Calculated at checkout</span>
+                                <span>@(Model.RequiresQuotation ? "Quoted by an agent" : Money.Format(Model.ShippingCost, Model.Currency))</span>
                             </div>
 
                             <div style="height: 1px; background: var(--ss-border); margin: 1.5rem 0;"></div>
 
                             <div style="display: flex; justify-content: space-between; margin-bottom: 2rem; font-size: 1.25rem; font-weight: 700;">
                                 <span>Total</span>
-                                <span>@Money.Format(Model.Subtotal, Model.Currency)</span>
+                                <span>@Money.Format(Model.Total, Model.Currency)</span>
                             </div>
 
                             @if (Model.RequiresQuotation)

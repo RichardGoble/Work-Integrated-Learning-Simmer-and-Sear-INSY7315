@@ -196,13 +196,19 @@ public sealed class CartService(
                 product is { IsPublished: true } && product.StockQuantity >= item.Quantity);
         }).ToList();
 
+        var requiresQuotation = cart.ExceedsThreshold(site.BulkOrderThreshold);
+
+        
+        var shipping = cart.IsEmpty || requiresQuotation ? 0m : site.ShippingFlatRate;
+
         return new CartResponse(
             lines,
             cart.TotalQuantity,
             cart.Subtotal,
+            shipping,
             site.DisplayCurrency,
             site.BulkOrderThreshold,
-            cart.ExceedsThreshold(site.BulkOrderThreshold));
+            requiresQuotation);
     }
 
 

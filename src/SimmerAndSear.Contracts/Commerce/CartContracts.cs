@@ -43,11 +43,15 @@ public sealed record CartResponse(
     IReadOnlyList<CartLineResponse> Items,
     int TotalQuantity,
     decimal Subtotal,
+    decimal ShippingCost,
     string Currency,
     decimal BulkOrderThreshold,
     bool RequiresQuotation)
 {
     public bool IsEmpty => Items.Count == 0;
+
+    
+    public decimal Total => Subtotal + ShippingCost;
 
     
     public bool HasUnavailableLines => Items.Any(i => !i.IsAvailable);
