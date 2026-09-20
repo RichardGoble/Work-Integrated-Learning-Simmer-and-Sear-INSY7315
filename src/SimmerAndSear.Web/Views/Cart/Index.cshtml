@@ -44,9 +44,18 @@
                             @foreach (var item in Model.Items)
                             {
                                 <div class="card" data-cart-line="@item.ProductId" style="display: flex; flex-wrap: wrap; gap: 1rem; padding: 1rem; align-items: center;">
-                                    <a href="/Catalogue/Detail/@item.ProductId" title="@item.ImageAlt" style="display: block; width: 80px; height: 80px; background: #e5e9f0; display: flex; align-items: center; justify-content: center; text-decoration: none; border-radius: var(--ss-radius-sm); border: 2px dashed #c2c9d6; color: #4c566a; font-size: 0.7rem; text-align: center;">
-                                        [Img]
-                                    </a>
+                                    @if (item.ImageId is { Length: > 0 })
+                                    {
+                                        <a href="/Catalogue/Detail/@item.ProductId" style="display: block; width: 80px; height: 80px; flex: 0 0 80px; border-radius: var(--ss-radius-sm); overflow: hidden; background: #e5e9f0;">
+                                            <img src="/api/media/@item.ImageId/thumb" alt="@item.ImageAlt" loading="lazy" width="80" height="80" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a href="/Catalogue/Detail/@item.ProductId" title="@item.ImageAlt" style="display: block; width: 80px; height: 80px; background: #e5e9f0; display: flex; align-items: center; justify-content: center; text-decoration: none; border-radius: var(--ss-radius-sm); border: 2px dashed #c2c9d6; color: #4c566a; font-size: 0.7rem; text-align: center;">
+                                            [Img]
+                                        </a>
+                                    }
 
                                     <div style="flex: 1 1 150px;">
                                         <div style="font-size: 0.7rem; color: var(--ss-ink-muted); text-transform: uppercase; font-weight: 600;">@item.Brand @(string.IsNullOrWhiteSpace(item.Material) ? "" : "• " + item.Material)</div>

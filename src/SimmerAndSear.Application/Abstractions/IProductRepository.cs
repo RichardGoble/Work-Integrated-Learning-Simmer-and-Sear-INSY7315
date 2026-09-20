@@ -20,6 +20,8 @@ public interface IProductRepository
 
     Task<Page<Product>> SearchAsync(ProductFilter filter, CancellationToken ct = default);
 
+    Task<CatalogueFacets> GetFacetsAsync(bool publishedOnly = true, CancellationToken ct = default);
+
     Task<string> CreateAsync(Product product, CancellationToken ct = default);
 
     Task UpdateAsync(Product product, CancellationToken ct = default);

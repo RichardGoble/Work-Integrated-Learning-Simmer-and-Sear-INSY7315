@@ -1,3 +1,4 @@
+using MongoDB.Bson;
 using MongoDB.Driver;
 using SimmerAndSear.Application.Abstractions;
 using SimmerAndSear.Contracts.Catalogue;
@@ -17,7 +18,9 @@ public sealed class ProductRepository(IMongoDatabase database)
     : MongoRepositoryBase<Product>(database, MongoCollections.Products), IProductRepository
 {
     public async Task<Product?> GetAsync(string id, CancellationToken ct = default) =>
-        await Collection.Find(Filter.Eq(p => p.Id, id)).Limit(1).FirstOrDefaultAsync(ct);
+        !IsValidId(id)
+            ? null
+            : await Collection.Find(Filter.Eq(p => p.Id, id)).Limit(1).FirstOrDefaultAsync(ct);
 
     public async Task<Product?> GetBySkuAsync(string sku, CancellationToken ct = default) =>
         await Collection
@@ -28,7 +31,7 @@ public sealed class ProductRepository(IMongoDatabase database)
     public async Task<IReadOnlyList<Product>> GetManyAsync(
         IEnumerable<string> ids, CancellationToken ct = default)
     {
-        var wanted = ids.Distinct().ToArray();
+        var wanted = ids.Where(IsValidId).Distinct().ToArray();
 
         if (wanted.Length == 0)
         {
@@ -49,6 +52,49 @@ public sealed class ProductRepository(IMongoDatabase database)
 
         return PageAsync(query, BuildSort(filter), filter.PageNumber, filter.PageSize, useCollation, ct);
     }
+
+    public async Task<CatalogueFacets> GetFacetsAsync(
+        bool publishedOnly = true, CancellationToken ct = default)
+    {
+        var pipeline = new List<BsonDocument>();
+
+        if (publishedOnly)
+        {
+            pipeline.Add(new BsonDocument("$match", new BsonDocument("isPublished", true)));
+        }
+
+        pipeline.Add(new BsonDocument("$group", new BsonDocument
+        {
+            { "_id", BsonNull.Value },
+            { "brands", new BsonDocument("$addToSet", "$brand") },
+            { "categories", new BsonDocument("$addToSet", "$category") },
+            { "cookwareTypes", new BsonDocument("$addToSet", "$cookwareType") },
+            { "materials", new BsonDocument("$addToSet", "$material") },
+            { "sizeLabels", new BsonDocument("$addToSet", "$sizeLabel") }
+        }));
+
+        var result = await Collection
+            .Aggregate<BsonDocument>(pipeline, cancellationToken: ct)
+            .FirstOrDefaultAsync(ct);
+
+        return result is null
+            ? CatalogueFacets.Empty
+            : new CatalogueFacets(
+                Values(result, "brands"),
+                Values(result, "categories"),
+                Values(result, "cookwareTypes"),
+                Values(result, "materials"),
+                Values(result, "sizeLabels"));
+    }
+
+  
+    private static List<string> Values(BsonDocument document, string field) =>
+        document.TryGetValue(field, out var value) && value is BsonArray array
+            ? [.. array.Where(v => !v.IsBsonNull)
+                       .Select(v => v.AsString)
+                       .Where(v => !string.IsNullOrWhiteSpace(v))
+                       .OrderBy(v => v, StringComparer.OrdinalIgnoreCase)]
+            : [];
 
     public async Task<string> CreateAsync(Product product, CancellationToken ct = default)
     {
@@ -95,6 +141,16 @@ public sealed class ProductRepository(IMongoDatabase database)
         if (!string.IsNullOrWhiteSpace(f.CookwareType))
         {
             clauses.Add(Filter.Eq(p => p.CookwareType, f.CookwareType));
+        }
+
+        if (!string.IsNullOrWhiteSpace(f.Material))
+        {
+            clauses.Add(Filter.Eq(p => p.Material, f.Material));
+        }
+
+        if (!string.IsNullOrWhiteSpace(f.SizeLabel))
+        {
+            clauses.Add(Filter.Eq(p => p.SizeLabel, f.SizeLabel));
         }
 
         if (f.MinPrice is { } min)

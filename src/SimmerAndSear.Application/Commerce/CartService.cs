@@ -187,6 +187,7 @@ public sealed class CartService(
                 product?.Name ?? item.ProductName,
                 product?.Brand ?? string.Empty,
                 product?.Material,
+                product?.PrimaryImage?.MediaAssetId,
                 product?.PrimaryImage?.AltText,
                 item.UnitPrice,
                 item.Quantity,

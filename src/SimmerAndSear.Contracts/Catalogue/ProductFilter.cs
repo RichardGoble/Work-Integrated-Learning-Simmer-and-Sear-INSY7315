@@ -27,10 +27,14 @@ public sealed record ProductFilter : PagedQuery
     public string? Category { get; init; }
     public string? Brand { get; init; }
     public string? CookwareType { get; init; }
+    public string? Material { get; init; }
+    public string? SizeLabel { get; init; }
     public decimal? MinPrice { get; init; }
     public decimal? MaxPrice { get; init; }
 
     public ProductSort Sort { get; init; } = ProductSort.Relevance;
+
+   
     public bool PublishedOnly { get; init; } = true;
 
     public bool HasSearchTerm => !string.IsNullOrWhiteSpace(SearchTerm);

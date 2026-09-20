@@ -10,11 +10,15 @@ public sealed class OrderRepository(IMongoDatabase database)
     : MongoRepositoryBase<Order>(database, MongoCollections.Orders), IOrderRepository
 {
     public async Task<Order?> GetAsync(string id, CancellationToken ct = default) =>
-        await Collection.Find(Filter.Eq(o => o.Id, id)).Limit(1).FirstOrDefaultAsync(ct);
+        !IsValidId(id)
+            ? null
+            : await Collection.Find(Filter.Eq(o => o.Id, id)).Limit(1).FirstOrDefaultAsync(ct);
 
 
     public async Task<Order?> GetForClientAsync(string id, string clientId, CancellationToken ct = default) =>
-        await Collection
+        !IsValidId(id)
+            ? null
+            : await Collection
             .Find(Filter.And(
                 Filter.Eq(o => o.Id, id),
                 Filter.Eq(o => o.ClientId, clientId)))
