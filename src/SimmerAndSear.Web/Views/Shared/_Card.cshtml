@@ -4,9 +4,16 @@
 <div class="card" style="display: flex; flex-direction: column; transition: var(--ss-transition); height: 100%; overflow: hidden;">
     <div style="overflow: hidden; position: relative;">
         <a href="@Model.Href" style="display: block; height: 260px; background: #e5e9f0; display: flex; align-items: center; justify-content: center; text-decoration: none;">
-            <div style="color: #4c566a; border: 2px dashed #c2c9d6; padding: 1rem 2rem; border-radius: var(--ss-radius-sm); font-weight: 500;">
-                [Product Image]
-            </div>
+            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+            {
+                <img src="@Model.ImageUrl" alt="@Model.AltText" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;" />
+            }
+            else
+            {
+                <div style="color: #4c566a; border: 2px dashed #c2c9d6; padding: 1rem 2rem; border-radius: var(--ss-radius-sm); font-weight: 500;">
+                    [Product Image]
+                </div>
+            }
         </a>
         <button style="position: absolute; top: 1rem; right: 1rem; background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--ss-shadow-1); transition: var(--ss-transition); z-index: 10;" class="wishlist-card-button" title="Add to Wishlist">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--ss-ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
@@ -15,7 +22,7 @@
     <div style="padding: 1.5rem; display: flex; flex-direction: column; flex: 1;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
             <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 600; color: var(--ss-ink-muted); letter-spacing: 0.05em;">
-                [Category]
+                @(Model.Category ?? "[Category]")
             </span>
             @if (!string.IsNullOrEmpty(Model.Badge))
             {
@@ -29,15 +36,15 @@
             <h3 style="margin: 0 0 0.5rem 0; font-size: 1.25rem; font-weight: 600; color: var(--ss-ink);">@Model.Title</h3>
         </a>
         <div style="font-size: 1.5rem; font-weight: 700; color: var(--ss-brand); margin-bottom: 0.5rem;">
-            [Price]
+            @(Model.Price ?? "[Price]")
         </div>
         <p style="color: var(--ss-ink-muted); font-size: 0.95rem; margin-bottom: 1.5rem; flex: 1; line-height: 1.5;">
             @Model.Meta
         </p>
         
         <div style="display: flex; gap: 0.5rem;">
-            <button class="btn btn-primary" style="flex: 1; font-size: 0.9rem; padding: 0.75rem; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg> Add to Cart
+            <button class="btn btn-primary" data-add-to-cart="@Model.ProductId" data-quantity="1" disabled="@(!Model.InStock)" title="@(Model.InStock ? "Add to Cart" : "Out of stock")" style="flex: 1; font-size: 0.9rem; padding: 0.75rem; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg> @(Model.InStock ? "Add to Cart" : "Out of Stock")
             </button>
             <button class="btn btn-outline" style="font-size: 0.9rem; padding: 0.75rem; display: flex; justify-content: center; align-items: center;" title="Reviews">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>

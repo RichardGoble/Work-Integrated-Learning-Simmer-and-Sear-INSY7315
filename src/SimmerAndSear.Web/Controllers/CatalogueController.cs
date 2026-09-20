@@ -1,56 +1,118 @@
 using Microsoft.AspNetCore.Mvc;
+using SimmerAndSear.Application.Catalogue;
+using SimmerAndSear.Contracts.Catalogue;
+using SimmerAndSear.Contracts.Paging;
+using SimmerAndSear.Domain.Enums;
+using SimmerAndSear.Web.Security;
+using SimmerAndSear.Web.ViewModels;
 using SimmerAndSear.Web.ViewModels.Components;
-using System.Collections.Generic;
 
 namespace SimmerAndSear.Web.Controllers;
 
 // ── References ──────────────────────────────────────────────────────────────
 //Microsoft, 2026. Handle requests with controllers in ASP.NET Core MVC [Source code].
-//Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/controllers/actions?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/controllers/actions?view=aspnetcore-10.0> [Accessed 20 September 2026].
 //
 //Microsoft, 2026. Views in ASP.NET Core MVC [Source code].
-//Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/views/overview?view=aspnetcore-10.0> [Accessed 18 September 2026].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/views/overview?view=aspnetcore-10.0> [Accessed 20 September 2026].
+//
+//Microsoft, 2026. Model Binding in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/models/model-binding?view=aspnetcore-10.0> [Accessed 20 September 2026].
 // ────────────────────────────────────────────────────────────────────────────
-public class CatalogueController : Controller
+public class CatalogueController(CatalogueService catalogue, CurrentUser current) : Controller
 {
-    public IActionResult Index(string? filter)
+    public async Task<IActionResult> Index([FromQuery] ProductFilter filter, CancellationToken ct)
     {
         ViewData["Title"] = "Catalogue";
-        
-        var products = new List<CardVm>();
-        var pagination = new PaginationVm(1, 1, "/Catalogue");
-        
-        if (filter == "empty")
+
+        var page = await catalogue.SearchAsync(filter, CanSeeDrafts, ct);
+        var facets = await catalogue.GetFacetsAsync(CanSeeDrafts, ct);
+
+        var cards = page.Items.Select(p => new CardVm(
+            Title: p.Name,
+            Href: $"/Catalogue/Detail/{p.Id}",
+            ImageUrl: p.PrimaryImage?.ThumbnailUrl ?? string.Empty,
+            AltText: p.PrimaryImage?.AltText ?? p.Name,
+            Meta: Describe(p),
+            Badge: p.InStock ? null : "Out of stock",
+            Price: Money.Format(p.Price, p.Currency),
+            Category: p.Category,
+            ProductId: p.Id,
+            InStock: p.InStock)).ToList();
+
+        // Carries the current filter into every page link, so paging does not silently
+        // drop the filter the visitor applied.
+        var pagination = new PaginationVm(page.PageNumber, page.TotalPages, "/Catalogue" + QueryFor(filter));
+
+        ViewData["Facets"] = facets;
+        ViewData["Filter"] = filter;
+
+        return View((cards, pagination));
+    }
+
+    private static string Describe(ProductSummaryResponse p)
+    {
+        var parts = new[] { p.Material, p.SizeLabel }.Where(s => !string.IsNullOrWhiteSpace(s));
+        return string.Join(" • ", parts);
+    }
+
+    
+    private static string QueryFor(ProductFilter f)
+    {
+        var parts = new List<string>();
+
+        void Add(string key, string? value)
         {
-            return View((products, pagination));
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                parts.Add($"{key}={Uri.EscapeDataString(value)}");
+            }
         }
 
-        products.AddRange(new[]
-        {
-            new CardVm("[Dynamic Product Title 1]", "/Catalogue/Detail", "/images/skillet.jpg", "Product Image", "[Material] • [Price]", "[Badge]"),
-            new CardVm("[Dynamic Product Title 2]", "/Catalogue/Detail", "/images/dutch_oven.jpg", "Product Image", "[Material] • [Price]", null),
-            new CardVm("[Dynamic Product Title 3]", "/Catalogue/Detail", "/images/saucepan.jpg", "Product Image", "[Material] • [Price]", null),
-            new CardVm("[Dynamic Product Title 4]", "/Catalogue/Detail", "/images/crepe.jpg", "Product Image", "[Material] • [Price]", null),
-            new CardVm("[Dynamic Product Title 5]", "/Catalogue/Detail", "/images/wok.jpg", "Product Image", "[Material] • [Price]", null),
-            new CardVm("[Dynamic Product Title 6]", "/Catalogue/Detail", "/images/stockpot.jpg", "Product Image", "[Material] • [Price]", null),
-        });
+        Add("searchTerm", f.SearchTerm);
+        Add("brand", f.Brand);
+        Add("category", f.Category);
+        Add("cookwareType", f.CookwareType);
+        Add("material", f.Material);
+        Add("sizeLabel", f.SizeLabel);
 
-        pagination = new PaginationVm(1, 3, "/Catalogue");
-        return View((products, pagination));
+        if (f.Sort != ProductSort.Relevance)
+        {
+            Add("sort", f.Sort.ToString());
+        }
+
+        if (f.PageSize != PagedQuery.DefaultPageSize)
+        {
+            Add("pageSize", f.PageSize.ToString());
+        }
+
+        return parts.Count == 0 ? string.Empty : "?" + string.Join("&", parts);
     }
 
-    public IActionResult Detail()
+    public async Task<IActionResult> Detail(string id, CancellationToken ct)
     {
-        ViewData["Title"] = "Classic Cast Iron Skillet";
-        
-        var breadcrumbs = new BreadcrumbVm(new List<BreadcrumbItem>
+        var product = await catalogue.GetAsync(id, CanSeeDrafts, ct);
+
+        if (product is null)
         {
+            return NotFound();
+        }
+
+        ViewData["Title"] = product.Name;
+
+        // The detail view still renders its designed placeholders; sub-feature 3 binds the
+        // body to this product. Fetching it now gives the page a real 404 and real crumbs.
+        ViewData["Product"] = product;
+
+        return View(new BreadcrumbVm(
+        [
             new BreadcrumbItem("Home", "/"),
             new BreadcrumbItem("Catalogue", "/Catalogue"),
-            new BreadcrumbItem("Cast Iron", "/Catalogue?category=Cast Iron"),
-            new BreadcrumbItem("Classic Cast Iron Skillet", "/Catalogue/Detail")
-        });
-
-        return View(breadcrumbs);
+            new BreadcrumbItem(product.Category, $"/Catalogue?category={Uri.EscapeDataString(product.Category)}"),
+            new BreadcrumbItem(product.Name, $"/Catalogue/Detail/{product.Id}")
+        ]));
     }
+
+    private bool CanSeeDrafts =>
+        current.Role is RoleName.MasterAdmin or RoleName.SalesAdmin;
 }
