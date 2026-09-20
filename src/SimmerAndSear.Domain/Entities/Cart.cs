@@ -55,6 +55,43 @@ public sealed class Cart : IEntity
         Touch();
     }
 
+    
+    public void SetLine(string productId, string productName, decimal unitPrice, int quantity)
+    {
+        var existing = Items.FirstOrDefault(i => i.ProductId == productId);
+
+        if (quantity <= 0)
+        {
+            if (existing is not null)
+            {
+                Items.Remove(existing);
+            }
+
+            Touch();
+            return;
+        }
+
+        if (existing is null)
+        {
+            Items.Add(new CartItem
+            {
+                ProductId = productId,
+                ProductName = productName,
+                UnitPrice = unitPrice,
+                Quantity = quantity,
+                AddedAt = DateTime.UtcNow
+            });
+        }
+        else
+        {      
+            existing.ProductName = productName;
+            existing.UnitPrice = unitPrice;
+            existing.Quantity = quantity;
+        }
+
+        Touch();
+    }
+
     public void SetQuantity(string productId, int quantity)
     {
         var existing = Items.FirstOrDefault(i => i.ProductId == productId);

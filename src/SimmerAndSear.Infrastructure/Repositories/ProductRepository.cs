@@ -25,6 +25,23 @@ public sealed class ProductRepository(IMongoDatabase database)
             .Limit(1)
             .FirstOrDefaultAsync(ct);
 
+    public async Task<IReadOnlyList<Product>> GetManyAsync(
+        IEnumerable<string> ids, CancellationToken ct = default)
+    {
+        var wanted = ids.Distinct().ToArray();
+
+        if (wanted.Length == 0)
+        {
+            return [];
+        }
+
+        
+        return await Collection
+            .Find(Filter.In(p => p.Id, wanted))
+            .Limit(wanted.Length)
+            .ToListAsync(ct);
+    }
+
     public Task<Page<Product>> SearchAsync(ProductFilter filter, CancellationToken ct = default)
     {
         var query = BuildFilter(filter);

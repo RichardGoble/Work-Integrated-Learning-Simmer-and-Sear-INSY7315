@@ -27,6 +27,12 @@ public sealed class CartRepository(IMongoDatabase database)
     {
         cart.UpdatedAt = DateTime.UtcNow;
 
+        if (string.IsNullOrEmpty(cart.Id))
+        {
+            await Collection.InsertOneAsync(cart, cancellationToken: ct);
+            return;
+        }
+
         await Collection.ReplaceOneAsync(
             Filter.Eq(c => c.Id, cart.Id),
             cart,

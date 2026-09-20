@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using SimmerAndSear.Application.Commerce;
 using SimmerAndSear.Domain.Enums;
 
 namespace SimmerAndSear.Web.Security;
@@ -20,6 +21,8 @@ public static class Permissions
         services.AddHttpContextAccessor();
         services.AddScoped<CurrentUser>();
         services.AddScoped<AuditWriter>();
+        services.AddScoped<CartSession>();
+        services.AddScoped<CartService>();
         services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuditedAuthorizationResultHandler>();
         services.AddAuthorization(options =>
         {
