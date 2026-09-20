@@ -51,6 +51,8 @@ public static class DependencyInjection
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<ISiteSettingsRepository, SiteSettingsRepository>();
         services.AddScoped<IMediaAssetRepository, MediaAssetRepository>();
+        services.AddScoped<ICartRepository, CartRepository>();
+        services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IFileStore, GridFsFileStore>();
         services.AddScoped<IDatabaseHealth, MongoDatabaseHealth>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
