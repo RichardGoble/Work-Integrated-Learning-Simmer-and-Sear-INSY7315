@@ -13,6 +13,9 @@
   <ItemGroup Label="Data">
     <PackageVersion Include="MongoDB.Driver" Version="3.11.2" />
   </ItemGroup>
+  <ItemGroup Label="Media">
+    <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.12" />
+  </ItemGroup>
   <ItemGroup Label="Client-side libraries">
     <!-- Restores the libraries listed in src/SimmerAndSear.Web/libman.json as part
          of `dotnet build`, so wwwroot/lib never has to live in source control. -->
