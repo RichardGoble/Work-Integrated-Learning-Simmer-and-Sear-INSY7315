@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using SimmerAndSear.Application.Catalogue;
+using SimmerAndSear.Contracts.Catalogue;
+using SimmerAndSear.Web.ViewModels;
 using SimmerAndSear.Web.ViewModels.Components;
-using System.Collections.Generic;
 
 namespace SimmerAndSear.Web.Controllers;
 
@@ -11,19 +13,31 @@ namespace SimmerAndSear.Web.Controllers;
 //Microsoft, 2026. Views in ASP.NET Core MVC [Source code].
 //Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/views/overview?view=aspnetcore-10.0> [Accessed 18 September 2026].
 // ────────────────────────────────────────────────────────────────────────────
-public class HomeController : Controller
+public class HomeController(CatalogueService catalogue) : Controller
 {
-    public IActionResult Index()
+    private const int FeaturedCount = 3;
+
+    public async Task<IActionResult> Index(CancellationToken ct)
     {
         ViewData["Title"] = "Premium Cookware";
-        var featuredProducts = new List<CardVm>
-        {
-            new CardVm("[Dynamic Product Title 1]", "/Catalogue/Detail", "/images/skillet.jpg", "Product Image", "[Material] • [Price]", "[Badge]"),
-            new CardVm("[Dynamic Product Title 2]", "/Catalogue/Detail", "/images/dutch_oven.jpg", "Product Image", "[Material] • [Price]", null),
-            new CardVm("[Dynamic Product Title 3]", "/Catalogue/Detail", "/images/saucepan.jpg", "Product Image", "[Material] • [Price]", null)
-        };
 
-        return View(featuredProducts);
+        
+        var page = await catalogue.SearchAsync(
+            new ProductFilter { PageSize = FeaturedCount, Sort = ProductSort.Newest }, ct: ct);
+
+        var featured = page.Items.Select(p => new CardVm(
+            Title: p.Name,
+            Href: $"/Catalogue/Detail/{p.Id}",
+            ImageUrl: p.PrimaryImage?.ThumbnailUrl ?? string.Empty,
+            AltText: p.PrimaryImage?.AltText ?? p.Name,
+            Meta: string.Join(" • ", new[] { p.Material, p.SizeLabel }.Where(s => !string.IsNullOrWhiteSpace(s))),
+            Badge: p.InStock ? null : "Out of stock",
+            Price: Money.Format(p.Price, p.Currency),
+            Category: p.Category,
+            ProductId: p.Id,
+            InStock: p.InStock)).ToList();
+
+        return View(featured);
     }
 
     [Route("/About")]

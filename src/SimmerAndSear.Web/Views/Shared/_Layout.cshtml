@@ -13,7 +13,9 @@
 <body>
     <div class="app-container">
         <a class="skip-link" href="#main">Skip to main content</a>
-        
+              
+        @if (ViewData["HideNav"] as bool? != true)
+        {
         <header>
             <nav class="navbar">
                 <div class="container nav-content">
@@ -116,6 +118,7 @@
                 </div>
             </nav>
         </header>
+        }
 
         <main id="main" tabindex="-1">
             @RenderBody()
