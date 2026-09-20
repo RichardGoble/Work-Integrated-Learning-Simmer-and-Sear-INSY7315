@@ -251,7 +251,11 @@ public sealed class SecurityTests
         var principal = AccountCookies.CreatePrincipal(factory.AddUser(role));
         foreach (var permission in Enum.GetValues<Permission>())
         {
-            var expected = permission is Permission.AccountManage or Permission.AuditRead ? master : sales;
+            // CatalogueManage joins AccountManage and AuditRead as Master-Admin-only: Task 1
+            // reserves the catalogue for the Master Admin, and criterion 9 of the demo turns on
+            // a Sales Admin being refused it.
+            var expected = permission is Permission.AccountManage or Permission.AuditRead
+                or Permission.CatalogueManage ? master : sales;
             (await authorization.AuthorizeAsync(principal, null, permission.ToString())).Succeeded.ShouldBe(expected);
         }
     }

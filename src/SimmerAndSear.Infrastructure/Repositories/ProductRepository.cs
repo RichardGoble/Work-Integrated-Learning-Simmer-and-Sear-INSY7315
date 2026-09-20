@@ -101,18 +101,40 @@ public sealed class ProductRepository(IMongoDatabase database)
         product.CreatedAt = DateTime.UtcNow;
         product.UpdatedAt = product.CreatedAt;
 
-        await Collection.InsertOneAsync(product, cancellationToken: ct);
+        try
+        {
+            await Collection.InsertOneAsync(product, cancellationToken: ct);
+        }
+        catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
+        {
+            throw new DuplicateSkuException(product.Sku);
+        }
+
         return product.Id;
     }
 
     public async Task UpdateAsync(Product product, CancellationToken ct = default)
     {
         product.UpdatedAt = DateTime.UtcNow;
-        await Collection.ReplaceOneAsync(Filter.Eq(p => p.Id, product.Id), product, cancellationToken: ct);
+
+        try
+        {
+            await Collection.ReplaceOneAsync(
+                Filter.Eq(p => p.Id, product.Id), product, cancellationToken: ct);
+        }
+        catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
+        {
+            throw new DuplicateSkuException(product.Sku);
+        }
     }
 
-    public async Task DeleteAsync(string id, CancellationToken ct = default) =>
-        await Collection.DeleteOneAsync(Filter.Eq(p => p.Id, id), ct);
+    public async Task DeleteAsync(string id, CancellationToken ct = default)
+    {
+        if (IsValidId(id))
+        {
+            await Collection.DeleteOneAsync(Filter.Eq(p => p.Id, id), ct);
+        }
+    }
 
     private static FilterDefinition<Product> BuildFilter(ProductFilter f)
     {
