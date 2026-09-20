@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using MongoDB.Driver.GridFS;
 using SimmerAndSear.Application.Abstractions;
+using SimmerAndSear.Infrastructure.Caching;
 using SimmerAndSear.Infrastructure.Persistence;
 using SimmerAndSear.Infrastructure.Repositories;
 using SimmerAndSear.Infrastructure.Security;
@@ -53,6 +54,9 @@ public static class DependencyInjection
         services.AddScoped<IMediaAssetRepository, MediaAssetRepository>();
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddMemoryCache();
+        services.AddScoped<ISiteSettingsProvider, CachedSiteSettingsProvider>();
+
         services.AddScoped<IFileStore, GridFsFileStore>();
         services.AddScoped<IDatabaseHealth, MongoDatabaseHealth>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
