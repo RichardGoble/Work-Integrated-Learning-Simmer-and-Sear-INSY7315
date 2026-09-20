@@ -2,8 +2,10 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SimmerAndSear.Application.Abstractions;
+using SimmerAndSear.Application.Media;
 using SimmerAndSear.Domain.Entities;
 using SimmerAndSear.Domain.Enums;
+using SimmerAndSear.Infrastructure.Media;
 
 namespace SimmerAndSear.Seeder;
 // ── References ──────────────────────────────────────────────────────────────
@@ -21,7 +23,8 @@ public sealed class SeedRunner(
     IFileStore files,
     IPasswordHasher hasher,
     IOptions<SeedOptions> options,
-    ILogger<SeedRunner> logger)
+    ILogger<SeedRunner> logger,
+    IMediaService? mediaService = null)
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
@@ -198,24 +201,10 @@ public sealed class SeedRunner(
     private async Task<string> UploadImageAsync(string path, string fileName, CancellationToken ct)
     {
         await using var stream = File.OpenRead(path);
-
-        var contentType = Path.GetExtension(fileName).ToLowerInvariant() switch
-        {
-            ".png" => "image/png",
-            ".webp" => "image/webp",
-            _ => "image/jpeg"
-        };
-
-        var gridFsId = await files.UploadAsync(stream, fileName, contentType, ct);
-
-        return await media.CreateAsync(new MediaAsset
-        {
-            FileName = fileName,
-            ContentType = contentType,
-            FileSizeBytes = new FileInfo(path).Length,
-            GridFsId = gridFsId,
-            UploadedBy = "seeder"
-        }, ct);
+        var fileLength = new FileInfo(path).Length;
+        var service = mediaService ?? new MediaService(media, files, new ImageSharpImageProcessor());
+        var asset = await service.UploadAsync(stream, fileName, fileLength, "seeder", ct);
+        return asset.Id;
     }
     // ── References ──────────────────────────────────────────────────────────────
     //Microsoft, 2026. C# record types [Source code].
