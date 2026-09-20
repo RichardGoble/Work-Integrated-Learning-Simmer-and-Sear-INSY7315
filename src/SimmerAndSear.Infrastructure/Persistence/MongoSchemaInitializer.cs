@@ -78,7 +78,9 @@ public sealed class MongoSchemaInitializer(
                      MongoCollections.Users,
                      MongoCollections.AuditLog,
                      MongoCollections.SiteSettings,
-                     MongoCollections.MediaAssets
+                     MongoCollections.MediaAssets,
+                     MongoCollections.Carts,
+                     MongoCollections.Orders
                  })
         {
             try
@@ -145,6 +147,42 @@ public sealed class MongoSchemaInitializer(
                 "properties", new BsonDocument
                 {
                     { "fileSizeBytes", new BsonDocument { { "bsonType", "long" }, { "minimum", 0 } } }
+                }
+            }
+        }, ct);
+
+        
+        await ApplyValidatorAsync(MongoCollections.Orders, new BsonDocument
+        {
+            { "bsonType", "object" },
+            {
+                "required",
+                new BsonArray { "orderReference", "clientId", "orderType", "status", "items", "total", "placedAt" }
+            },
+            {
+                "properties", new BsonDocument
+                {
+                    { "orderReference", Str(minLength: 1) },
+                    { "clientId", Str(minLength: 1) },
+                    { "items", new BsonDocument { { "bsonType", "array" }, { "minItems", 1 } } },
+                    { "subtotal", new BsonDocument { { "bsonType", "decimal" }, { "minimum", 0 } } },
+                    { "shippingCost", new BsonDocument { { "bsonType", "decimal" }, { "minimum", 0 } } },
+                    { "total", new BsonDocument { { "bsonType", "decimal" }, { "minimum", 0 } } },
+                    { "placedAt", new BsonDocument("bsonType", "date") }
+                }
+            }
+        }, ct);
+
+       
+        await ApplyValidatorAsync(MongoCollections.Carts, new BsonDocument
+        {
+            { "bsonType", "object" },
+            { "required", new BsonArray { "items", "updatedAt" } },
+            {
+                "properties", new BsonDocument
+                {
+                    { "items", new BsonDocument("bsonType", "array") },
+                    { "updatedAt", new BsonDocument("bsonType", "date") }
                 }
             }
         }, ct);
@@ -220,6 +258,45 @@ public sealed class MongoSchemaInitializer(
             new CreateIndexModel<AuditLogEntry>(
                 Builders<AuditLogEntry>.IndexKeys.Ascending(a => a.ActorId).Descending(a => a.OccurredAt),
                 new CreateIndexOptions { Name = "ix_audit_actor" })
+        ], ct);
+
+        var carts = database.GetCollection<Cart>(MongoCollections.Carts);
+
+        await carts.Indexes.CreateManyAsync(
+        [
+           
+            new CreateIndexModel<Cart>(
+                Builders<Cart>.IndexKeys.Ascending(c => c.ClientId),
+                new CreateIndexOptions { Name = "ix_carts_client", Sparse = true }),
+
+            new CreateIndexModel<Cart>(
+                Builders<Cart>.IndexKeys.Ascending(c => c.SessionId),
+                new CreateIndexOptions { Name = "ix_carts_session", Sparse = true }),
+
+            new CreateIndexModel<Cart>(
+                Builders<Cart>.IndexKeys.Ascending(c => c.ExpiresAt),
+                new CreateIndexOptions { Name = "ttl_carts_expires", ExpireAfter = TimeSpan.Zero })
+        ], ct);
+
+        var orders = database.GetCollection<Order>(MongoCollections.Orders);
+
+        await orders.Indexes.CreateManyAsync(
+        [
+            // Serves a customer's order history, which is the common read.
+            new CreateIndexModel<Order>(
+                Builders<Order>.IndexKeys.Ascending(o => o.ClientId).Descending(o => o.PlacedAt),
+                new CreateIndexOptions { Name = "ix_orders_client_placed" }),
+
+            new CreateIndexModel<Order>(
+                Builders<Order>.IndexKeys.Ascending(o => o.OrderReference),
+                new CreateIndexOptions { Name = "ux_orders_reference", Unique = true }),
+
+            new CreateIndexModel<Order>(
+                Builders<Order>.IndexKeys
+                    .Ascending(o => o.OrderType)
+                    .Ascending(o => o.Status)
+                    .Descending(o => o.PlacedAt),
+                new CreateIndexOptions { Name = "ix_orders_type_status_placed" })
         ], ct);
     }
 }

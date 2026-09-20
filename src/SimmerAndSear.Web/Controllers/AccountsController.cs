@@ -22,7 +22,8 @@ namespace SimmerAndSear.Web.Controllers;
 // ────────────────────────────────────────────────────────────────────────────
 [ApiController, Route("api/accounts")]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public sealed class AccountsController(AccountService accounts, AuditWriter audit, CurrentUser current) : ControllerBase
+public sealed class AccountsController(
+    AccountService accounts, AuditWriter audit, CurrentUser current, CartClaim cartClaim) : ControllerBase
 {
     [HttpGet("csrf"), AllowAnonymous]
     public IActionResult Csrf([FromServices] IAntiforgery antiforgery) =>
@@ -52,6 +53,7 @@ public sealed class AccountsController(AccountService accounts, AuditWriter audi
         }
         await audit.WriteAsync(AuditAction.Login, "Signed in", user);
         await HttpContext.SignInAsync(AccountCookies.CreatePrincipal(user));
+        await cartClaim.OnSignedInAsync(user, ct);
         return Ok(new { user.Id, user.FullName, role = user.Role.ToString() });
     }
 

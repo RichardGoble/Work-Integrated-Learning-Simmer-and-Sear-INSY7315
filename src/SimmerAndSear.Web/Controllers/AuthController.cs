@@ -20,7 +20,7 @@ namespace SimmerAndSear.Web.Controllers;
 //Available at: <https://learn.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-10.0> [Accessed 18 September 2026].
 // ────────────────────────────────────────────────────────────────────────────
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public class AuthController(AccountService accounts, AuditWriter audit) : Controller
+public class AuthController(AccountService accounts, AuditWriter audit, CartClaim cartClaim) : Controller
 {
     [HttpGet, AllowAnonymous]
     public IActionResult Login(string? returnUrl = null)
@@ -44,6 +44,7 @@ public class AuthController(AccountService accounts, AuditWriter audit) : Contro
         }
         await audit.WriteAsync(AuditAction.Login, "Signed in", user);
         await HttpContext.SignInAsync(AccountCookies.CreatePrincipal(user));
+        await cartClaim.OnSignedInAsync(user, ct);
         return LocalRedirect(Url.IsLocalUrl(returnUrl) ? returnUrl! : "/Auth/Profile");
     }
 

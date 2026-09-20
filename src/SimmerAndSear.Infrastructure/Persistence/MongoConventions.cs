@@ -48,6 +48,8 @@ public static class MongoConventions
         MapWithObjectId<User>();
         MapWithObjectId<MediaAsset>();
         MapWithObjectId<AuditLogEntry>();
+        MapWithObjectId<Cart>();
+        MapWithObjectId<Order>();
         MapWithStringId<SiteSettings>();
     }
 
