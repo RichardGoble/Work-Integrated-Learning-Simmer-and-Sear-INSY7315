@@ -23,6 +23,7 @@ public static class Permissions
         services.AddScoped<AuditWriter>();
         services.AddScoped<CartSession>();
         services.AddScoped<CartService>();
+        services.AddScoped<CartClaim>();
         services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuditedAuthorizationResultHandler>();
         services.AddAuthorization(options =>
         {

@@ -111,6 +111,33 @@ public sealed class CartService(
         return await DescribeAsync(cart, ct);
     }
 
+    
+    public async Task<CartResponse> ClaimAsync(
+        string clientId, string sessionId, CancellationToken ct = default)
+    {
+        var owner = CartOwner.ForClient(clientId);
+        var anonymous = await carts.GetBySessionAsync(sessionId, ct);
+
+        if (anonymous is null)
+        {
+            return await ViewAsync(owner, ct);
+        }
+
+        var mine = await LoadAsync(owner, ct);
+
+        if (!anonymous.IsEmpty)
+        {
+            mine.MergeFrom(anonymous);
+            await RepriceAsync(mine, ct);
+            await PersistAsync(mine, owner, ct);
+        }
+
+       
+        await carts.DeleteAsync(anonymous.Id, ct);
+
+        return await DescribeAsync(mine, ct);
+    }
+
     public async Task<CartResponse> ClearAsync(CartOwner owner, CancellationToken ct = default)
     {
         var cart = await LoadAsync(owner, ct);
@@ -176,6 +203,35 @@ public sealed class CartService(
             site.DisplayCurrency,
             site.BulkOrderThreshold,
             cart.ExceedsThreshold(site.BulkOrderThreshold));
+    }
+
+
+    private async Task RepriceAsync(Cart cart, CancellationToken ct)
+    {
+        if (cart.IsEmpty)
+        {
+            return;
+        }
+
+        var catalogue = (await products.GetManyAsync(cart.Items.Select(i => i.ProductId), ct))
+            .ToDictionary(p => p.Id);
+
+        foreach (var line in cart.Items.ToList())
+        {
+            if (!catalogue.TryGetValue(line.ProductId, out var product) || !product.IsPublished)
+            {
+                continue;
+            }
+
+            var target = Clamp(line.Quantity, product);
+
+            if (target <= 0)
+            {
+                continue;
+            }
+
+            cart.SetLine(product.Id, product.Name, product.Price, target);
+        }
     }
 
     private static int Clamp(int quantity, Product product) =>

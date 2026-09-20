@@ -28,8 +28,16 @@ public sealed class CartSession(IHttpContextAccessor accessor, CurrentUser curre
             return CartOwner.ForClient(clientId);
         }
 
-        var token = accessor.HttpContext?.Request.Cookies[CookieName];
-        return IsWellFormed(token) ? CartOwner.ForSession(token!) : null;
+        return SessionToken is { } token ? CartOwner.ForSession(token) : null;
+    }
+
+    public string? SessionToken
+    {
+        get
+        {
+            var token = accessor.HttpContext?.Request.Cookies[CookieName];
+            return IsWellFormed(token) ? token : null;
+        }
     }
 
  
