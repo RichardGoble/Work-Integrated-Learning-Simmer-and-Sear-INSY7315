@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\SimmerAndSear.Domain\SimmerAndSear.Domain.csproj" />
@@ -12,6 +12,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
     <PackageReference Include="MongoDB.Driver" />
+    <PackageReference Include="SixLabors.ImageSharp" />
   </ItemGroup>
 
   <PropertyGroup>
