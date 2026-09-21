@@ -22,6 +22,8 @@ public sealed class SecurityFactory : WebApplicationFactory<Program>
 {
     public MemoryUsers Users { get; } = new();
     public MemoryAudit Audit { get; } = new();
+    public MemoryOrders Orders { get; } = new();
+    public MemoryWishlists Wishlists { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -39,6 +41,12 @@ public sealed class SecurityFactory : WebApplicationFactory<Program>
             services.RemoveAll<IAuditLogRepository>();
             services.AddSingleton<IUserRepository>(Users);
             services.AddSingleton<IAuditLogRepository>(Audit);
+            services.RemoveAll<IOrderRepository>();
+            services.RemoveAll<IWishlistRepository>();
+            services.RemoveAll<ISiteSettingsProvider>();
+            services.AddSingleton<IOrderRepository>(Orders);
+            services.AddSingleton<IWishlistRepository>(Wishlists);
+            services.AddSingleton<ISiteSettingsProvider, FixedSiteSettings>();
             services.AddSingleton<IStartupFilter, RemoteAddressFilter>();
         });
     }
@@ -156,4 +164,70 @@ public sealed class MemoryAudit : IAuditLogRepository
         Task.FromResult(new Page<AuditLogEntry>(Items, Items.Count, pageNumber, pageSize));
     public Task<Page<AuditLogEntry>> ListForEntityAsync(string entityType, string entityId, int pageNumber, int pageSize, CancellationToken ct = default) =>
         ListAsync(pageNumber, pageSize, ct);
+}
+
+//References
+//Microsoft, 2026. Integration tests in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0> [Accessed 21 September 2026].
+
+//Microsoft, 2026. Interfaces - define behavior for multiple types [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/interfaces> [Accessed 21 September 2026].
+
+public sealed class MemoryOrders : IOrderRepository
+{
+    public List<Order> Items { get; } = [];
+    public Task<Order?> GetAsync(string id, CancellationToken ct = default) => Task.FromResult(Items.Find(o => o.Id == id));
+    public Task<Order?> GetForClientAsync(string id, string clientId, CancellationToken ct = default) =>
+        Task.FromResult(Items.Find(o => o.Id == id && o.ClientId == clientId));
+    public Task<Page<Order>> ListForClientAsync(string clientId, int pageNumber, int pageSize, CancellationToken ct = default)
+    {
+        var owned = Items.Where(o => o.ClientId == clientId).ToList();
+        return Task.FromResult(new Page<Order>(owned, owned.Count, pageNumber, pageSize));
+    }
+    public Task<Page<Order>> ListAsync(int pageNumber, int pageSize, CancellationToken ct = default) =>
+        Task.FromResult(new Page<Order>(Items, Items.Count, pageNumber, pageSize));
+    public Task<string> CreateAsync(Order order, CancellationToken ct = default)
+    {
+        order.Id = Guid.NewGuid().ToString("N");
+        Items.Add(order);
+        return Task.FromResult(order.Id);
+    }
+    public Task UpdateAsync(Order order, CancellationToken ct = default) => Task.CompletedTask;
+}
+
+//References
+//Microsoft, 2026. Integration tests in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0> [Accessed 21 September 2026].
+
+//Microsoft, 2026. Interfaces - define behavior for multiple types [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/interfaces> [Accessed 21 September 2026].
+
+public sealed class MemoryWishlists : IWishlistRepository
+{
+    public List<Wishlist> Items { get; } = [];
+    public Task<Wishlist?> GetByClientAsync(string clientId, CancellationToken ct = default) =>
+        Task.FromResult(Items.Find(w => w.ClientId == clientId));
+    public Task SaveAsync(Wishlist wishlist, CancellationToken ct = default)
+    {
+        if (string.IsNullOrEmpty(wishlist.Id))
+        {
+            wishlist.Id = Guid.NewGuid().ToString("N");
+            Items.Add(wishlist);
+        }
+        wishlist.UpdatedAt = DateTime.UtcNow;
+        return Task.CompletedTask;
+    }
+}
+
+//References
+//Microsoft, 2026. Integration tests in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0> [Accessed 21 September 2026].
+
+public sealed class FixedSiteSettings : ISiteSettingsProvider
+{
+    private readonly SiteSettings _settings = new();
+    public Task<SiteSettings> CurrentAsync(CancellationToken ct = default) => Task.FromResult(_settings);
+    public void Invalidate()
+    {
+    }
 }

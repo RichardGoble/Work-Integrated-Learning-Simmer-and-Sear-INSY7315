@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using SimmerAndSear.Domain.Entities;
 using SimmerAndSear.Domain.Enums;
 using SimmerAndSear.Web.Security;
 
@@ -301,5 +302,74 @@ public sealed class SecurityTests
         var disabledBody = await disabled.Content.ReadFromJsonAsync<JsonElement>();
         var missingBody = await missing.Content.ReadFromJsonAsync<JsonElement>();
         disabledBody.GetProperty("title").GetString().ShouldBe(missingBody.GetProperty("title").GetString());
+    }
+
+    [Theory]
+    [InlineData("/api/admin/accounts", null, 401)]
+    [InlineData("/api/admin/accounts", RoleName.Customer, 403)]
+    [InlineData("/api/admin/accounts", RoleName.SalesAdmin, 403)]
+    [InlineData("/api/admin/accounts", RoleName.MasterAdmin, 200)]
+    [InlineData("/api/orders", null, 401)]
+    [InlineData("/api/orders", RoleName.SalesAdmin, 403)]
+    [InlineData("/api/orders", RoleName.Customer, 200)]
+    [InlineData("/api/wishlist", null, 401)]
+    [InlineData("/api/wishlist", RoleName.MasterAdmin, 403)]
+    [InlineData("/api/wishlist", RoleName.Customer, 200)]
+    public async Task S5_endpoints_enforce_role_matrix(string path, RoleName? role, int expectedStatus)
+    {
+        using var factory = new SecurityFactory();
+        using var client = factory.Browser();
+        if (role is { } signedInRole)
+        {
+            var user = factory.AddUser(signedInRole);
+            (await Post(client, "/api/accounts/login", new { user.Email, password = Password })).EnsureSuccessStatusCode();
+        }
+        (await client.GetAsync(path)).StatusCode.ShouldBe((HttpStatusCode)expectedStatus);
+        if (expectedStatus == 403)
+        {
+            factory.Audit.Items.ShouldContain(a => a.Action == AuditAction.AccessDenied && a.Summary.Contains("ACCESS_DENIED"));
+        }
+    }
+
+    [Fact]
+    public async Task Customer_gets_404_for_another_customers_order()
+    {
+        using var factory = new SecurityFactory();
+        using var clientA = factory.Browser();
+        using var clientB = factory.Browser();
+        var customerA = factory.AddUser();
+        var customerB = factory.AddUser();
+        const string orderId = "650000000000000000000001";
+        factory.Orders.Items.Add(new Order { Id = orderId, ClientId = customerB.Id, OrderReference = "SS-TEST-0001" });
+        (await Post(clientA, "/api/accounts/login", new { customerA.Email, password = Password })).EnsureSuccessStatusCode();
+        (await Post(clientB, "/api/accounts/login", new { customerB.Email, password = Password })).EnsureSuccessStatusCode();
+        (await clientA.GetAsync($"/api/orders/{orderId}")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await clientB.GetAsync($"/api/orders/{orderId}")).StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Master_admin_creates_and_deactivates_admin_immediately()
+    {
+        using var factory = new SecurityFactory();
+        using var master = factory.Browser();
+        using var sales = factory.Browser();
+        var admin = factory.AddUser(RoleName.MasterAdmin);
+        (await Post(master, "/api/accounts/login", new { admin.Email, password = Password })).EnsureSuccessStatusCode();
+
+        var created = await Post(master, "/api/admin/accounts/sales-admins", new
+        {
+            email = "Sales@Example.com", password = Password, firstName = "Sales", lastName = "Admin",
+            role = "MasterAdmin", userType = "Client", isActive = false
+        });
+        created.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var stored = factory.Users.Items.Single(u => u.Email == "sales@example.com");
+        stored.Role.ShouldBe(RoleName.SalesAdmin);
+        stored.UserType.ShouldBe(UserType.Admin);
+        stored.IsActive.ShouldBeTrue();
+
+        (await Post(sales, "/api/accounts/login", new { stored.Email, password = Password })).EnsureSuccessStatusCode();
+        (await Post(master, $"/api/admin/accounts/{stored.Id}/deactivate", new { })).StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await sales.GetAsync("/api/accounts/me")).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        factory.Audit.Items.ShouldContain(a => a.Action == AuditAction.Update && a.EntityType == "User");
     }
 }
