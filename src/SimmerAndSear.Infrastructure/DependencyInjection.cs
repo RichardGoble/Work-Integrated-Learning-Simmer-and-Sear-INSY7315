@@ -17,6 +17,9 @@ namespace SimmerAndSear.Infrastructure;
 //
 //Microsoft, 2026. Options pattern [Source code].
 //Available at: <https://learn.microsoft.com/en-us/dotnet/core/extensions/options> [Accessed 18 September 2026].
+
+//QuestPDF, n.d. License configuration [Source code].
+//Available at: <https://www.questpdf.com/license/configuration.html> [Accessed 21 September 2026].
 // ────────────────────────────────────────────────────────────────────────────
 public static class DependencyInjection
 {
@@ -24,6 +27,7 @@ public static class DependencyInjection
         this IServiceCollection services, IConfiguration configuration)
     {
         MongoConventions.Register();
+        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
         services.AddOptions<MongoOptions>()
             .Bind(configuration.GetSection(MongoOptions.SectionName))
@@ -57,6 +61,7 @@ public static class DependencyInjection
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<INewsPostRepository, NewsPostRepository>();
         services.AddScoped<IWishlistRepository, WishlistRepository>();
+        services.AddScoped<IQuotationDocumentRepository, QuotationDocumentRepository>();
         services.AddMemoryCache();
         services.AddScoped<ISiteSettingsProvider, CachedSiteSettingsProvider>();
 

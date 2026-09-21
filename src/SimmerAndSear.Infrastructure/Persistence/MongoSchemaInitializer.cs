@@ -83,7 +83,8 @@ public sealed class MongoSchemaInitializer(
                      MongoCollections.Orders,
                      MongoCollections.Reviews,
                      MongoCollections.NewsPosts,
-                     MongoCollections.Wishlists
+                     MongoCollections.Wishlists,
+                     MongoCollections.QuotationDocuments
                  })
         {
             try
@@ -230,6 +231,30 @@ public sealed class MongoSchemaInitializer(
                     { "clientId", Str(minLength: 1) },
                     { "items", new BsonDocument { { "bsonType", "array" }, { "maxItems", Wishlist.MaxItems } } },
                     { "updatedAt", new BsonDocument("bsonType", "date") }
+                }
+            }
+        }, ct);
+
+        await ApplyValidatorAsync(MongoCollections.QuotationDocuments, new BsonDocument
+        {
+            { "bsonType", "object" },
+            {
+                "required", new BsonArray
+                {
+                    "orderId", "orderReference", "clientId", "gridFsId", "fileName", "validUntil", "generatedAt"
+                }
+            },
+            {
+                "properties", new BsonDocument
+                {
+                    { "orderId", Str(minLength: 1) },
+                    { "orderReference", Str(minLength: 1) },
+                    { "clientId", Str(minLength: 1) },
+                    { "gridFsId", Str(minLength: 1) },
+                    { "fileName", Str(minLength: 1) },
+                    { "total", new BsonDocument("bsonType", "decimal") },
+                    { "validUntil", new BsonDocument("bsonType", "date") },
+                    { "generatedAt", new BsonDocument("bsonType", "date") }
                 }
             }
         }, ct);
@@ -382,6 +407,14 @@ public sealed class MongoSchemaInitializer(
             new CreateIndexModel<Wishlist>(
                 Builders<Wishlist>.IndexKeys.Ascending(w => w.ClientId),
                 new CreateIndexOptions { Name = "ux_wishlists_client", Unique = true }),
+            cancellationToken: ct);
+
+        var quotationDocuments = database.GetCollection<QuotationDocument>(MongoCollections.QuotationDocuments);
+
+        await quotationDocuments.Indexes.CreateOneAsync(
+            new CreateIndexModel<QuotationDocument>(
+                Builders<QuotationDocument>.IndexKeys.Ascending(d => d.OrderId),
+                new CreateIndexOptions { Name = "ux_quotationDocuments_order", Unique = true }),
             cancellationToken: ct);
     }
 }

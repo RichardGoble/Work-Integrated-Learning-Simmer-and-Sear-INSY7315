@@ -53,6 +53,7 @@ public static class MongoConventions
         MapWithObjectId<Review>();
         MapWithObjectId<NewsPost>();
         MapWithObjectId<Wishlist>();
+        MapWithObjectId<QuotationDocument>();
         MapWithStringId<SiteSettings>();
     }
 
