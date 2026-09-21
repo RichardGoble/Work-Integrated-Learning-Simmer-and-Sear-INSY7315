@@ -1,5 +1,3 @@
-using SimmerAndSear.Domain.Entities;
-
 namespace SimmerAndSear.Application.Abstractions;
 //References
 //Microsoft, 2026. Interfaces - define behavior for multiple types [Source code].
@@ -11,7 +9,7 @@ namespace SimmerAndSear.Application.Abstractions;
 
 public interface IWishlistRepository
 {
-    Task<Wishlist?> GetByClientAsync(string clientId, CancellationToken ct = default);
+    Task<Domain.Entities.Wishlist?> GetByClientAsync(string clientId, CancellationToken ct = default);
 
-    Task SaveAsync(Wishlist wishlist, CancellationToken ct = default);
+    Task SaveAsync(Domain.Entities.Wishlist wishlist, CancellationToken ct = default);
 }
