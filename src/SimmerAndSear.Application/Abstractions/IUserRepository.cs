@@ -24,4 +24,5 @@ public interface IUserRepository
     Task RecordFailedLoginAsync(string userId, int lockoutThreshold, TimeSpan lockoutDuration, CancellationToken ct = default);
 
     Task RecordSuccessfulLoginAsync(string userId, CancellationToken ct = default);
+    Task DeleteAsync(string id, CancellationToken ct = default);
 }

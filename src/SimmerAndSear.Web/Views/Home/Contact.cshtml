@@ -53,18 +53,24 @@
         <!-- Contact Form -->
         <div class="card" style="padding: 3rem;">
           <h3 style="margin-bottom: 2rem; font-size: 1.5rem; margin-top: 0;">Send a Message</h3>
-          <form style="display: flex; flex-direction: column; gap: 1.5rem;" data-submit-action="action22">
+          @if (ViewData["SuccessMessage"] is string msg)
+          {
+              <div style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; border-radius: 6px; padding: 1rem; margin-bottom: 1.5rem; font-size: 0.95rem;">
+                  @msg
+              </div>
+          }
+          <form method="post" action="/Contact" style="display: flex; flex-direction: column; gap: 1.5rem;">
             <div>
               <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--ss-ink);">Full Name</label>
-              <input type="text" class="input-field" placeholder="John Doe" required />
+              <input type="text" name="fullName" class="input-field" placeholder="John Doe" required />
             </div>
             <div>
               <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--ss-ink);">Email Address</label>
-              <input type="email" class="input-field" placeholder="john@example.com" required />
+              <input type="email" name="email" class="input-field" placeholder="john@example.com" required />
             </div>
             <div>
               <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--ss-ink);">Message</label>
-              <textarea class="input-field" placeholder="How can we help you?" rows="5" required></textarea>
+              <textarea name="message" class="input-field" placeholder="How can we help you?" rows="5" required></textarea>
             </div>
             <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 1rem;">
               Send Message <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>

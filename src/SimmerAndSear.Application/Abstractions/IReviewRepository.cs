@@ -21,4 +21,5 @@ public interface IReviewRepository
     Task<string> CreateAsync(Review review, CancellationToken ct = default);
 
     Task UpdateAsync(Review review, CancellationToken ct = default);
+    Task DeleteAsync(string id, CancellationToken ct = default);
 }
