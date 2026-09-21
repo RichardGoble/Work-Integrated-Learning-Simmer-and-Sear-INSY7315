@@ -80,7 +80,9 @@ public sealed class MongoSchemaInitializer(
                      MongoCollections.SiteSettings,
                      MongoCollections.MediaAssets,
                      MongoCollections.Carts,
-                     MongoCollections.Orders
+                     MongoCollections.Orders,
+                     MongoCollections.Reviews,
+                     MongoCollections.NewsPosts
                  })
         {
             try
@@ -183,6 +185,36 @@ public sealed class MongoSchemaInitializer(
                 {
                     { "items", new BsonDocument("bsonType", "array") },
                     { "updatedAt", new BsonDocument("bsonType", "date") }
+                }
+            }
+        }, ct);
+
+        await ApplyValidatorAsync(MongoCollections.Reviews, new BsonDocument
+        {
+            { "bsonType", "object" },
+            { "required", new BsonArray { "productId", "clientId", "rating", "status", "createdAt" } },
+            {
+                "properties", new BsonDocument
+                {
+                    { "productId", Str(minLength: 1) },
+                    { "clientId", Str(minLength: 1) },
+                    { "rating", new BsonDocument { { "bsonType", "int" }, { "minimum", 1 }, { "maximum", 5 } } },
+                    { "status", Str(minLength: 1) },
+                    { "createdAt", new BsonDocument("bsonType", "date") }
+                }
+            }
+        }, ct);
+
+        await ApplyValidatorAsync(MongoCollections.NewsPosts, new BsonDocument
+        {
+            { "bsonType", "object" },
+            { "required", new BsonArray { "authorId", "status", "createdAt" } },
+            {
+                "properties", new BsonDocument
+                {
+                    { "authorId", Str(minLength: 1) },
+                    { "status", Str(minLength: 1) },
+                    { "createdAt", new BsonDocument("bsonType", "date") }
                 }
             }
         }, ct);
@@ -297,6 +329,36 @@ public sealed class MongoSchemaInitializer(
                     .Ascending(o => o.Status)
                     .Descending(o => o.PlacedAt),
                 new CreateIndexOptions { Name = "ix_orders_type_status_placed" })
+        ], ct);
+
+        var reviews = database.GetCollection<Review>(MongoCollections.Reviews);
+
+        await reviews.Indexes.CreateManyAsync(
+        [
+            new CreateIndexModel<Review>(
+                Builders<Review>.IndexKeys.Ascending(r => r.ProductId).Ascending(r => r.Status),
+                new CreateIndexOptions { Name = "ix_reviews_product_status" }),
+
+            new CreateIndexModel<Review>(
+                Builders<Review>.IndexKeys.Ascending(r => r.ClientId).Descending(r => r.CreatedAt),
+                new CreateIndexOptions { Name = "ix_reviews_client_created" }),
+
+            new CreateIndexModel<Review>(
+                Builders<Review>.IndexKeys.Ascending(r => r.Status).Descending(r => r.CreatedAt),
+                new CreateIndexOptions { Name = "ix_reviews_status_created" })
+        ], ct);
+
+        var newsPosts = database.GetCollection<NewsPost>(MongoCollections.NewsPosts);
+
+        await newsPosts.Indexes.CreateManyAsync(
+        [
+            new CreateIndexModel<NewsPost>(
+                Builders<NewsPost>.IndexKeys.Ascending(p => p.Status).Descending(p => p.CreatedAt),
+                new CreateIndexOptions { Name = "ix_newsposts_status_created" }),
+
+            new CreateIndexModel<NewsPost>(
+                Builders<NewsPost>.IndexKeys.Descending(p => p.PublishedAt),
+                new CreateIndexOptions { Name = "ix_newsposts_published", Sparse = true })
         ], ct);
     }
 }
