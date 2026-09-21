@@ -53,7 +53,15 @@
     }
 
     async function request(url, options) {
-        const response = await fetch(url, options);
+        let response;
+        try {
+            response = await fetch(url, { ...options, headers: { Accept: 'application/json', ...options?.headers } });
+        } catch {
+            throw new Error('The connection was interrupted. Check that the website is running and reselect the image. Check the catalogue before retrying, as the save may have completed.');
+        }
+        if (response.status === 401 || response.status === 403) {
+            throw new Error('Sign in with an administrator account before saving.');
+        }
         if (!response.ok) {
             const error = await response.json().catch(() => ({}));
             throw new Error(error.message || error.title || 'Unable to save changes. Please try again.');
@@ -121,12 +129,21 @@
         if (form.dataset.confirm && !window.confirm(form.dataset.confirm)) { event.preventDefault(); return; }
         if (!form.matches('[data-admin-save]')) return;
         event.preventDefault();
+        if (!form.reportValidity()) return;
+        for (const input of form.querySelectorAll('input[type="file"]')) {
+            if ([...input.files].some(file => file.size > 10 * 1024 * 1024)) {
+                showError(form, 'Choose an image smaller than 10 MB.');
+                return;
+            }
+        }
         const submit = form.querySelector('[type="submit"]');
         if (submit.disabled) return;
         submit.disabled = true;
         try {
-            await request(form.action, { method: 'POST', body: new FormData(form) });
-            window.location.href = '/Admin#' + (form.action.includes('/Products/') ? 'products' : form.action.includes('/Journal/') ? 'journal' : 'gallery');
+            const response = await request(form.action, { method: 'POST', body: new FormData(form) });
+            const result = await response.json();
+            if (!result.success) throw new Error('The save could not be confirmed. Please check the catalogue before retrying.');
+            window.history.replaceState(null, '', '/Admin#' + (form.action.includes('/Products/') ? 'products' : form.action.includes('/Journal/') ? 'journal' : 'gallery'));
             window.location.reload();
         } catch (error) { showError(form, error.message); }
         finally { submit.disabled = false; }

@@ -195,7 +195,7 @@ public class AdminController(
             request.Sku = $"SKU-{Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()}";
             ModelState.Remove(nameof(request.Sku));
         }
-        if (!ModelState.IsValid) return BadRequest(new { message = "Check the product fields, including name, description and price." });
+        if (!ModelState.IsValid) return BadRequest(new { message = "Check the product fields. The name needs at least 2 characters, the description at least 10 characters, and the price must be between 0.01 and 1000000." });
         var existing = id is null ? null : await catalogue.GetAsync(id, true, ct);
         if (id is not null && existing is null) return NotFound();
         request.IsPublished = existing?.IsPublished ?? true;
@@ -215,6 +215,7 @@ public class AdminController(
             if (id is null) await catalogue.CreateAsync(request, ct);
             else await catalogue.UpdateAsync(id, request, ct);
             await auditWriter.WriteAsync(id is null ? AuditAction.Create : AuditAction.Update, $"Product saved: {request.Sku} ({request.Name})");
+            if (Request.Headers.Accept.ToString().Contains("application/json")) return Ok(new { success = true });
             return Redirect("/Admin#products");
         }
         catch (Exception ex) when (ex is ProductRuleException or MediaValidationException or DuplicateSkuException)
@@ -271,6 +272,7 @@ public class AdminController(
             }
             else await newsService.UpdateAsync(id, new UpdateNewsPostRequest { Title = title, Body = content, ImageMediaAssetId = imageAssetId }, ct);
             await auditWriter.WriteAsync(id is null ? AuditAction.Create : AuditAction.Update, $"Journal entry saved: {title.Trim()}");
+            if (Request.Headers.Accept.ToString().Contains("application/json")) return Ok(new { success = true });
             return Redirect("/Admin#journal");
         }
         catch (MediaValidationException ex)
@@ -303,6 +305,7 @@ public class AdminController(
             await using var stream = file.OpenReadStream();
             var asset = await mediaService.UploadAsync(stream, file.FileName, file.Length, current.Id, ct);
             await auditWriter.WriteAsync(AuditAction.Create, $"Gallery image uploaded: {asset.Id} ({asset.FileName})");
+            if (Request.Headers.Accept.ToString().Contains("application/json")) return Ok(new { success = true });
             return Redirect("/Admin#gallery");
         }
         catch (MediaValidationException ex)

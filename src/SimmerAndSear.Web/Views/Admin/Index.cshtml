@@ -220,7 +220,7 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
                         <div>
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Product Name</label>
-                            <input type="text" name="name" class="input-field" placeholder="e.g. Signature Cast Iron Skillet" required />
+                            <input type="text" name="name" minlength="2" maxlength="160" class="input-field" placeholder="e.g. Signature Cast Iron Skillet" required />
                             <input type="hidden" name="sku" />
                             <input type="hidden" name="stockQuantity" value="10" />
                         </div>
@@ -237,35 +237,35 @@
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Product Type</label>
-                            <input type="text" name="cookwareType" class="input-field" placeholder="Skillet / Pot / Pan" list="type-list" required />
+                            <input type="text" name="cookwareType" minlength="1" maxlength="80" class="input-field" placeholder="Skillet / Pot / Pan" list="type-list" required />
                             <datalist id="type-list">
                                 @foreach (var t in Model.Facets.CookwareTypes) { <option value="@t">@t</option> }
                             </datalist>
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Material</label>
-                            <input type="text" name="material" class="input-field" placeholder="Cast Iron / Stainless Steel" list="mat-list" />
+                            <input type="text" name="material" minlength="0" maxlength="120" class="input-field" placeholder="Cast Iron / Stainless Steel" list="mat-list" />
                             <datalist id="mat-list">
                                 @foreach (var m in Model.Facets.Materials) { <option value="@m">@m</option> }
                             </datalist>
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Brand</label>
-                            <input type="text" name="brand" class="input-field" placeholder="Simmer & Sear" list="brand-list" required />
+                            <input type="text" name="brand" minlength="1" maxlength="80" class="input-field" placeholder="Simmer & Sear" list="brand-list" required />
                             <datalist id="brand-list">
                                 @foreach (var b in Model.Facets.Brands) { <option value="@b">@b</option> }
                             </datalist>
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Range</label>
-                            <input type="text" name="category" class="input-field" placeholder="Signature" list="cat-list" required />
+                            <input type="text" name="category" minlength="1" maxlength="80" class="input-field" placeholder="Signature" list="cat-list" required />
                             <datalist id="cat-list">
                                 @foreach (var c in Model.Facets.Categories) { <option value="@c">@c</option> }
                             </datalist>
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Size</label>
-                            <input type="text" name="sizeLabel" class="input-field" placeholder="28cm" list="size-list" />
+                            <input type="text" name="sizeLabel" minlength="0" maxlength="40" class="input-field" placeholder="28cm" list="size-list" />
                             <datalist id="size-list">
                                 @foreach (var s in Model.Facets.SizeLabels) { <option value="@s">@s</option> }
                             </datalist>
@@ -273,7 +273,7 @@
                     </div>
                     <div>
                         <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Description</label>
-                        <textarea name="description" class="input-field" rows="4" placeholder="Detailed product description..." required></textarea>
+                        <textarea name="description" minlength="10" maxlength="4000" class="input-field" rows="4" placeholder="Detailed product description..." required></textarea>
                     </div>
                     <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem;">
                         <button type="button" class="btn btn-outline" data-toggle-form="product">Cancel</button>

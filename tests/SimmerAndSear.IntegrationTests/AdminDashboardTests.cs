@@ -65,8 +65,16 @@ public sealed class AdminDashboardTests
                 ["brand"] = "Test", ["category"] = "Classic", ["cookwareType"] = "Pan",
                 ["material"] = "Copper", ["price"] = "250", ["stockQuantity"] = "0"
             };
+            client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+            fields["description"] = "Test";
+            var invalid = await Post("/Admin/Products/Create", fields, "imageFile");
+            Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+            Assert.Contains("10 characters", await invalid.Content.ReadAsStringAsync());
+            fields["description"] = "A durable copper pan for testing.";
             var create = await Post("/Admin/Products/Create", fields, "imageFile");
-            Assert.True(create.StatusCode == HttpStatusCode.Redirect, await create.Content.ReadAsStringAsync());
+            Assert.True(create.StatusCode == HttpStatusCode.OK, await create.Content.ReadAsStringAsync());
+            Assert.True((await create.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("success").GetBoolean());
+            client.DefaultRequestHeaders.Accept.Clear();
             var products = scope.ServiceProvider.GetRequiredService<IProductRepository>();
             var page = await products.SearchAsync(new ProductFilter { SearchTerm = "Copper Pan" });
             var product = Assert.Single(page.Items);
