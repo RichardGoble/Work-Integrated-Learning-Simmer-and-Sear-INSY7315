@@ -1,5 +1,6 @@
 using SimmerAndSear.Application.Abstractions;
 using SimmerAndSear.Contracts.Commerce;
+using SimmerAndSear.Contracts.Paging;
 using SimmerAndSear.Domain.Entities;
 
 namespace SimmerAndSear.Application.Commerce;
@@ -93,12 +94,28 @@ public sealed class OrderService(
         }
 
         var site = await settings.CurrentAsync(ct);
-        var strategy = order.OrderType == Domain.Enums.OrderType.QuoteRequest
+
+        return Describe(order, NextStepFor(order), site.DisplayCurrency);
+    }
+
+
+    public async Task<Page<OrderResponse>> ListForClientAsync(
+        string clientId, int pageNumber, int pageSize, CancellationToken ct = default)
+    {
+        var page = await orders.ListForClientAsync(clientId, pageNumber, pageSize, ct);
+        var site = await settings.CurrentAsync(ct);
+
+        return new Page<OrderResponse>(
+            [.. page.Items.Select(o => Describe(o, NextStepFor(o), site.DisplayCurrency))],
+            page.Total,
+            page.PageNumber,
+            page.PageSize);
+    }
+
+    private static string NextStepFor(Order order) =>
+        order.OrderType == Domain.Enums.OrderType.QuoteRequest
             ? new QuotationFulfilmentStrategy().NextStepMessage
             : new PaymentFulfilmentStrategy().NextStepMessage;
-
-        return Describe(order, strategy, site.DisplayCurrency);
-    }
 
     private static ShippingDetails ToShippingDetails(CheckoutRequest request) => new()
     {
