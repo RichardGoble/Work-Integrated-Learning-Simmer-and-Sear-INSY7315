@@ -1,5 +1,7 @@
 using SimmerAndSear.Application.Abstractions;
+using SimmerAndSear.Application.Commerce;
 using SimmerAndSear.Contracts.Wishlist;
+using SimmerAndSear.Domain.Entities;
 
 namespace SimmerAndSear.Application.Wishlist;
 
@@ -13,15 +15,18 @@ namespace SimmerAndSear.Application.Wishlist;
 //Microsoft, 2025. Asynchronous programming [Source code].
 //Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/> [Accessed 21 September 2026].
 
+//Refactoring.Guru, n.d. Facade [Source code].
+//Available at: <https://refactoring.guru/design-patterns/facade> [Accessed 21 September 2026].
 
-public sealed class WishlistService(IWishlistRepository wishlists, IProductRepository products)
+
+public sealed class WishlistService(IWishlistRepository wishlists, IProductRepository products, CartService cart)
 {
     private static readonly WishlistResponse Empty = new([], 0);
 
     public async Task<WishlistResponse> GetAsync(string clientId, CancellationToken ct = default)
     {
         var wishlist = await wishlists.GetByClientAsync(clientId, ct);
-        return wishlist is null ? Empty : Describe(wishlist);
+        return wishlist is null ? Empty : await DescribeAsync(wishlist, ct);
     }
 
     public async Task<(WishlistResponse? Wishlist, string? Error)> AddAsync(
@@ -42,7 +47,7 @@ public sealed class WishlistService(IWishlistRepository wishlists, IProductRepos
         }
 
         await wishlists.SaveAsync(wishlist, ct);
-        return (Describe(wishlist), null);
+        return (await DescribeAsync(wishlist, ct), null);
     }
 
     public async Task<WishlistResponse> RemoveAsync(string clientId, string productId, CancellationToken ct = default)
@@ -58,7 +63,7 @@ public sealed class WishlistService(IWishlistRepository wishlists, IProductRepos
             await wishlists.SaveAsync(wishlist, ct);
         }
 
-        return Describe(wishlist);
+        return await DescribeAsync(wishlist, ct);
     }
 
     public async Task ClearAsync(string clientId, CancellationToken ct = default)
@@ -73,11 +78,52 @@ public sealed class WishlistService(IWishlistRepository wishlists, IProductRepos
         await wishlists.SaveAsync(wishlist, ct);
     }
 
-    private static WishlistResponse Describe(Domain.Entities.Wishlist wishlist)
+    public async Task<WishlistMoveResult> MoveToCartAsync(
+        string clientId, string productId, CancellationToken ct = default)
     {
-        var items = wishlist.Items
-            .Select(i => new WishlistItemResponse(i.ProductId, i.ProductName, i.UnitPrice, i.AddedAt))
-            .ToList();
+        var wishlist = await wishlists.GetByClientAsync(clientId, ct);
+        if (wishlist is null || !wishlist.Items.Any(i => i.ProductId == productId))
+        {
+            return new WishlistMoveResult(WishlistMoveOutcome.NotInWishlist, null);
+        }
+
+        var result = await cart.AddAsync(CartOwner.ForClient(clientId), productId, 1, ct);
+
+        switch (result.Outcome)
+        {
+            case CartChange.ProductNotFound:
+                return new WishlistMoveResult(WishlistMoveOutcome.Unavailable, null);
+            case CartChange.OutOfStock:
+                return new WishlistMoveResult(WishlistMoveOutcome.OutOfStock, null);
+        }
+
+        wishlist.Remove(productId);
+        await wishlists.SaveAsync(wishlist, ct);
+
+        var response = new MoveToCartResponse(await DescribeAsync(wishlist, ct), result.Cart!);
+        return new WishlistMoveResult(WishlistMoveOutcome.Moved, response);
+    }
+
+    private async Task<WishlistResponse> DescribeAsync(Domain.Entities.Wishlist wishlist, CancellationToken ct)
+    {
+        var catalogue = wishlist.Items.Count == 0
+            ? new Dictionary<string, Product>()
+            : (await products.GetManyAsync(wishlist.Items.Select(i => i.ProductId), ct))
+                .ToDictionary(p => p.Id);
+
+        var items = wishlist.Items.Select(item =>
+        {
+            catalogue.TryGetValue(item.ProductId, out var product);
+
+            return new WishlistItemResponse(
+                item.ProductId,
+                product?.Name ?? item.ProductName,
+                product?.Price ?? item.UnitPrice,
+                item.AddedAt,
+                product?.PrimaryImage?.MediaAssetId,
+                product?.PrimaryImage?.AltText,
+                product is { IsPublished: true } && product.StockQuantity > 0);
+        }).ToList();
 
         return new WishlistResponse(items, items.Count);
     }

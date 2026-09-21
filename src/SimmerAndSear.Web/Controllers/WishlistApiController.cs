@@ -37,6 +37,20 @@ public sealed class WishlistApiController(WishlistService service, CurrentUser c
     public async Task<ActionResult<WishlistResponse>> Remove(string productId, CancellationToken ct) =>
         Ok(await service.RemoveAsync(current.Id!, productId, ct));
 
+    [HttpPost("items/{productId}/move-to-cart")]
+    public async Task<ActionResult<MoveToCartResponse>> MoveToCart(string productId, CancellationToken ct)
+    {
+        var result = await service.MoveToCartAsync(current.Id!, productId, ct);
+
+        return result.Outcome switch
+        {
+            WishlistMoveOutcome.Moved => Ok(result.Result),
+            WishlistMoveOutcome.NotInWishlist => Problem(statusCode: 404, title: "That product is not in your wishlist."),
+            WishlistMoveOutcome.Unavailable => Problem(statusCode: 404, title: "That product is no longer available."),
+            _ => Problem(statusCode: 409, title: "There is not enough stock to fill that request.")
+        };
+    }
+
     [HttpDelete]
     public async Task<IActionResult> Clear(CancellationToken ct)
     {

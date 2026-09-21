@@ -1,5 +1,6 @@
 using Shouldly;
 using SimmerAndSear.Application.Abstractions;
+using SimmerAndSear.Application.Commerce;
 using SimmerAndSear.Application.Wishlist;
 using SimmerAndSear.Domain.Entities;
 using SimmerAndSear.UnitTests.Admin;
@@ -21,8 +22,10 @@ public sealed class WishlistServiceTests
 
     private readonly MemoryWishlistRepository _wishlists = new();
     private readonly MemoryProductRepository _products = new();
+    private readonly MemoryCartRepository _carts = new();
 
-    private WishlistService CreateService() => new(_wishlists, _products);
+    private WishlistService CreateService() =>
+        new(_wishlists, _products, new CartService(_carts, _products, new FixedSiteSettings()));
 
     [Fact]
     public async Task Adding_same_product_twice_keeps_one_line()
@@ -51,6 +54,74 @@ public sealed class WishlistServiceTests
         wishlist.ShouldBeNull();
         error.ShouldNotBeNullOrEmpty();
         (await service.GetAsync(ClientId)).Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Move_to_cart_adds_one_unit_and_removes_the_wishlist_line()
+    {
+        _products.Add(new Product { Id = ProductId, Name = "Cast Iron Pan", Price = 499m, IsPublished = true, StockQuantity = 5 });
+        var service = CreateService();
+        await service.AddAsync(ClientId, ProductId);
+
+        var result = await service.MoveToCartAsync(ClientId, ProductId);
+
+        result.Outcome.ShouldBe(WishlistMoveOutcome.Moved);
+        result.Result.ShouldNotBeNull();
+        result.Result!.Cart.Items.ShouldHaveSingleItem().Quantity.ShouldBe(1);
+        result.Result.Wishlist.Count.ShouldBe(0);
+        (await service.GetAsync(ClientId)).Items.ShouldNotContain(i => i.ProductId == ProductId);
+    }
+
+    [Fact]
+    public async Task Out_of_stock_item_stays_in_wishlist_when_move_fails()
+    {
+        _products.Add(new Product { Id = ProductId, Name = "Cast Iron Pan", Price = 499m, IsPublished = true, StockQuantity = 0 });
+        var service = CreateService();
+        await service.AddAsync(ClientId, ProductId);
+
+        var result = await service.MoveToCartAsync(ClientId, ProductId);
+
+        result.Outcome.ShouldBe(WishlistMoveOutcome.OutOfStock);
+        (await service.GetAsync(ClientId)).Items.ShouldContain(i => i.ProductId == ProductId);
+        (await _carts.GetByClientAsync(ClientId)).ShouldBeNull();
+    }
+
+    private sealed class MemoryCartRepository : ICartRepository
+    {
+        private readonly List<Cart> _items = [];
+
+        public Task<Cart?> GetByClientAsync(string clientId, CancellationToken ct = default) =>
+            Task.FromResult(_items.Find(c => c.ClientId == clientId));
+
+        public Task<Cart?> GetBySessionAsync(string sessionId, CancellationToken ct = default) =>
+            Task.FromResult(_items.Find(c => c.SessionId == sessionId));
+
+        public Task SaveAsync(Cart cart, CancellationToken ct = default)
+        {
+            if (string.IsNullOrEmpty(cart.Id))
+            {
+                cart.Id = Guid.NewGuid().ToString("N");
+                _items.Add(cart);
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public Task DeleteAsync(string cartId, CancellationToken ct = default)
+        {
+            _items.RemoveAll(c => c.Id == cartId);
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class FixedSiteSettings : ISiteSettingsProvider
+    {
+        public Task<SiteSettings> CurrentAsync(CancellationToken ct = default) =>
+            Task.FromResult(new SiteSettings());
+
+        public void Invalidate()
+        {
+        }
     }
 
     private sealed class MemoryWishlistRepository : IWishlistRepository

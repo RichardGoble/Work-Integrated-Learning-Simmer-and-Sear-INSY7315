@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using SimmerAndSear.Contracts.Commerce;
 
 namespace SimmerAndSear.Contracts.Wishlist;
 
@@ -20,8 +21,15 @@ public sealed record WishlistItemResponse(
     string ProductId,
     string ProductName,
     decimal UnitPrice,
-    DateTime AddedAt);
+    DateTime AddedAt,
+    string? ImageId,
+    string? ImageAlt,
+    bool InStock);
 
 public sealed record WishlistResponse(
     IReadOnlyList<WishlistItemResponse> Items,
     int Count);
+
+public sealed record MoveToCartResponse(
+    WishlistResponse Wishlist,
+    CartResponse Cart);
