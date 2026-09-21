@@ -172,12 +172,14 @@ public sealed class MongoSchemaInitializer(
                     { "subtotal", new BsonDocument { { "bsonType", "decimal" }, { "minimum", 0 } } },
                     { "shippingCost", new BsonDocument { { "bsonType", "decimal" }, { "minimum", 0 } } },
                     { "total", new BsonDocument { { "bsonType", "decimal" }, { "minimum", 0 } } },
-                    { "placedAt", new BsonDocument("bsonType", "date") }
+                    { "placedAt", new BsonDocument("bsonType", "date") },
+                    { "companyName", new BsonDocument { { "bsonType", "string" }, { "maxLength", 120 } } },
+                    { "customerNotes", new BsonDocument { { "bsonType", "string" }, { "maxLength", 1000 } } }
                 }
             }
         }, ct);
 
-       
+
         await ApplyValidatorAsync(MongoCollections.Carts, new BsonDocument
         {
             { "bsonType", "object" },

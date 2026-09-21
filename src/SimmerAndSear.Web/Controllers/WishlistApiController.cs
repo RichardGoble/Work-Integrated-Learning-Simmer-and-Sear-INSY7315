@@ -51,6 +51,19 @@ public sealed class WishlistApiController(WishlistService service, CurrentUser c
         };
     }
 
+    [HttpPost("quote-request")]
+    public async Task<IActionResult> RequestQuote(WishlistQuoteRequest request, CancellationToken ct)
+    {
+        var result = await service.RequestQuoteAsync(current.Id!, request, ct);
+
+        return result.Outcome switch
+        {
+            WishlistQuoteOutcome.Placed => Created($"/api/orders/{result.Order!.Id}", result.Order),
+            WishlistQuoteOutcome.EmptyWishlist => Problem(statusCode: 400, title: "Your wishlist is empty."),
+            _ => Problem(statusCode: 409, title: result.Detail)
+        };
+    }
+
     [HttpDelete]
     public async Task<IActionResult> Clear(CancellationToken ct)
     {

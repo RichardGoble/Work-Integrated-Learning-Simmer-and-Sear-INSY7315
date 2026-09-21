@@ -126,7 +126,7 @@ public sealed class OrderService(
         PostalCode = request.Postal.Trim()
     };
 
-    private static OrderResponse Describe(Order order, string nextStep, string? currency = null) =>
+    internal static OrderResponse Describe(Order order, string nextStep, string? currency = null) =>
         new(
             order.Id,
             order.OrderReference,
@@ -141,5 +141,7 @@ public sealed class OrderService(
             order.ShippingDetails?.FullName ?? string.Empty,
             order.PlacedAt,
             order.OrderType == Domain.Enums.OrderType.QuoteRequest,
-            nextStep);
+            nextStep,
+            order.CompanyName,
+            order.CustomerNotes);
 }

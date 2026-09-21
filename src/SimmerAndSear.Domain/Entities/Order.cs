@@ -25,6 +25,9 @@ public sealed class Order : IEntity
     public ShippingDetails? ShippingDetails { get; set; }
     public Payment? Payment { get; set; }
 
+    public string? CompanyName { get; set; }
+    public string? CustomerNotes { get; set; }
+
     public DateTime PlacedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
@@ -56,7 +59,33 @@ public sealed class Order : IEntity
         return order;
     }
 
-    private static Order Build(Cart cart, string clientId, string currency)
+    public static Order FromWishlistQuote(
+        IEnumerable<OrderItem> items, string clientId, ShippingDetails contact,
+        string? companyName, string? customerNotes, string currency = "ZAR")
+    {
+        var order = Build(items, clientId, currency);
+
+        order.OrderType = OrderType.QuoteRequest;
+        order.Status = OrderStatus.Pending;
+        order.ShippingDetails = contact;
+        order.ShippingCost = 0m;
+        order.Total = order.Subtotal;
+        order.CompanyName = companyName;
+        order.CustomerNotes = customerNotes;
+
+        return order;
+    }
+
+    private static Order Build(Cart cart, string clientId, string currency) =>
+        Build(cart.Items.Select(i => new OrderItem
+        {
+            ProductId = i.ProductId,
+            ProductName = i.ProductName,
+            UnitPrice = i.UnitPrice,
+            Quantity = i.Quantity
+        }), clientId, currency);
+
+    private static Order Build(IEnumerable<OrderItem> items, string clientId, string currency)
     {
         var now = DateTime.UtcNow;
 
@@ -67,13 +96,7 @@ public sealed class Order : IEntity
             PlacedAt = now,
             UpdatedAt = now,
             OrderReference = BuildReference(now),
-            Items = [.. cart.Items.Select(i => new OrderItem
-            {
-                ProductId = i.ProductId,
-                ProductName = i.ProductName,
-                UnitPrice = i.UnitPrice,
-                Quantity = i.Quantity
-            })]
+            Items = [.. items]
         };
 
         order.Subtotal = order.Items.Sum(i => i.LineTotal);

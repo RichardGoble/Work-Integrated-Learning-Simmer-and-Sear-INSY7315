@@ -17,6 +17,21 @@ public sealed class AddWishlistItemRequest
     public string ProductId { get; set; } = string.Empty;
 }
 
+public sealed class WishlistQuoteRequest
+{
+    [Required, StringLength(120, MinimumLength = 2)]
+    public string Name { get; set; } = string.Empty;
+
+    [Required, EmailAddress, StringLength(254)]
+    public string Email { get; set; } = string.Empty;
+
+    [StringLength(120)]
+    public string? Company { get; set; }
+
+    [StringLength(1000)]
+    public string? Notes { get; set; }
+}
+
 public sealed record WishlistItemResponse(
     string ProductId,
     string ProductName,
@@ -24,7 +39,9 @@ public sealed record WishlistItemResponse(
     DateTime AddedAt,
     string? ImageId,
     string? ImageAlt,
-    bool InStock);
+    bool InStock,
+    string? Brand = null,
+    string? Material = null);
 
 public sealed record WishlistResponse(
     IReadOnlyList<WishlistItemResponse> Items,

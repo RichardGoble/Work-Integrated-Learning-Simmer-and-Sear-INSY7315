@@ -384,6 +384,9 @@ public sealed class SecurityTests
     [InlineData("GET", "/api/admin/orders/650000000000000000000009/quotation", RoleName.Customer, 403)]
     [InlineData("GET", "/api/admin/orders/650000000000000000000009/quotation", RoleName.SalesAdmin, 404)]
     [InlineData("GET", "/api/admin/orders/650000000000000000000009/quotation", RoleName.MasterAdmin, 404)]
+    [InlineData("POST", "/api/wishlist/quote-request", null, 401)]
+    [InlineData("POST", "/api/wishlist/quote-request", RoleName.SalesAdmin, 403)]
+    [InlineData("POST", "/api/wishlist/quote-request", RoleName.Customer, 400)]
     public async Task S8_endpoints_enforce_role_matrix(string method, string path, RoleName? role, int expectedStatus)
     {
         using var factory = new SecurityFactory();
@@ -444,5 +447,45 @@ public sealed class SecurityTests
         var staff = await sales.GetAsync($"/api/admin/orders/{quoteId}/quotation");
         staff.StatusCode.ShouldBe(HttpStatusCode.OK);
         staff.Content.Headers.ContentType!.MediaType.ShouldBe("application/pdf");
+    }
+
+    [Fact]
+    public async Task Wishlist_quote_request_raises_a_quotation_and_keeps_the_wishlist()
+    {
+        using var factory = new SecurityFactory();
+        using var client = factory.Browser();
+        var customer = factory.AddUser();
+        var request = new { name = "Quote Customer", email = customer.Email, company = "Acme Kitchens", notes = "Need these by March." };
+
+        string productId;
+        using (var scope = factory.Services.CreateScope())
+        {
+            productId = await scope.ServiceProvider.GetRequiredService<SimmerAndSear.Application.Abstractions.IProductRepository>()
+                .CreateAsync(new Product
+                {
+                    Name = "Quote Test Skillet", Sku = $"QT-{Guid.NewGuid():N}", Brand = "Heritage",
+                    Price = 650m, StockQuantity = 5, IsPublished = true
+                });
+        }
+
+        (await Post(client, "/api/accounts/login", new { customer.Email, password = Password })).EnsureSuccessStatusCode();
+        (await Post(client, "/api/wishlist/quote-request", request)).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
+        (await Post(client, "/api/wishlist/items", new { productId })).EnsureSuccessStatusCode();
+        var placed = await Post(client, "/api/wishlist/quote-request", request);
+        placed.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        var order = factory.Orders.Items.ShouldHaveSingleItem();
+        order.OrderType.ShouldBe(OrderType.QuoteRequest);
+        order.ClientId.ShouldBe(customer.Id);
+        order.CompanyName.ShouldBe("Acme Kitchens");
+        order.CustomerNotes.ShouldBe("Need these by March.");
+        order.Items.ShouldHaveSingleItem().Quantity.ShouldBe(1);
+        order.Total.ShouldBe(650m);
+        factory.Wishlists.Items.Single(w => w.ClientId == customer.Id).Items.ShouldHaveSingleItem();
+
+        var pdf = await client.GetAsync($"/api/orders/{order.Id}/quotation");
+        pdf.StatusCode.ShouldBe(HttpStatusCode.OK);
+        pdf.Content.Headers.ContentType!.MediaType.ShouldBe("application/pdf");
     }
 }

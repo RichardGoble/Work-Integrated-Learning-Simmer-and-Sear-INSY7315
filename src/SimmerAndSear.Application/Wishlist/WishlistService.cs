@@ -19,7 +19,8 @@ namespace SimmerAndSear.Application.Wishlist;
 //Available at: <https://refactoring.guru/design-patterns/facade> [Accessed 21 September 2026].
 
 
-public sealed class WishlistService(IWishlistRepository wishlists, IProductRepository products, CartService cart)
+public sealed class WishlistService(
+    IWishlistRepository wishlists, IProductRepository products, CartService cart, IOrderRepository orders)
 {
     private static readonly WishlistResponse Empty = new([], 0);
 
@@ -104,6 +105,54 @@ public sealed class WishlistService(IWishlistRepository wishlists, IProductRepos
         return new WishlistMoveResult(WishlistMoveOutcome.Moved, response);
     }
 
+    public async Task<WishlistQuoteResult> RequestQuoteAsync(
+        string clientId, WishlistQuoteRequest request, CancellationToken ct = default)
+    {
+        var wishlist = await wishlists.GetByClientAsync(clientId, ct);
+        if (wishlist is null || wishlist.Items.Count == 0)
+        {
+            return new WishlistQuoteResult(WishlistQuoteOutcome.EmptyWishlist, null);
+        }
+
+        var catalogue = (await products.GetManyAsync(wishlist.Items.Select(i => i.ProductId), ct))
+            .ToDictionary(p => p.Id);
+
+        var lines = new List<OrderItem>();
+        foreach (var item in wishlist.Items)
+        {
+            if (!catalogue.TryGetValue(item.ProductId, out var product) || !product.IsPublished)
+            {
+                return new WishlistQuoteResult(
+                    WishlistQuoteOutcome.LineUnavailable, null, $"{item.ProductName} is no longer available.");
+            }
+
+            if (product.StockQuantity < 1)
+            {
+                return new WishlistQuoteResult(
+                    WishlistQuoteOutcome.LineUnavailable, null, $"{product.Name} is out of stock. Please remove it from your wishlist.");
+            }
+
+            lines.Add(new OrderItem
+            {
+                ProductId = product.Id,
+                ProductName = product.Name,
+                UnitPrice = product.Price,
+                Quantity = 1
+            });
+        }
+
+        var contact = new ShippingDetails { FullName = request.Name.Trim(), Email = request.Email.Trim() };
+        var order = Order.FromWishlistQuote(lines, clientId, contact, Blank(request.Company), Blank(request.Notes));
+
+        await orders.CreateAsync(order, ct);
+
+        var described = OrderService.Describe(order, new QuotationFulfilmentStrategy().NextStepMessage);
+        return new WishlistQuoteResult(WishlistQuoteOutcome.Placed, described);
+    }
+
+    private static string? Blank(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
     private async Task<WishlistResponse> DescribeAsync(Domain.Entities.Wishlist wishlist, CancellationToken ct)
     {
         var catalogue = wishlist.Items.Count == 0
@@ -122,7 +171,9 @@ public sealed class WishlistService(IWishlistRepository wishlists, IProductRepos
                 item.AddedAt,
                 product?.PrimaryImage?.MediaAssetId,
                 product?.PrimaryImage?.AltText,
-                product is { IsPublished: true } && product.StockQuantity > 0);
+                product is { IsPublished: true } && product.StockQuantity > 0,
+                product?.Brand,
+                product?.Material);
         }).ToList();
 
         return new WishlistResponse(items, items.Count);

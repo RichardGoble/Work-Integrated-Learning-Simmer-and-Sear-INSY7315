@@ -64,7 +64,7 @@ public sealed class QuestQuotationPdfRenderer : IQuotationPdfRenderer
                     {
                         customer.Item().Text("Quotation for").Bold();
 
-                        foreach (var line in CustomerLines(order.ShippingDetails, customerEmail))
+                        foreach (var line in CustomerLines(order.ShippingDetails, order.CompanyName, customerEmail))
                         {
                             customer.Item().Text(line);
                         }
@@ -100,6 +100,15 @@ public sealed class QuestQuotationPdfRenderer : IQuotationPdfRenderer
                     column.Item().AlignRight().Text($"Subtotal: {Money(order.Currency, order.Subtotal)}");
                     column.Item().AlignRight().Text($"Total: {Money(order.Currency, order.Total)}").Bold();
 
+                    if (!string.IsNullOrWhiteSpace(order.CustomerNotes))
+                    {
+                        column.Item().Column(notes =>
+                        {
+                            notes.Item().Text("Customer notes").Bold();
+                            notes.Item().Text(order.CustomerNotes);
+                        });
+                    }
+
                     column.Item().PaddingTop(10).Text(Terms).Italic();
                 });
 
@@ -114,11 +123,12 @@ public sealed class QuestQuotationPdfRenderer : IQuotationPdfRenderer
         }).GeneratePdf();
     }
 
-    private static IEnumerable<string> CustomerLines(ShippingDetails? shipping, string customerEmail)
+    private static IEnumerable<string> CustomerLines(ShippingDetails? shipping, string? companyName, string customerEmail)
     {
         string?[] lines =
         [
             shipping?.FullName,
+            companyName,
             customerEmail,
             shipping?.AddressLine,
             shipping?.City,

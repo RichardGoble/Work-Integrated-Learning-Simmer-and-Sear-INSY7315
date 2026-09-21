@@ -2,6 +2,8 @@ using Shouldly;
 using SimmerAndSear.Application.Abstractions;
 using SimmerAndSear.Application.Commerce;
 using SimmerAndSear.Application.Wishlist;
+using SimmerAndSear.Contracts.Paging;
+using SimmerAndSear.Contracts.Wishlist;
 using SimmerAndSear.Domain.Entities;
 using SimmerAndSear.UnitTests.Admin;
 
@@ -23,9 +25,15 @@ public sealed class WishlistServiceTests
     private readonly MemoryWishlistRepository _wishlists = new();
     private readonly MemoryProductRepository _products = new();
     private readonly MemoryCartRepository _carts = new();
+    private readonly MemoryOrderRepository _orders = new();
+
+    private static readonly WishlistQuoteRequest Quote = new()
+    {
+        Name = "Quote Customer", Email = "quote@example.com", Company = "  Acme Kitchens ", Notes = "   "
+    };
 
     private WishlistService CreateService() =>
-        new(_wishlists, _products, new CartService(_carts, _products, new FixedSiteSettings()));
+        new(_wishlists, _products, new CartService(_carts, _products, new FixedSiteSettings()), _orders);
 
     [Fact]
     public async Task Adding_same_product_twice_keeps_one_line()
@@ -84,6 +92,71 @@ public sealed class WishlistServiceTests
         result.Outcome.ShouldBe(WishlistMoveOutcome.OutOfStock);
         (await service.GetAsync(ClientId)).Items.ShouldContain(i => i.ProductId == ProductId);
         (await _carts.GetByClientAsync(ClientId)).ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Quote_request_places_a_quote_order_at_live_prices_and_keeps_the_wishlist()
+    {
+        var product = new Product { Id = ProductId, Name = "Cast Iron Pan", Price = 499m, IsPublished = true, StockQuantity = 5 };
+        _products.Add(product);
+        var service = CreateService();
+        await service.AddAsync(ClientId, ProductId);
+        product.Price = 549m;
+
+        var result = await service.RequestQuoteAsync(ClientId, Quote);
+
+        result.Outcome.ShouldBe(WishlistQuoteOutcome.Placed);
+        result.Order!.IsQuotation.ShouldBeTrue();
+        result.Order.Total.ShouldBe(549m);
+        var order = _orders.Items.ShouldHaveSingleItem();
+        order.OrderType.ShouldBe(Domain.Enums.OrderType.QuoteRequest);
+        order.Items.ShouldHaveSingleItem().Quantity.ShouldBe(1);
+        order.CompanyName.ShouldBe("Acme Kitchens");
+        order.CustomerNotes.ShouldBeNull();
+        (await service.GetAsync(ClientId)).Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Quote_request_is_refused_for_an_empty_wishlist_or_an_out_of_stock_line()
+    {
+        var service = CreateService();
+        (await service.RequestQuoteAsync(ClientId, Quote)).Outcome.ShouldBe(WishlistQuoteOutcome.EmptyWishlist);
+
+        _products.Add(new Product { Id = ProductId, Name = "Cast Iron Pan", Price = 499m, IsPublished = true, StockQuantity = 0 });
+        await service.AddAsync(ClientId, ProductId);
+
+        var result = await service.RequestQuoteAsync(ClientId, Quote);
+
+        result.Outcome.ShouldBe(WishlistQuoteOutcome.LineUnavailable);
+        result.Detail.ShouldNotBeNullOrEmpty();
+        _orders.Items.ShouldBeEmpty();
+        (await service.GetAsync(ClientId)).Count.ShouldBe(1);
+    }
+
+    private sealed class MemoryOrderRepository : IOrderRepository
+    {
+        public List<Order> Items { get; } = [];
+
+        public Task<Order?> GetAsync(string id, CancellationToken ct = default) =>
+            Task.FromResult(Items.Find(o => o.Id == id));
+
+        public Task<Order?> GetForClientAsync(string id, string clientId, CancellationToken ct = default) =>
+            Task.FromResult(Items.Find(o => o.Id == id && o.ClientId == clientId));
+
+        public Task<Page<Order>> ListForClientAsync(string clientId, int pageNumber, int pageSize, CancellationToken ct = default) =>
+            throw new NotSupportedException();
+
+        public Task<Page<Order>> ListAsync(int pageNumber, int pageSize, CancellationToken ct = default) =>
+            throw new NotSupportedException();
+
+        public Task<string> CreateAsync(Order order, CancellationToken ct = default)
+        {
+            order.Id = Guid.NewGuid().ToString("N");
+            Items.Add(order);
+            return Task.FromResult(order.Id);
+        }
+
+        public Task UpdateAsync(Order order, CancellationToken ct = default) => Task.CompletedTask;
     }
 
     private sealed class MemoryCartRepository : ICartRepository

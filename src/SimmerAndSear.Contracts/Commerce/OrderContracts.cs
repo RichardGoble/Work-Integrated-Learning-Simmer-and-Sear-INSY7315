@@ -48,4 +48,6 @@ public sealed record OrderResponse(
     string CustomerName,
     DateTime PlacedAt,
     bool IsQuotation,
-    string NextStepMessage);
+    string NextStepMessage,
+    string? CompanyName = null,
+    string? CustomerNotes = null);
