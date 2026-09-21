@@ -18,12 +18,20 @@ namespace SimmerAndSear.IntegrationTests.Security;
 //Microsoft, 2026. Dependency injection in ASP.NET Core [Source code].
 //Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-10.0> [Accessed 18 September 2026].
 // ────────────────────────────────────────────────────────────────────────────
+
+//Microsoft, 2026. Integration tests in ASP.NET Core [Source code].
+//Available at: <https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0> [Accessed 21 September 2026].
+
+//Microsoft, 2026. Interfaces - define behavior for multiple types [Source code].
+//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/interfaces> [Accessed 21 September 2026].
 public sealed class SecurityFactory : WebApplicationFactory<Program>
 {
     public MemoryUsers Users { get; } = new();
     public MemoryAudit Audit { get; } = new();
     public MemoryOrders Orders { get; } = new();
     public MemoryWishlists Wishlists { get; } = new();
+    public MemoryQuotationDocuments Quotations { get; } = new();
+    public MemoryFileStore Files { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -47,6 +55,10 @@ public sealed class SecurityFactory : WebApplicationFactory<Program>
             services.AddSingleton<IOrderRepository>(Orders);
             services.AddSingleton<IWishlistRepository>(Wishlists);
             services.AddSingleton<ISiteSettingsProvider, FixedSiteSettings>();
+            services.RemoveAll<IQuotationDocumentRepository>();
+            services.RemoveAll<IFileStore>();
+            services.AddSingleton<IQuotationDocumentRepository>(Quotations);
+            services.AddSingleton<IFileStore>(Files);
             services.AddSingleton<IStartupFilter, RemoteAddressFilter>();
         });
     }
@@ -68,13 +80,6 @@ public sealed class SecurityFactory : WebApplicationFactory<Program>
     }
 }
 
-// ── References ──────────────────────────────────────────────────────────────
-//Microsoft, 2026. Integration tests in ASP.NET Core [Source code].
-//Available at: <https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0> [Accessed 18 September 2026].
-//
-//Microsoft, 2026. Dependency injection in ASP.NET Core [Source code].
-//Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-10.0> [Accessed 18 September 2026].
-// ────────────────────────────────────────────────────────────────────────────
 public sealed class RemoteAddressFilter : IStartupFilter
 {
     public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next) => app =>
@@ -88,13 +93,6 @@ public sealed class RemoteAddressFilter : IStartupFilter
     };
 }
 
-// ── References ──────────────────────────────────────────────────────────────
-//Microsoft, 2026. Integration tests in ASP.NET Core [Source code].
-//Available at: <https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0> [Accessed 18 September 2026].
-//
-//Microsoft, 2026. Interfaces - define behavior for multiple types [Source code].
-//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/interfaces> [Accessed 18 September 2026].
-// ────────────────────────────────────────────────────────────────────────────
 public sealed class MemoryUsers : IUserRepository
 {
     public List<User> Items { get; } = [];
@@ -143,13 +141,6 @@ public sealed class MemoryUsers : IUserRepository
     }
 }
 
-// ── References ──────────────────────────────────────────────────────────────
-//Microsoft, 2026. Integration tests in ASP.NET Core [Source code].
-//Available at: <https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0> [Accessed 18 September 2026].
-//
-//Microsoft, 2026. Interfaces - define behavior for multiple types [Source code].
-//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/interfaces> [Accessed 18 September 2026].
-// ────────────────────────────────────────────────────────────────────────────
 public sealed class MemoryAudit : IAuditLogRepository
 {
     public List<AuditLogEntry> Items { get; } = [];
@@ -165,13 +156,6 @@ public sealed class MemoryAudit : IAuditLogRepository
     public Task<Page<AuditLogEntry>> ListForEntityAsync(string entityType, string entityId, int pageNumber, int pageSize, CancellationToken ct = default) =>
         ListAsync(pageNumber, pageSize, ct);
 }
-
-//References
-//Microsoft, 2026. Integration tests in ASP.NET Core [Source code].
-//Available at: <https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0> [Accessed 21 September 2026].
-
-//Microsoft, 2026. Interfaces - define behavior for multiple types [Source code].
-//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/interfaces> [Accessed 21 September 2026].
 
 public sealed class MemoryOrders : IOrderRepository
 {
@@ -195,13 +179,6 @@ public sealed class MemoryOrders : IOrderRepository
     public Task UpdateAsync(Order order, CancellationToken ct = default) => Task.CompletedTask;
 }
 
-//References
-//Microsoft, 2026. Integration tests in ASP.NET Core [Source code].
-//Available at: <https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0> [Accessed 21 September 2026].
-
-//Microsoft, 2026. Interfaces - define behavior for multiple types [Source code].
-//Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/interfaces> [Accessed 21 September 2026].
-
 public sealed class MemoryWishlists : IWishlistRepository
 {
     public List<Wishlist> Items { get; } = [];
@@ -219,15 +196,45 @@ public sealed class MemoryWishlists : IWishlistRepository
     }
 }
 
-//References
-//Microsoft, 2026. Integration tests in ASP.NET Core [Source code].
-//Available at: <https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0> [Accessed 21 September 2026].
-
 public sealed class FixedSiteSettings : ISiteSettingsProvider
 {
     private readonly SiteSettings _settings = new();
     public Task<SiteSettings> CurrentAsync(CancellationToken ct = default) => Task.FromResult(_settings);
     public void Invalidate()
     {
+    }
+}
+
+public sealed class MemoryQuotationDocuments : IQuotationDocumentRepository
+{
+    public List<QuotationDocument> Items { get; } = [];
+    public Task<QuotationDocument?> GetByOrderAsync(string orderId, CancellationToken ct = default) =>
+        Task.FromResult(Items.Find(d => d.OrderId == orderId));
+    public Task<bool> TryCreateAsync(QuotationDocument document, CancellationToken ct = default)
+    {
+        if (Items.Any(d => d.OrderId == document.OrderId)) return Task.FromResult(false);
+        document.Id = Guid.NewGuid().ToString("N");
+        Items.Add(document);
+        return Task.FromResult(true);
+    }
+}
+
+public sealed class MemoryFileStore : IFileStore
+{
+    public Dictionary<string, byte[]> Items { get; } = [];
+    public async Task<string> UploadAsync(Stream content, string fileName, string contentType, CancellationToken ct = default)
+    {
+        using var buffer = new MemoryStream();
+        await content.CopyToAsync(buffer, ct);
+        var id = Guid.NewGuid().ToString("N");
+        Items[id] = buffer.ToArray();
+        return id;
+    }
+    public Task<Stream> OpenDownloadAsync(string fileId, CancellationToken ct = default) =>
+        Task.FromResult<Stream>(new MemoryStream(Items[fileId], writable: false));
+    public Task DeleteAsync(string fileId, CancellationToken ct = default)
+    {
+        Items.Remove(fileId);
+        return Task.CompletedTask;
     }
 }

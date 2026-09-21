@@ -372,4 +372,77 @@ public sealed class SecurityTests
         (await sales.GetAsync("/api/accounts/me")).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         factory.Audit.Items.ShouldContain(a => a.Action == AuditAction.Update && a.EntityType == "User");
     }
+
+    [Theory]
+    [InlineData("POST", "/api/wishlist/items/650000000000000000000009/move-to-cart", null, 401)]
+    [InlineData("POST", "/api/wishlist/items/650000000000000000000009/move-to-cart", RoleName.MasterAdmin, 403)]
+    [InlineData("POST", "/api/wishlist/items/650000000000000000000009/move-to-cart", RoleName.Customer, 404)]
+    [InlineData("GET", "/api/orders/650000000000000000000009/quotation", null, 401)]
+    [InlineData("GET", "/api/orders/650000000000000000000009/quotation", RoleName.SalesAdmin, 403)]
+    [InlineData("GET", "/api/orders/650000000000000000000009/quotation", RoleName.Customer, 404)]
+    [InlineData("GET", "/api/admin/orders/650000000000000000000009/quotation", null, 401)]
+    [InlineData("GET", "/api/admin/orders/650000000000000000000009/quotation", RoleName.Customer, 403)]
+    [InlineData("GET", "/api/admin/orders/650000000000000000000009/quotation", RoleName.SalesAdmin, 404)]
+    [InlineData("GET", "/api/admin/orders/650000000000000000000009/quotation", RoleName.MasterAdmin, 404)]
+    public async Task S8_endpoints_enforce_role_matrix(string method, string path, RoleName? role, int expectedStatus)
+    {
+        using var factory = new SecurityFactory();
+        using var client = factory.Browser();
+        if (role is { } signedInRole)
+        {
+            var user = factory.AddUser(signedInRole);
+            (await Post(client, "/api/accounts/login", new { user.Email, password = Password })).EnsureSuccessStatusCode();
+        }
+        var response = method == "POST" ? await Post(client, path, new { }) : await client.GetAsync(path);
+        response.StatusCode.ShouldBe((HttpStatusCode)expectedStatus);
+        if (expectedStatus == 403)
+        {
+            factory.Audit.Items.ShouldContain(a => a.Action == AuditAction.AccessDenied && a.Summary.Contains("ACCESS_DENIED"));
+        }
+    }
+
+    [Fact]
+    public async Task Quotation_downloads_as_pdf_and_is_stored_once()
+    {
+        using var factory = new SecurityFactory();
+        using var clientA = factory.Browser();
+        using var clientB = factory.Browser();
+        using var sales = factory.Browser();
+        var customerA = factory.AddUser();
+        var customerB = factory.AddUser();
+        var salesAdmin = factory.AddUser(RoleName.SalesAdmin);
+        const string quoteId = "650000000000000000000002";
+        const string checkoutId = "650000000000000000000003";
+        factory.Orders.Items.Add(new Order
+        {
+            Id = quoteId, ClientId = customerB.Id, OrderReference = "SS-TEST-0002", OrderType = OrderType.QuoteRequest,
+            Items = [new OrderItem { ProductId = "650000000000000000000100", ProductName = "Cast Iron Skillet", UnitPrice = 450m, Quantity = 2 }],
+            Subtotal = 900m, Total = 900m,
+            ShippingDetails = new ShippingDetails { FullName = "Customer B", Email = customerB.Email }
+        });
+        factory.Orders.Items.Add(new Order
+        {
+            Id = checkoutId, ClientId = customerB.Id, OrderReference = "SS-TEST-0003", OrderType = OrderType.Checkout
+        });
+        (await Post(clientA, "/api/accounts/login", new { customerA.Email, password = Password })).EnsureSuccessStatusCode();
+        (await Post(clientB, "/api/accounts/login", new { customerB.Email, password = Password })).EnsureSuccessStatusCode();
+        (await Post(sales, "/api/accounts/login", new { salesAdmin.Email, password = Password })).EnsureSuccessStatusCode();
+
+        var first = await clientB.GetAsync($"/api/orders/{quoteId}/quotation");
+        first.StatusCode.ShouldBe(HttpStatusCode.OK);
+        first.Content.Headers.ContentType!.MediaType.ShouldBe("application/pdf");
+        first.Content.Headers.ContentDisposition!.ToString().ShouldContain("Quotation-SS-TEST-0002.pdf");
+        System.Text.Encoding.ASCII.GetString(await first.Content.ReadAsByteArrayAsync()).ShouldStartWith("%PDF");
+
+        (await clientB.GetAsync($"/api/orders/{quoteId}/quotation")).StatusCode.ShouldBe(HttpStatusCode.OK);
+        factory.Files.Items.Count.ShouldBe(1);
+        factory.Quotations.Items.Count.ShouldBe(1);
+
+        (await clientB.GetAsync($"/api/orders/{checkoutId}/quotation")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await clientA.GetAsync($"/api/orders/{quoteId}/quotation")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
+        var staff = await sales.GetAsync($"/api/admin/orders/{quoteId}/quotation");
+        staff.StatusCode.ShouldBe(HttpStatusCode.OK);
+        staff.Content.Headers.ContentType!.MediaType.ShouldBe("application/pdf");
+    }
 }
