@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SimmerAndSear.Application.Accounts;
 using SimmerAndSear.Application.Wishlist;
 using SimmerAndSear.Web.Infrastructure;
 
@@ -17,5 +18,6 @@ public sealed class AccountsModule : IModule
     public void Register(IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<WishlistService>();
+        services.AddScoped<AdminAccountService>();
     }
 }

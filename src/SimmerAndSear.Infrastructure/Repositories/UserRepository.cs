@@ -32,6 +32,9 @@ public sealed class UserRepository(IMongoDatabase database)
     public Task<Page<User>> ListAsync(int pageNumber, int pageSize, CancellationToken ct = default) =>
         PageAsync(Filter.Empty, SortBy.Ascending(u => u.Email), pageNumber, pageSize, ct: ct);
 
+    public Task<Page<User>> ListAdminsAsync(int pageNumber, int pageSize, CancellationToken ct = default) =>
+        PageAsync(Filter.Eq(u => u.UserType, UserType.Admin), SortBy.Ascending(u => u.Email), pageNumber, pageSize, ct: ct);
+
     public async Task<bool> AnyAdminExistsAsync(CancellationToken ct = default) =>
         await Collection
             .Find(Filter.Eq(u => u.UserType, UserType.Admin))
@@ -49,8 +52,15 @@ public sealed class UserRepository(IMongoDatabase database)
         return user.Id;
     }
 
-    public async Task UpdateAsync(User user, CancellationToken ct = default) =>
-        await Collection.ReplaceOneAsync(Filter.Eq(u => u.Id, user.Id), user, cancellationToken: ct);
+    public async Task UpdateAsync(User user, CancellationToken ct = default)
+    {
+        try { await Collection.ReplaceOneAsync(Filter.Eq(u => u.Id, user.Id), user, cancellationToken: ct); }
+        catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
+        {
+            throw new DuplicateEmailException();
+        }
+    }
+
     public async Task RecordFailedLoginAsync(
         string userId, int lockoutThreshold, TimeSpan lockoutDuration, CancellationToken ct = default)
     {

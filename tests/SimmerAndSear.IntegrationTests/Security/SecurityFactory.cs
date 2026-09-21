@@ -99,6 +99,11 @@ public sealed class MemoryUsers : IUserRepository
     }
     public Task<Page<User>> ListAsync(int pageNumber, int pageSize, CancellationToken ct = default) =>
         Task.FromResult(new Page<User>(Items, Items.Count, pageNumber, pageSize));
+    public Task<Page<User>> ListAdminsAsync(int pageNumber, int pageSize, CancellationToken ct = default)
+    {
+        var admins = Items.Where(u => u.UserType == UserType.Admin).OrderBy(u => u.Email).ToList();
+        return Task.FromResult(new Page<User>(admins, admins.Count, pageNumber, pageSize));
+    }
     public Task<bool> AnyAdminExistsAsync(CancellationToken ct = default) => Task.FromResult(Items.Any(u => u.UserType == UserType.Admin));
     public Task<string> CreateAsync(User user, CancellationToken ct = default)
     {
