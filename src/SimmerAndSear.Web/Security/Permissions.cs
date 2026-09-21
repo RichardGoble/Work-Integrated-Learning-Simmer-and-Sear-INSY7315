@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using SimmerAndSear.Application.Admin;
 using SimmerAndSear.Application.Catalogue;
 using SimmerAndSear.Application.Commerce;
 using SimmerAndSear.Domain.Enums;
@@ -27,6 +28,9 @@ public static class Permissions
         services.AddScoped<CartClaim>();
         services.AddScoped<OrderService>();
         services.AddScoped<CatalogueService>();
+        services.AddScoped<ReviewService>();
+        services.AddScoped<NewsService>();
+        services.AddScoped<SiteSettingsService>();
         services.AddSingleton<OrderStrategyFactory>();
         services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuditedAuthorizationResultHandler>();
         services.AddAuthorization(options =>
