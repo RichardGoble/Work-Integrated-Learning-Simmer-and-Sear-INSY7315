@@ -82,7 +82,8 @@ public sealed class MongoSchemaInitializer(
                      MongoCollections.Carts,
                      MongoCollections.Orders,
                      MongoCollections.Reviews,
-                     MongoCollections.NewsPosts
+                     MongoCollections.NewsPosts,
+                     MongoCollections.Wishlists
                  })
         {
             try
@@ -215,6 +216,20 @@ public sealed class MongoSchemaInitializer(
                     { "authorId", Str(minLength: 1) },
                     { "status", Str(minLength: 1) },
                     { "createdAt", new BsonDocument("bsonType", "date") }
+                }
+            }
+        }, ct);
+
+        await ApplyValidatorAsync(MongoCollections.Wishlists, new BsonDocument
+        {
+            { "bsonType", "object" },
+            { "required", new BsonArray { "clientId", "items", "updatedAt" } },
+            {
+                "properties", new BsonDocument
+                {
+                    { "clientId", Str(minLength: 1) },
+                    { "items", new BsonDocument { { "bsonType", "array" }, { "maxItems", Wishlist.MaxItems } } },
+                    { "updatedAt", new BsonDocument("bsonType", "date") }
                 }
             }
         }, ct);
@@ -360,5 +375,13 @@ public sealed class MongoSchemaInitializer(
                 Builders<NewsPost>.IndexKeys.Descending(p => p.PublishedAt),
                 new CreateIndexOptions { Name = "ix_newsposts_published", Sparse = true })
         ], ct);
+
+        var wishlists = database.GetCollection<Wishlist>(MongoCollections.Wishlists);
+
+        await wishlists.Indexes.CreateOneAsync(
+            new CreateIndexModel<Wishlist>(
+                Builders<Wishlist>.IndexKeys.Ascending(w => w.ClientId),
+                new CreateIndexOptions { Name = "ux_wishlists_client", Unique = true }),
+            cancellationToken: ct);
     }
 }

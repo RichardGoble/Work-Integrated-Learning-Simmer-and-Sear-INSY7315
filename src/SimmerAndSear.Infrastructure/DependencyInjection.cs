@@ -56,6 +56,7 @@ public static class DependencyInjection
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<INewsPostRepository, NewsPostRepository>();
+        services.AddScoped<IWishlistRepository, WishlistRepository>();
         services.AddMemoryCache();
         services.AddScoped<ISiteSettingsProvider, CachedSiteSettingsProvider>();
 
