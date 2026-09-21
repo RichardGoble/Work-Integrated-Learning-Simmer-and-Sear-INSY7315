@@ -5,6 +5,7 @@ using MongoDB.Driver;
 using MongoDB.Driver.GridFS;
 using SimmerAndSear.Application.Abstractions;
 using SimmerAndSear.Infrastructure.Caching;
+using SimmerAndSear.Infrastructure.Documents;
 using SimmerAndSear.Infrastructure.Persistence;
 using SimmerAndSear.Infrastructure.Repositories;
 using SimmerAndSear.Infrastructure.Security;
@@ -68,6 +69,7 @@ public static class DependencyInjection
         services.AddScoped<IFileStore, GridFsFileStore>();
         services.AddScoped<IDatabaseHealth, MongoDatabaseHealth>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<IQuotationPdfRenderer, QuestQuotationPdfRenderer>();
 
      
         services.AddSingleton<SchemaStatus>();
