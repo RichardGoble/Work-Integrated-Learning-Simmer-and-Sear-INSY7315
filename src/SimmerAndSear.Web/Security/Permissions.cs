@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
+using SimmerAndSear.Application.Catalogue;
+using SimmerAndSear.Application.Commerce;
 using SimmerAndSear.Domain.Enums;
 
 namespace SimmerAndSear.Web.Security;
@@ -20,6 +22,12 @@ public static class Permissions
         services.AddHttpContextAccessor();
         services.AddScoped<CurrentUser>();
         services.AddScoped<AuditWriter>();
+        services.AddScoped<CartSession>();
+        services.AddScoped<CartService>();
+        services.AddScoped<CartClaim>();
+        services.AddScoped<OrderService>();
+        services.AddScoped<CatalogueService>();
+        services.AddSingleton<OrderStrategyFactory>();
         services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuditedAuthorizationResultHandler>();
         services.AddAuthorization(options =>
         {
@@ -27,7 +35,10 @@ public static class Permissions
             options.AddPolicy(Staff, policy => policy.RequireAuthenticatedUser().RequireRole(nameof(RoleName.SalesAdmin), nameof(RoleName.MasterAdmin)));
             foreach (var permission in Enum.GetValues<Permission>())
             {
-                var roles = permission is Permission.CatalogueManage or Permission.InquiryManage or Permission.SettingsManage
+                // Task 1 reserves the catalogue for the Master Admin; a Sales Admin handles inquiries
+                // and quotes. Granting CatalogueManage to Sales too would break the RBAC story the
+                // demo leads with - a Sales Admin reaching a Master Admin action and being refused.
+                var roles = permission is Permission.InquiryManage or Permission.SettingsManage
                     ? new[] { nameof(RoleName.SalesAdmin), nameof(RoleName.MasterAdmin) }
                     : new[] { nameof(RoleName.MasterAdmin) };
                 options.AddPolicy(permission.ToString(), policy => policy.RequireAuthenticatedUser().RequireRole(roles));

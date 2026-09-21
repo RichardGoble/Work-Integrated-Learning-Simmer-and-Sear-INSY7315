@@ -15,7 +15,9 @@ public sealed class MediaAssetRepository(IMongoDatabase database)
     : MongoRepositoryBase<MediaAsset>(database, MongoCollections.MediaAssets), IMediaAssetRepository
 {
     public async Task<MediaAsset?> GetAsync(string id, CancellationToken ct = default) =>
-        await Collection.Find(Filter.Eq(m => m.Id, id)).Limit(1).FirstOrDefaultAsync(ct);
+        !IsValidId(id)
+            ? null
+            : await Collection.Find(Filter.Eq(m => m.Id, id)).Limit(1).FirstOrDefaultAsync(ct);
 
     public async Task<string> CreateAsync(MediaAsset asset, CancellationToken ct = default)
     {

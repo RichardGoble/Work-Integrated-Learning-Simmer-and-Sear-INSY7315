@@ -16,7 +16,11 @@ public interface IProductRepository
 
     Task<Product?> GetBySkuAsync(string sku, CancellationToken ct = default);
 
+    Task<IReadOnlyList<Product>> GetManyAsync(IEnumerable<string> ids, CancellationToken ct = default);
+
     Task<Page<Product>> SearchAsync(ProductFilter filter, CancellationToken ct = default);
+
+    Task<CatalogueFacets> GetFacetsAsync(bool publishedOnly = true, CancellationToken ct = default);
 
     Task<string> CreateAsync(Product product, CancellationToken ct = default);
 

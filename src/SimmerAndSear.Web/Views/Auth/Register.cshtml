@@ -1,18 +1,47 @@
-@model SimmerAndSear.Contracts.Accounts.RegisterRequest
-@{ ViewData["Title"] = "Register"; }
-<section class="container section-light" style="max-width: 480px; padding: 3rem 1rem;">
-    <h1>Create an account</h1>
-    <form asp-controller="Auth" asp-action="Register" method="post">
-        <div asp-validation-summary="All" role="alert"></div>
-        <label asp-for="FirstName">First name</label>
-        <input asp-for="FirstName" autocomplete="given-name" class="input-field" required maxlength="80" />
-        <label asp-for="LastName">Last name</label>
-        <input asp-for="LastName" autocomplete="family-name" class="input-field" required maxlength="80" />
-        <label asp-for="Email">Email</label>
-        <input asp-for="Email" type="email" autocomplete="email" class="input-field" required maxlength="254" />
-        <label asp-for="Password">Password (12-128 characters)</label>
-        <input name="Password" id="Password" type="password" autocomplete="new-password" class="input-field" required minlength="12" maxlength="128" />
-        <button type="submit" class="btn btn-primary">Register</button>
-    </form>
-    <p><a asp-action="Login">Back to sign in</a></p>
-</section>
+@model SimmerAndSear.Web.ViewModels.RegisterForm
+@{
+    ViewData["Title"] = "Sign up";
+    ViewData["HideNav"] = true;
+}
+
+<div style="background: var(--ss-surface-alt); min-height: 80vh; padding: 2rem 1.5rem 5rem;">
+
+    <a href="/" style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--ss-ink); font-size: 0.95rem; font-weight: 500; text-decoration: none; margin-bottom: 3rem;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        Back to Home
+    </a>
+
+    <div style="max-width: 420px; margin: 0 auto; background: var(--ss-surface); border-radius: var(--ss-radius); padding: 2.5rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+
+        <img src="~/logo.png" alt="Simmer &amp; Sear" style="display: block; width: 190px; margin: 0 auto 0.5rem;" />
+
+        <p style="text-align: center; color: #5b7c99; font-size: 0.95rem; margin: 0 0 2rem;">
+            Quality cookware for every home
+        </p>
+
+        <form asp-controller="Auth" asp-action="Register" method="post" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div asp-validation-summary="All" role="alert" style="color: #b91c1c; font-size: 0.9rem;"></div>
+
+            <label asp-for="FullName" class="visually-hidden">Full Name</label>
+            <input asp-for="FullName" placeholder="Full Name" autocomplete="name" required maxlength="160"
+                   style="width: 100%; padding: 0.8rem 1rem; border: 1px solid var(--ss-border); border-radius: 6px; font-size: 0.95rem;" />
+
+            <label asp-for="Email" class="visually-hidden">Email Address</label>
+            <input asp-for="Email" type="email" placeholder="Email Address" autocomplete="email" required maxlength="254"
+                   style="width: 100%; padding: 0.8rem 1rem; border: 1px solid var(--ss-border); border-radius: 6px; font-size: 0.95rem;" />
+
+            <label asp-for="Password" class="visually-hidden">Password (at least 12 characters)</label>
+            <input asp-for="Password" type="password" placeholder="Password" autocomplete="new-password" required minlength="12" maxlength="128"
+                   style="width: 100%; padding: 0.8rem 1rem; border: 1px solid var(--ss-border); border-radius: 6px; font-size: 0.95rem;" />
+
+            <button type="submit"
+                    style="width: 100%; margin-top: 0.5rem; padding: 0.8rem; background: var(--ss-brand); color: white; border: none; border-radius: 6px; font-weight: 600; font-size: 0.95rem; cursor: pointer;">
+                Sign Up
+            </button>
+        </form>
+
+        <p style="text-align: center; font-weight: 600; font-size: 0.9rem; margin: 1.5rem 0 0;">
+            Already have an account? <a asp-action="Login" style="color: var(--ss-ink);">Login</a>
+        </p>
+    </div>
+</div>

@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using SimmerAndSear.Application.Commerce;
+using SimmerAndSear.Contracts.Commerce;
+using SimmerAndSear.Domain.Enums;
 using SimmerAndSear.Web.Security;
 
 namespace SimmerAndSear.Web.Controllers;
@@ -14,25 +17,87 @@ namespace SimmerAndSear.Web.Controllers;
 //Microsoft, 2026. Views in ASP.NET Core MVC [Source code].
 //Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/views/overview?view=aspnetcore-10.0> [Accessed 18 September 2026].
 // ────────────────────────────────────────────────────────────────────────────
-public class CartController : Controller
+public class CartController(
+    CartService carts,
+    CartSession session,
+    OrderService orders,
+    CurrentUser current,
+    AuditWriter audit) : Controller
 {
-    public IActionResult Index()
+    public async Task<IActionResult> Index(CancellationToken ct)
     {
         ViewData["Title"] = "Your Cart";
-        return View();
+
+        
+        var cart = await carts.ViewAsync(session.Resolve(), ct);
+
+        ViewData["IsEmpty"] = cart.IsEmpty;
+        return View(cart);
     }
 
-    [Authorize(Policy = Permissions.Customer)]
-    public IActionResult Checkout()
+    [HttpGet, Authorize(Policy = Permissions.Customer)]
+    public async Task<IActionResult> Checkout(CancellationToken ct)
     {
         ViewData["Title"] = "Checkout";
-        return View();
+
+        var cart = await carts.ViewAsync(session.Resolve(), ct);
+
+        if (cart.IsEmpty)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+
+        ViewData["Shipping"] = new CheckoutRequest();
+        return View(cart);
     }
 
-    [Authorize(Policy = Permissions.Customer)]
-    public IActionResult OrderConfirmation()
+    [HttpPost, Authorize(Policy = Permissions.Customer)]
+    public async Task<IActionResult> Checkout(CheckoutRequest request, CancellationToken ct)
+    {
+        ViewData["Title"] = "Checkout";
+
+        var cart = await carts.ViewAsync(session.Resolve(), ct);
+
+        if (cart.IsEmpty)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+
+        ViewData["Shipping"] = request;
+
+        if (!ModelState.IsValid)
+        {
+            return View(cart);
+        }
+
+        var result = await orders.PlaceAsync(current.Id!, request, ct);
+
+        switch (result.Outcome)
+        {
+            case CheckoutOutcome.EmptyCart:
+                return RedirectToAction(nameof(Index));
+
+            case CheckoutOutcome.LineUnavailable:
+                ModelState.AddModelError(string.Empty, result.Detail ?? "Your cart needs attention.");
+                return View(cart);
+        }
+
+        var order = result.Order!;
+
+        await audit.WriteAsync(AuditAction.Create,
+            $"{order.OrderType} {order.OrderReference} placed for {order.Total:F2} {order.Currency}");
+
+        return RedirectToAction(nameof(OrderConfirmation), new { id = order.Id });
+    }
+
+    [HttpGet, Authorize(Policy = Permissions.Customer)]
+    public async Task<IActionResult> OrderConfirmation(string id, CancellationToken ct)
     {
         ViewData["Title"] = "Order Confirmed";
-        return View();
+
+        
+        var order = await orders.GetForClientAsync(id, current.Id!, ct);
+
+        return order is null ? NotFound() : View(order);
     }
 }

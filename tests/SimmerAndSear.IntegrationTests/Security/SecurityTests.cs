@@ -230,10 +230,13 @@ public sealed class SecurityTests
         var html = await client.GetStringAsync("/Auth/Login");
         var token = Regex.Match(html, "name=\"__RequestVerificationToken\"[^>]*value=\"([^\"]+)\"").Groups[1].Value;
         token.ShouldNotBeNullOrEmpty();
-        var response = await client.PostAsync("/Auth/Login", new FormUrlEncodedContent(new Dictionary<string, string>
-        { ["Email"] = user.Email, ["Password"] = Password, ["returnUrl"] = "https://evil.example", ["__RequestVerificationToken"] = token }));
+
+        var response = await client.PostAsync("/Auth/Login?returnUrl=https%3A%2F%2Fevil.example", new FormUrlEncodedContent(new Dictionary<string, string>
+        { ["Email"] = user.Email, ["Password"] = Password, ["__RequestVerificationToken"] = token }));
         response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
-        response.Headers.Location!.OriginalString.ShouldBe("/Auth/Profile");
+
+
+        response.Headers.Location!.OriginalString.ShouldBe("/");
         var profile = await client.GetStringAsync("/Auth/Profile");
         profile.ShouldContain(user.Email);
         profile.ShouldNotContain(Password);
@@ -251,7 +254,9 @@ public sealed class SecurityTests
         var principal = AccountCookies.CreatePrincipal(factory.AddUser(role));
         foreach (var permission in Enum.GetValues<Permission>())
         {
-            var expected = permission is Permission.AccountManage or Permission.AuditRead ? master : sales;
+           
+            var expected = permission is Permission.AccountManage or Permission.AuditRead
+                or Permission.CatalogueManage ? master : sales;
             (await authorization.AuthorizeAsync(principal, null, permission.ToString())).Succeeded.ShouldBe(expected);
         }
     }

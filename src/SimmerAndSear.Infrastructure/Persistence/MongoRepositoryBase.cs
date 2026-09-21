@@ -29,6 +29,10 @@ public abstract class MongoRepositoryBase<TEntity> where TEntity : class
     protected static UpdateDefinitionBuilder<TEntity> Update => Builders<TEntity>.Update;
 
     protected static SortDefinitionBuilder<TEntity> SortBy => Builders<TEntity>.Sort;
+
+    protected static bool IsValidId(string? id) =>
+        id is { Length: 24 } && id.All(char.IsAsciiHexDigit);
+
     protected async Task<Page<TEntity>> PageAsync(
         FilterDefinition<TEntity> filter,
         SortDefinition<TEntity> sort,
