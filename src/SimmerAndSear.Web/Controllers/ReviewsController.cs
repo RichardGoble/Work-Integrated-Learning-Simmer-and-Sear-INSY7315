@@ -9,7 +9,7 @@ using SimmerAndSear.Web.Security;
 
 namespace SimmerAndSear.Web.Controllers;
 
-[ApiController, Route("api/reviews")]
+[ApiController, Route("api/reviews"), Route("api/admin/reviews")]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public sealed class ReviewsController(ReviewService service, CurrentUser current, AuditWriter audit) : ControllerBase
 {

@@ -50,6 +50,8 @@ public static class MongoConventions
         MapWithObjectId<AuditLogEntry>();
         MapWithObjectId<Cart>();
         MapWithObjectId<Order>();
+        MapWithObjectId<Review>();
+        MapWithObjectId<NewsPost>();
         MapWithStringId<SiteSettings>();
     }
 
