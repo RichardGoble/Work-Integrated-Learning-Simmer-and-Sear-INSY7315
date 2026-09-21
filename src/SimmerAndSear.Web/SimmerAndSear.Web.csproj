@@ -10,6 +10,12 @@
     <PackageReference Include="Microsoft.Web.LibraryManager.Build" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\images\home_banner.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
   <PropertyGroup>
   </PropertyGroup>
 
