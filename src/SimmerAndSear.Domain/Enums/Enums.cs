@@ -13,7 +13,7 @@ public enum RoleName { Customer, SalesAdmin, MasterAdmin }
 //Microsoft, 2026. Enumeration types - C# reference [Source code].
 //Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum> [Accessed 18 September 2026].
 // ────────────────────────────────────────────────────────────────────────────
-public enum Permission { CatalogueManage, InquiryManage, AccountManage, AuditRead, SettingsManage }
+public enum Permission { CatalogueManage, InquiryManage, AccountManage, AuditRead, SettingsManage, ReviewManage }
 // ── References ──────────────────────────────────────────────────────────────
 //Microsoft, 2026. Enumeration types - C# reference [Source code].
 //Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum> [Accessed 18 September 2026].
