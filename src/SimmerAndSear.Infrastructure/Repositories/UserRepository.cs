@@ -21,7 +21,9 @@ public sealed class UserRepository(IMongoDatabase database)
     : MongoRepositoryBase<User>(database, MongoCollections.Users), IUserRepository
 {
     public async Task<User?> GetAsync(string id, CancellationToken ct = default) =>
-        await Collection.Find(Filter.Eq(u => u.Id, id)).Limit(1).FirstOrDefaultAsync(ct);
+        !IsValidId(id)
+            ? null
+            : await Collection.Find(Filter.Eq(u => u.Id, id)).Limit(1).FirstOrDefaultAsync(ct);
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken ct = default) =>
         await Collection
