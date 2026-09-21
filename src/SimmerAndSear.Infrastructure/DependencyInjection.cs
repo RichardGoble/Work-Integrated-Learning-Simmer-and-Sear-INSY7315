@@ -54,6 +54,8 @@ public static class DependencyInjection
         services.AddScoped<IMediaAssetRepository, MediaAssetRepository>();
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<IReviewRepository, ReviewRepository>();
+        services.AddScoped<INewsPostRepository, NewsPostRepository>();
         services.AddMemoryCache();
         services.AddScoped<ISiteSettingsProvider, CachedSiteSettingsProvider>();
 
