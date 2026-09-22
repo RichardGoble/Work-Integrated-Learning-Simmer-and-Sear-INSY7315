@@ -82,7 +82,9 @@ public sealed class MongoSchemaInitializer(
                      MongoCollections.Carts,
                      MongoCollections.Orders,
                      MongoCollections.Reviews,
-                     MongoCollections.NewsPosts
+                     MongoCollections.NewsPosts,
+                     MongoCollections.Wishlists,
+                     MongoCollections.QuotationDocuments
                  })
         {
             try
@@ -170,12 +172,14 @@ public sealed class MongoSchemaInitializer(
                     { "subtotal", new BsonDocument { { "bsonType", "decimal" }, { "minimum", 0 } } },
                     { "shippingCost", new BsonDocument { { "bsonType", "decimal" }, { "minimum", 0 } } },
                     { "total", new BsonDocument { { "bsonType", "decimal" }, { "minimum", 0 } } },
-                    { "placedAt", new BsonDocument("bsonType", "date") }
+                    { "placedAt", new BsonDocument("bsonType", "date") },
+                    { "companyName", new BsonDocument { { "bsonType", "string" }, { "maxLength", 120 } } },
+                    { "customerNotes", new BsonDocument { { "bsonType", "string" }, { "maxLength", 1000 } } }
                 }
             }
         }, ct);
 
-       
+
         await ApplyValidatorAsync(MongoCollections.Carts, new BsonDocument
         {
             { "bsonType", "object" },
@@ -215,6 +219,44 @@ public sealed class MongoSchemaInitializer(
                     { "authorId", Str(minLength: 1) },
                     { "status", Str(minLength: 1) },
                     { "createdAt", new BsonDocument("bsonType", "date") }
+                }
+            }
+        }, ct);
+
+        await ApplyValidatorAsync(MongoCollections.Wishlists, new BsonDocument
+        {
+            { "bsonType", "object" },
+            { "required", new BsonArray { "clientId", "items", "updatedAt" } },
+            {
+                "properties", new BsonDocument
+                {
+                    { "clientId", Str(minLength: 1) },
+                    { "items", new BsonDocument { { "bsonType", "array" }, { "maxItems", Wishlist.MaxItems } } },
+                    { "updatedAt", new BsonDocument("bsonType", "date") }
+                }
+            }
+        }, ct);
+
+        await ApplyValidatorAsync(MongoCollections.QuotationDocuments, new BsonDocument
+        {
+            { "bsonType", "object" },
+            {
+                "required", new BsonArray
+                {
+                    "orderId", "orderReference", "clientId", "gridFsId", "fileName", "validUntil", "generatedAt"
+                }
+            },
+            {
+                "properties", new BsonDocument
+                {
+                    { "orderId", Str(minLength: 1) },
+                    { "orderReference", Str(minLength: 1) },
+                    { "clientId", Str(minLength: 1) },
+                    { "gridFsId", Str(minLength: 1) },
+                    { "fileName", Str(minLength: 1) },
+                    { "total", new BsonDocument("bsonType", "decimal") },
+                    { "validUntil", new BsonDocument("bsonType", "date") },
+                    { "generatedAt", new BsonDocument("bsonType", "date") }
                 }
             }
         }, ct);
@@ -360,5 +402,21 @@ public sealed class MongoSchemaInitializer(
                 Builders<NewsPost>.IndexKeys.Descending(p => p.PublishedAt),
                 new CreateIndexOptions { Name = "ix_newsposts_published", Sparse = true })
         ], ct);
+
+        var wishlists = database.GetCollection<Wishlist>(MongoCollections.Wishlists);
+
+        await wishlists.Indexes.CreateOneAsync(
+            new CreateIndexModel<Wishlist>(
+                Builders<Wishlist>.IndexKeys.Ascending(w => w.ClientId),
+                new CreateIndexOptions { Name = "ux_wishlists_client", Unique = true }),
+            cancellationToken: ct);
+
+        var quotationDocuments = database.GetCollection<QuotationDocument>(MongoCollections.QuotationDocuments);
+
+        await quotationDocuments.Indexes.CreateOneAsync(
+            new CreateIndexModel<QuotationDocument>(
+                Builders<QuotationDocument>.IndexKeys.Ascending(d => d.OrderId),
+                new CreateIndexOptions { Name = "ux_quotationDocuments_order", Unique = true }),
+            cancellationToken: ct);
     }
 }

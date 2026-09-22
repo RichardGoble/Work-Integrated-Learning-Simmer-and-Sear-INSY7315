@@ -5,6 +5,7 @@ using MongoDB.Driver;
 using MongoDB.Driver.GridFS;
 using SimmerAndSear.Application.Abstractions;
 using SimmerAndSear.Infrastructure.Caching;
+using SimmerAndSear.Infrastructure.Documents;
 using SimmerAndSear.Infrastructure.Persistence;
 using SimmerAndSear.Infrastructure.Repositories;
 using SimmerAndSear.Infrastructure.Security;
@@ -17,6 +18,9 @@ namespace SimmerAndSear.Infrastructure;
 //
 //Microsoft, 2026. Options pattern [Source code].
 //Available at: <https://learn.microsoft.com/en-us/dotnet/core/extensions/options> [Accessed 18 September 2026].
+
+//QuestPDF, n.d. License configuration [Source code].
+//Available at: <https://www.questpdf.com/license/configuration.html> [Accessed 21 September 2026].
 // ────────────────────────────────────────────────────────────────────────────
 public static class DependencyInjection
 {
@@ -24,6 +28,7 @@ public static class DependencyInjection
         this IServiceCollection services, IConfiguration configuration)
     {
         MongoConventions.Register();
+        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
         services.AddOptions<MongoOptions>()
             .Bind(configuration.GetSection(MongoOptions.SectionName))
@@ -57,6 +62,8 @@ public static class DependencyInjection
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<INewsPostRepository, NewsPostRepository>();
+        services.AddScoped<IWishlistRepository, WishlistRepository>();
+        services.AddScoped<IQuotationDocumentRepository, QuotationDocumentRepository>();
         services.AddScoped<IContactRepository, ContactRepository>();
         services.AddScoped<IPartnerRepository, PartnerRepository>();
         services.AddMemoryCache();
@@ -65,6 +72,7 @@ public static class DependencyInjection
         services.AddScoped<IFileStore, GridFsFileStore>();
         services.AddScoped<IDatabaseHealth, MongoDatabaseHealth>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<IQuotationPdfRenderer, QuestQuotationPdfRenderer>();
 
      
         services.AddSingleton<SchemaStatus>();

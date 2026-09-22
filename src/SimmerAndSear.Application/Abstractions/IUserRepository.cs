@@ -16,6 +16,8 @@ public interface IUserRepository
 
     Task<Page<User>> ListAsync(int pageNumber, int pageSize, CancellationToken ct = default);
 
+    Task<Page<User>> ListAdminsAsync(int pageNumber, int pageSize, CancellationToken ct = default);
+
     Task<bool> AnyAdminExistsAsync(CancellationToken ct = default);
 
     Task<string> CreateAsync(User user, CancellationToken ct = default);
