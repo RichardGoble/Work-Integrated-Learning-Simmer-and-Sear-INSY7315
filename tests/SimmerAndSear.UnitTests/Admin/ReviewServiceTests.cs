@@ -210,6 +210,12 @@ public sealed class MemoryReviewRepository : IReviewRepository
         if (idx >= 0) _items[idx] = review;
         return Task.CompletedTask;
     }
+
+    public Task DeleteAsync(string id, CancellationToken ct = default)
+    {
+        _items.RemoveAll(r => r.Id == id);
+        return Task.CompletedTask;
+    }
 }
 
 // ────────────────────────────────────────────────────────────────────────────

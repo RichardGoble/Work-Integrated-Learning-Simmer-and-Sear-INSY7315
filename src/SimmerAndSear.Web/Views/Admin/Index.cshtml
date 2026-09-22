@@ -1,3 +1,4 @@
+@model SimmerAndSear.Web.ViewModels.AdminDashboardVm
 @{
     ViewData["Title"] = "Admin Dashboard";
 }
@@ -11,120 +12,202 @@
             </button></form>
         </div>
 
+        @if (TempData["Error"] is not null)
+        {
+            <div class="alert alert-danger" style="margin-bottom: 2rem; padding: 1rem 1.5rem; background: #fee2e2; border-left: 4px solid #ef4444; color: #b91c1c; border-radius: var(--ss-radius-sm);">
+                @TempData["Error"]
+            </div>
+        }
+
         <div style="display: flex; gap: 0.75rem; margin-bottom: 2rem; border-bottom: 1px solid var(--ss-border); padding-bottom: 1rem; overflow-x: auto; flex-wrap: nowrap; white-space: nowrap;">
-            <button id="btn-orders" class="btn btn-secondary admin-tab-btn" data-click-action="action1">Manage Orders <span style="background: var(--ss-brand); color: white; padding: 0.1rem 0.5rem; border-radius: 50px; font-size: 0.75rem; margin-left: 0.5rem;">[#]</span></button>
-            <button id="btn-bulk" class="btn btn-outline admin-tab-btn" data-click-action="action2">Bulk Requests <span style="background: var(--ss-brand); color: white; padding: 0.1rem 0.5rem; border-radius: 50px; font-size: 0.75rem; margin-left: 0.5rem;">[#]</span></button>
-            <button id="btn-inquiries" class="btn btn-outline admin-tab-btn" data-click-action="action3">Manage Inquiries <span style="background: var(--ss-brand); color: white; padding: 0.1rem 0.5rem; border-radius: 50px; font-size: 0.75rem; margin-left: 0.5rem;">[#]</span></button>
-            <button id="btn-products" class="btn btn-outline admin-tab-btn" data-click-action="action4">Manage Catalogue</button>
-            <button id="btn-attributes" class="btn btn-outline admin-tab-btn" data-click-action="action5">Manage Attributes</button>
-            <button id="btn-journal" class="btn btn-outline admin-tab-btn" data-click-action="action6">Manage Journal</button>
-            <button id="btn-gallery" class="btn btn-outline admin-tab-btn" data-click-action="action7">Manage Gallery</button>
-            <button id="btn-reviews" class="btn btn-outline admin-tab-btn" data-click-action="action8">Manage Reviews</button>
-            <button id="btn-partners" class="btn btn-outline admin-tab-btn" data-click-action="action9">Manage Partners</button>
-            <button id="btn-settings" class="btn btn-outline admin-tab-btn" data-click-action="action10">Settings</button>
+            <button type="button" id="btn-orders" class="btn btn-secondary admin-tab-btn" data-click-action="action1">Manage Orders <span style="background: var(--ss-brand); color: white; padding: 0.1rem 0.5rem; border-radius: 50px; font-size: 0.75rem; margin-left: 0.5rem;">@Model.CheckoutOrders.Count</span></button>
+            <button type="button" id="btn-bulk" class="btn btn-outline admin-tab-btn" data-click-action="action2">Bulk Requests <span style="background: var(--ss-brand); color: white; padding: 0.1rem 0.5rem; border-radius: 50px; font-size: 0.75rem; margin-left: 0.5rem;">@Model.BulkRequests.Count</span></button>
+            <button type="button" id="btn-inquiries" class="btn btn-outline admin-tab-btn" data-click-action="action3">Manage Inquiries <span style="background: var(--ss-brand); color: white; padding: 0.1rem 0.5rem; border-radius: 50px; font-size: 0.75rem; margin-left: 0.5rem;">@Model.Inquiries.Count</span></button>
+            <button type="button" id="btn-products" class="btn btn-outline admin-tab-btn" data-click-action="action4">Manage Catalogue</button>
+            <button type="button" id="btn-attributes" class="btn btn-outline admin-tab-btn" data-click-action="action5">Manage Attributes</button>
+            <button type="button" id="btn-journal" class="btn btn-outline admin-tab-btn" data-click-action="action6">Manage Journal</button>
+            <button type="button" id="btn-gallery" class="btn btn-outline admin-tab-btn" data-click-action="action7">Manage Gallery</button>
+            <button type="button" id="btn-reviews" class="btn btn-outline admin-tab-btn" data-click-action="action8">Manage Reviews</button>
+            <button type="button" id="btn-partners" class="btn btn-outline admin-tab-btn" data-click-action="action9">Manage Partners</button>
+            <button type="button" id="btn-settings" class="btn btn-outline admin-tab-btn" data-click-action="action10">Settings</button>
 @if (User.IsInRole("MasterAdmin")) {
-            <button id="btn-admins" class="btn btn-outline admin-tab-btn" data-click-action="action11">Manage Admins</button>
+            <button type="button" id="btn-admins" class="btn btn-outline admin-tab-btn" data-click-action="action11">Manage Admins</button>
             <a class="btn btn-outline" href="/Admin/Audit">Audit log</a>
 }
         </div>
 
+        <!-- 1. Manage Orders Tab -->
         <div id="tab-orders" class="admin-tab-content" style="display: block;">
             <h3 style="margin-bottom: 1.5rem;">Manage Orders</h3>
             <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
-                <div class="card" style="padding: 2rem; display: flex; flex-direction: column; gap: 1rem; border-left: 4px solid #10b981;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div style="display: flex; gap: 1rem; align-items: center;">
-                            <div style="padding: 0.75rem; background: var(--ss-surface-solid); border-radius: 50%;">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                            </div>
-                            <div>
-                                <h4 style="margin: 0 0 0.25rem 0; font-size: 1.25rem; color: var(--ss-ink);">Order #[Order ID]</h4>
-                                <div style="color: var(--ss-ink-muted); font-size: 0.9rem;">
-                                    <strong>[Customer Name]</strong> � [Order Date] � [Total Price]
+                @if (Model.CheckoutOrders.Count == 0)
+                {
+                    <div class="card" style="padding: 2.5rem; text-align: center; color: var(--ss-ink-muted);">
+                        No checkout orders found.
+                    </div>
+                }
+                @foreach (var order in Model.CheckoutOrders)
+                {
+                    <div class="card" style="padding: 2rem; display: flex; flex-direction: column; gap: 1rem; border-left: 4px solid #10b981;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                <div style="padding: 0.75rem; background: var(--ss-surface-solid); border-radius: 50%;">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                                </div>
+                                <div>
+                                    <h4 style="margin: 0 0 0.25rem 0; font-size: 1.25rem; color: var(--ss-ink);">Order #@order.OrderReference</h4>
+                                    <div style="color: var(--ss-ink-muted); font-size: 0.9rem;">
+                                        <strong>@(order.ShippingDetails?.FullName ?? "Customer")</strong> &bull; @order.PlacedAt.ToString("d MMM yyyy") &bull; @order.Currency @order.Total.ToString("N2")
+                                    </div>
                                 </div>
                             </div>
+                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                <form method="post" action="/Admin/Orders/@order.Id/status" style="margin: 0;">
+                                    @Html.AntiForgeryToken()
+                                    <select name="status" class="input-field" style="padding: 0.5rem; width: auto;" data-submit-on-change>
+                                        @foreach (var s in Enum.GetValues<SimmerAndSear.Domain.Enums.OrderStatus>())
+                                        {
+                                            <option value="@s" selected="@(s == order.Status)">@s</option>
+                                        }
+                                    </select>
+                                </form>
+                                <form method="post" action="/Admin/Orders/@order.Id/delete" data-confirm="Are you sure you want to delete this order?" style="margin: 0;">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" style="color: #ef4444; background: none; border: none; cursor: pointer;" title="Delete Order"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+                                </form>
+                            </div>
                         </div>
-                        <div style="display: flex; gap: 1rem; align-items: center;">
-                            <select class="input-field" style="padding: 0.5rem; width: auto;"><option>[Status]</option></select>
-                            <button style="color: #ef4444; background: none; border: none; cursor: pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+                        <div style="background: var(--ss-surface-solid); padding: 1rem; border-radius: var(--ss-radius-sm); font-size: 0.95rem;">
+                            <strong>Items:</strong> @string.Join(", ", order.Items.Select(i => $"{i.Quantity}x {i.ProductName}"))
+                        </div>
+                        <div style="padding: 1rem; border: 1px solid var(--ss-border); border-radius: var(--ss-radius-sm); font-size: 0.95rem;">
+                            <strong>Shipping Address:</strong><br/>
+                            @if (order.ShippingDetails is not null)
+                            {
+                                @($"{order.ShippingDetails.AddressLine}, {order.ShippingDetails.City}, {order.ShippingDetails.PostalCode}")
+                            }
+                            else
+                            {
+                                <span>No shipping address provided</span>
+                            }
                         </div>
                     </div>
-                    <div style="background: var(--ss-surface-solid); padding: 1rem; border-radius: var(--ss-radius-sm); font-size: 0.95rem;">
-                        <strong>Items:</strong> [Qty]x [Product Name], [Qty]x [Product Name]
-                    </div>
-                    <div style="padding: 1rem; border: 1px solid var(--ss-border); border-radius: var(--ss-radius-sm); font-size: 0.95rem;">
-                        <strong>Shipping Address:</strong><br/>[Address Line 1], [City], [Postal Code]
-                    </div>
-                </div>
+                }
             </div>
         </div>
 
+        <!-- 2. Bulk Requests Tab -->
         <div id="tab-bulk" class="admin-tab-content" style="display: none;">
             <h3 style="margin-bottom: 1.5rem;">Bulk Requests</h3>
             <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
-                <div class="card" style="padding: 2rem; display: flex; flex-direction: column; gap: 1rem; border-left: 4px solid #f59e0b;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div style="display: flex; gap: 1rem; align-items: center;">
-                            <div style="padding: 0.75rem; background: var(--ss-surface-solid); border-radius: 50%;">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
-                            </div>
-                            <div>
-                                <h4 style="margin: 0 0 0.25rem 0; font-size: 1.25rem; color: var(--ss-ink);">Request #[Request ID] - [Date]</h4>
-                                <div style="color: var(--ss-ink-muted); font-size: 0.9rem;">
-                                    <strong>[Customer Name]</strong> ([Company Name]) � <span style="color: #3b82f6">[Email Address]</span>
+                @if (Model.BulkRequests.Count == 0)
+                {
+                    <div class="card" style="padding: 2.5rem; text-align: center; color: var(--ss-ink-muted);">
+                        No bulk quote requests found.
+                    </div>
+                }
+                @foreach (var req in Model.BulkRequests)
+                {
+                    <div class="card" style="padding: 2rem; display: flex; flex-direction: column; gap: 1rem; border-left: 4px solid #f59e0b;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                <div style="padding: 0.75rem; background: var(--ss-surface-solid); border-radius: 50%;">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+                                </div>
+                                <div>
+                                    <h4 style="margin: 0 0 0.25rem 0; font-size: 1.25rem; color: var(--ss-ink);">Request #@req.OrderReference - @req.PlacedAt.ToString("d MMM yyyy")</h4>
+                                    <div style="color: var(--ss-ink-muted); font-size: 0.9rem;">
+                                        <strong>@(req.ShippingDetails?.FullName ?? "Trade Client")</strong> &bull; <span style="color: #3b82f6">@(req.ShippingDetails?.Email ?? req.ClientId)</span>
+                                    </div>
                                 </div>
                             </div>
+                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                <form method="post" action="/Admin/Orders/@req.Id/status" style="margin: 0;">
+                                    @Html.AntiForgeryToken()
+                                    <select name="status" class="input-field" style="padding: 0.5rem; width: auto;" data-submit-on-change>
+                                        @foreach (var s in Enum.GetValues<SimmerAndSear.Domain.Enums.OrderStatus>())
+                                        {
+                                            <option value="@s" selected="@(s == req.Status)">@s</option>
+                                        }
+                                    </select>
+                                </form>
+                                <form method="post" action="/Admin/Orders/@req.Id/delete" data-confirm="Are you sure you want to delete this bulk request?" style="margin: 0;">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" style="color: #ef4444; background: none; border: none; cursor: pointer;" title="Delete Request"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+                                </form>
+                            </div>
                         </div>
-                        <div style="display: flex; gap: 1rem; align-items: center;">
-                            <select class="input-field" style="padding: 0.5rem; width: auto;"><option>[Status]</option></select>
-                            <button style="color: #ef4444; background: none; border: none; cursor: pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+                        <div style="background: var(--ss-surface-solid); padding: 1rem; border-radius: var(--ss-radius-sm);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h5 style="margin: 0;">Requested Items (Est. Total: @req.Currency @req.Total.ToString("N2"))</h5>
+                                <a href="#" onclick="alert('The B2B Lookbook PDF is currently being updated.'); return false;" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem; text-decoration: none;">View Lookbook (PDF)</a>
+                            </div>
+                            <ul style="margin: 0; padding-left: 1.5rem; font-size: 0.9rem;">
+                                @foreach (var item in req.Items)
+                                {
+                                    <li>@item.Quantity x @item.ProductName (@req.Currency @item.UnitPrice.ToString("N2"))</li>
+                                }
+                            </ul>
+                        </div>
+                        <div style="padding: 1rem; border: 1px solid var(--ss-border); border-radius: var(--ss-radius-sm); font-size: 0.95rem;">
+                            <strong>Delivery / Contact Details:</strong><br/>
+                            @if (req.ShippingDetails is not null)
+                            {
+                                @($"{req.ShippingDetails.AddressLine}, {req.ShippingDetails.City}, {req.ShippingDetails.PostalCode}")
+                            }
+                            else
+                            {
+                                <span>Bulk inquiry received for pricing and delivery estimate.</span>
+                            }
                         </div>
                     </div>
-                    <div style="background: var(--ss-surface-solid); padding: 1rem; border-radius: var(--ss-radius-sm);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                            <h5 style="margin: 0;">Requested Items (Est. Total: [Est Total])</h5>
-                            <button class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem;">View Lookbook (PDF)</button>
-                        </div>
-                        <ul style="margin: 0; padding-left: 1.5rem; font-size: 0.9rem;">
-                            <li>[Qty]x [Product Name]</li>
-                        </ul>
-                    </div>
-                    <div style="padding: 1rem; border: 1px solid var(--ss-border); border-radius: var(--ss-radius-sm); font-size: 0.95rem;">
-                        <strong>Customer Message:</strong><br/>[Message Content]
-                    </div>
-                </div>
+                }
             </div>
         </div>
 
+        <!-- 3. Manage Inquiries Tab -->
         <div id="tab-inquiries" class="admin-tab-content" style="display: none;">
             <h3 style="margin-bottom: 1.5rem;">Manage Inquiries</h3>
             <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
-                <div class="card" style="padding: 2rem; display: flex; flex-direction: column; gap: 1rem; border-left: 4px solid var(--ss-brand);">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div style="display: flex; gap: 1rem; align-items: center;">
-                            <div style="padding: 0.75rem; background: var(--ss-surface-solid); border-radius: 50%;">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ss-brand)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                            </div>
-                            <div>
-                                <h4 style="margin: 0 0 0.25rem 0; font-size: 1.25rem; color: var(--ss-ink);">[Inquiry Type] from [Name]</h4>
-                                <div style="color: var(--ss-ink-muted); font-size: 0.9rem;">
-                                    <span style="color: #3b82f6">[Email]</span> � [Date]
+                @if (Model.Inquiries.Count == 0)
+                {
+                    <div class="card" style="padding: 2.5rem; text-align: center; color: var(--ss-ink-muted);">
+                        No contact inquiries found.
+                    </div>
+                }
+                @foreach (var inq in Model.Inquiries)
+                {
+                    <div class="card" style="padding: 2rem; display: flex; flex-direction: column; gap: 1rem; border-left: 4px solid var(--ss-brand);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                <div style="padding: 0.75rem; background: var(--ss-surface-solid); border-radius: 50%;">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ss-brand)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                </div>
+                                <div>
+                                    <h4 style="margin: 0 0 0.25rem 0; font-size: 1.25rem; color: var(--ss-ink);">@inq.InquiryType from @inq.FullName</h4>
+                                    <div style="color: var(--ss-ink-muted); font-size: 0.9rem;">
+                                        <a href="mailto:@inq.Email" style="color: #3b82f6">@inq.Email</a> &bull; @inq.SubmittedAt.ToString("d MMM yyyy, HH:mm")
+                                    </div>
                                 </div>
                             </div>
+                            <form method="post" action="/Admin/Inquiries/@inq.Id/delete" data-confirm="Are you sure you want to delete this inquiry?" style="margin: 0;">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" style="color: #ef4444; background: none; border: none; cursor: pointer;" title="Delete Inquiry"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+                            </form>
                         </div>
-                        <button style="color: #ef4444; background: none; border: none; cursor: pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+                        <div style="padding: 1rem; border: 1px solid var(--ss-border); border-radius: var(--ss-radius-sm); font-size: 0.95rem;">
+                            @inq.Message
+                        </div>
                     </div>
-                    <div style="padding: 1rem; border: 1px solid var(--ss-border); border-radius: var(--ss-radius-sm); font-size: 0.95rem;">
-                        [Message Content]
-                    </div>
-                </div>
+                }
             </div>
         </div>
 
+        <!-- 4. Manage Catalogue Tab -->
         <div id="tab-products" class="admin-tab-content" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <h3 style="margin: 0;">Manage Catalogue</h3>
-                <button class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem;" data-click-action="action13">
+                <button class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem;" data-toggle-form="product">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add New Product
                 </button>
             </div>
@@ -132,51 +215,69 @@
             <!-- Add New Product Form -->
             <div id="form-add-product" class="card" style="padding: 3rem; margin-bottom: 2rem; border-top: 4px solid var(--ss-brand); display: none;">
                 <h3 style="margin-bottom: 2rem;">Add New Product</h3>
-                <form style="display: flex; flex-direction: column; gap: 2rem;">
+                <form data-admin-save method="post" action="/Admin/Products/Create" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 2rem;">
+                    @Html.AntiForgeryToken()
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
                         <div>
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Product Name</label>
-                            <input type="text" class="input-field" required />
+                            <input type="text" name="name" minlength="2" maxlength="160" class="input-field" placeholder="e.g. Signature Cast Iron Skillet" required />
+                            <input type="hidden" name="sku" />
+                            <input type="hidden" name="stockQuantity" value="10" />
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Product Images</label>
-                            <button type="button" class="btn btn-outline" style="display: flex; align-items: center; gap: 0.5rem; width: fit-content;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Image</button>
-                            <small style="color: var(--ss-ink-muted); display: block; margin-top: 0.5rem;">Select image files (under 2MB)</small>
+                            <input type="file" name="imageFile" class="input-field" accept="image/*" />
+                            <small style="color: var(--ss-ink-muted); display: block; margin-top: 0.5rem;">Select image file (under 10MB)</small>
                         </div>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.5rem;">
                         <div>
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Price (R)</label>
-                            <input type="number" class="input-field" required />
+                            <input type="number" min="0.01" max="1000000" step="0.01" name="price" class="input-field" placeholder="1299.00" required />
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Product Type</label>
-                            <select class="input-field"><option>[Select Type]</option></select>
+                            <input type="text" name="cookwareType" minlength="1" maxlength="80" class="input-field" placeholder="Skillet / Pot / Pan" list="type-list" required />
+                            <datalist id="type-list">
+                                @foreach (var t in Model.Facets.CookwareTypes) { <option value="@t">@t</option> }
+                            </datalist>
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Material</label>
-                            <select class="input-field"><option>[Select Material]</option></select>
+                            <input type="text" name="material" minlength="0" maxlength="120" class="input-field" placeholder="Cast Iron / Stainless Steel" list="mat-list" />
+                            <datalist id="mat-list">
+                                @foreach (var m in Model.Facets.Materials) { <option value="@m">@m</option> }
+                            </datalist>
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Brand</label>
-                            <select class="input-field"><option>[Select Brand]</option></select>
+                            <input type="text" name="brand" minlength="1" maxlength="80" class="input-field" placeholder="Simmer & Sear" list="brand-list" required />
+                            <datalist id="brand-list">
+                                @foreach (var b in Model.Facets.Brands) { <option value="@b">@b</option> }
+                            </datalist>
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Range</label>
-                            <select class="input-field"><option>[Select Range]</option></select>
+                            <input type="text" name="category" minlength="1" maxlength="80" class="input-field" placeholder="Signature" list="cat-list" required />
+                            <datalist id="cat-list">
+                                @foreach (var c in Model.Facets.Categories) { <option value="@c">@c</option> }
+                            </datalist>
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Size</label>
-                            <select class="input-field"><option>[Select Size]</option></select>
+                            <input type="text" name="sizeLabel" minlength="0" maxlength="40" class="input-field" placeholder="28cm" list="size-list" />
+                            <datalist id="size-list">
+                                @foreach (var s in Model.Facets.SizeLabels) { <option value="@s">@s</option> }
+                            </datalist>
                         </div>
                     </div>
                     <div>
                         <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Description</label>
-                        <textarea class="input-field" rows="4" required></textarea>
+                        <textarea name="description" minlength="10" maxlength="4000" class="input-field" rows="4" placeholder="Detailed product description..." required></textarea>
                     </div>
                     <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem;">
-                        <button type="button" class="btn btn-outline" data-click-action="action14">Cancel</button>
-                        <button type="button" class="btn btn-primary">Save Product</button>
+                        <button type="button" class="btn btn-outline" data-toggle-form="product">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Product</button>
                     </div>
                 </form>
             </div>
@@ -188,179 +289,246 @@
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ss-brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
                         <h3 style="margin: 0; font-size: 1.5rem;">Filter Products</h3>
                     </div>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem;">
-                        <div>
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--ss-ink); font-size: 0.9rem;">Search keyword</label>
-                            <div style="display: flex; align-items: center; background: var(--ss-surface-solid); padding: 0.5rem 1rem; border-radius: var(--ss-radius-sm);">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ss-ink-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.5rem;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                                <input type="text" placeholder="Search..." style="flex: 1; border: none; background: transparent; outline: none; color: var(--ss-ink); font-size: 1rem;" />
+
+                    <form id="product-filter-form" method="get" action="/Admin#products">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem;">
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--ss-ink); font-size: 0.9rem;">Search keyword</label>
+                                <div style="display: flex; align-items: center; background: var(--ss-surface-solid); padding: 0.5rem 1rem; border-radius: var(--ss-radius-sm);">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ss-ink-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.5rem;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                    <input id="product-search" name="searchTerm" type="text" placeholder="Search..." value="@Model.ProductFilter.SearchTerm" style="flex: 1; border: none; background: transparent; outline: none; color: var(--ss-ink); font-size: 1rem;" />
+                                </div>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--ss-ink); font-size: 0.9rem;">Product Type</label>
+                                <select id="filter-type" name="cookwareType" class="input-field" style="background: var(--ss-surface-solid);">
+                                    <option value="">[All Types]</option>
+                                    @foreach (var t in Model.Facets.CookwareTypes) { <option value="@t" selected="@(t == Model.ProductFilter.CookwareType)">@t</option> }
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--ss-ink); font-size: 0.9rem;">Material</label>
+                                <select id="filter-material" name="material" class="input-field" style="background: var(--ss-surface-solid);">
+                                    <option value="">[All Materials]</option>
+                                    @foreach (var m in Model.Facets.Materials) { <option value="@m" selected="@(m == Model.ProductFilter.Material)">@m</option> }
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--ss-ink); font-size: 0.9rem;">Brand</label>
+                                <select id="filter-brand" name="brand" class="input-field" style="background: var(--ss-surface-solid);">
+                                    <option value="">[All Brands]</option>
+                                    @foreach (var b in Model.Facets.Brands) { <option value="@b" selected="@(b == Model.ProductFilter.Brand)">@b</option> }
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--ss-ink); font-size: 0.9rem;">Range</label>
+                                <select id="filter-range" name="category" class="input-field" style="background: var(--ss-surface-solid);">
+                                    <option value="">[Product Range]</option>
+                                    @foreach (var c in Model.Facets.Categories) { <option value="@c" selected="@(c == Model.ProductFilter.Category)">@c</option> }
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--ss-ink); font-size: 0.9rem;">Size</label>
+                                <select id="filter-size" name="sizeLabel" class="input-field" style="background: var(--ss-surface-solid);">
+                                    <option value="">[Size]</option>
+                                    @foreach (var s in Model.Facets.SizeLabels) { <option value="@s" selected="@(s == Model.ProductFilter.SizeLabel)">@s</option> }
+                                </select>
                             </div>
                         </div>
-                        <div>
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--ss-ink); font-size: 0.9rem;">Product Type</label>
-                            <select class="input-field" style="background: var(--ss-surface-solid);"><option value="">[All Types]</option></select>
+
+                        <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
+                            <a href="/Admin#products" class="btn btn-outline" style="padding: 0.5rem 1.5rem; text-decoration: none;">Clear Filters</a>
+                            <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1.5rem;">Filter</button>
                         </div>
-                        <div>
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--ss-ink); font-size: 0.9rem;">Material</label>
-                            <select class="input-field" style="background: var(--ss-surface-solid);"><option value="">[All Materials]</option></select>
-                        </div>
-                        <div>
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--ss-ink); font-size: 0.9rem;">Brand</label>
-                            <select class="input-field" style="background: var(--ss-surface-solid);"><option value="">[All Brands]</option></select>
-                        </div>
-                        <div>
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--ss-ink); font-size: 0.9rem;">Range</label>
-                            <select class="input-field" style="background: var(--ss-surface-solid);"><option value="">[Product Range]</option></select>
-                        </div>
-                        <div>
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--ss-ink); font-size: 0.9rem;">Size</label>
-                            <select class="input-field" style="background: var(--ss-surface-solid);"><option value="">[Size]</option></select>
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
-                        <button class="btn btn-outline" style="padding: 0.5rem 1.5rem;">Clear Filters</button>
-                        <button class="btn btn-primary" style="padding: 0.5rem 1.5rem;">Filter</button>
-                    </div>
+                    </form>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
-                    <div class="card" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <div style="width: 80px; height: 80px; background: #e5e9f0; display: flex; align-items: center; justify-content: center; border-radius: var(--ss-radius-sm); border: 2px dashed #c2c9d6; color: #4c566a; font-size: 0.7rem;">[Img]</div>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <button style="color: #3b82f6; background: none; border: none; cursor: pointer; padding: 0.5rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-                                <button style="color: #ef4444; background: none; border: none; cursor: pointer; padding: 0.5rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+                <div id="product-cards-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+                    @if (Model.Products.Count == 0)
+                    {
+                        <div class="card" style="padding: 2.5rem; grid-column: 1 / -1; text-align: center; color: var(--ss-ink-muted);">
+                            No products found in the catalogue.
+                        </div>
+                    }
+                    @foreach (var p in Model.Products)
+                    {
+                        <div class="card product-admin-item"
+                             data-name="@p.Name.ToLowerInvariant()"
+                             data-type="@p.CookwareType.ToLowerInvariant()"
+                             data-material="@(p.Material?.ToLowerInvariant() ?? "")"
+                             data-brand="@p.Brand.ToLowerInvariant()"
+                             data-range="@p.Category.ToLowerInvariant()"
+                             data-size="@(p.SizeLabel?.ToLowerInvariant() ?? "")"
+                             style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <div style="width: 80px; height: 80px; background: #e5e9f0; display: flex; align-items: center; justify-content: center; border-radius: var(--ss-radius-sm); border: 2px dashed #c2c9d6; color: #4c566a; font-size: 0.7rem; overflow: hidden;">
+                                    @if (p.PrimaryImage is not null)
+                                    {
+                                        <img src="@p.PrimaryImage.ThumbnailUrl" alt="@p.Name" style="width: 100%; height: 100%; object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        <span>[Img]</span>
+                                    }
+                                </div>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <a href="#products" data-edit-product="@p.Id" style="color: #3b82f6; background: none; border: none; cursor: pointer; padding: 0.5rem; display: flex; align-items: center;" title="Edit Product"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></a>
+                                    <form method="post" action="/Admin/Products/@p.Id/delete" data-confirm="Are you sure you want to delete this product?" style="margin: 0;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" style="color: #ef4444; background: none; border: none; cursor: pointer; padding: 0.5rem; display: flex; align-items: center;" title="Delete Product"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--ss-ink-muted); text-transform: uppercase;">@p.Brand • @(p.Material ?? "Premium")</div>
+                                <h4 style="margin: 0.25rem 0; font-size: 1.1rem;">@p.Name</h4>
+                                <div style="font-weight: bold; color: var(--ss-brand);">@p.Currency @p.Price.ToString("N2")</div>
+                                <div style="font-size: 0.85rem; color: var(--ss-ink-muted); margin-top: 0.5rem;">Type: @p.CookwareType | Range: @p.Category | Size: @(p.SizeLabel ?? "Standard")</div>
                             </div>
                         </div>
-                        <div>
-                            <div style="font-size: 0.75rem; color: var(--ss-ink-muted); text-transform: uppercase;">[Brand] • [Material]</div>
-                            <h4 style="margin: 0.25rem 0; font-size: 1.1rem;">[Product Title]</h4>
-                            <div style="font-weight: bold; color: var(--ss-brand);">[Price]</div>
-                            <div style="font-size: 0.85rem; color: var(--ss-ink-muted); margin-top: 0.5rem;">Type: [Type] | Range: [Range] | Size: [Size]</div>
-                        </div>
-                    </div>
+                    }
                 </div>
             </div>
         </div>
 
+        <!-- 5. Manage Attributes Tab -->
         <div id="tab-attributes" class="admin-tab-content" style="display: none;">
             <h3 style="margin-bottom: 2rem;">Manage Product Attributes</h3>
-            
+
             <div class="card" style="padding: 2rem; margin-bottom: 2rem; max-width: 600px;">
                 <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem;">Attribute Type</label>
-                <select class="input-field" style="margin-bottom: 1.5rem;"><option>All Attributes</option></select>
+                <select id="select-attribute-filter" class="input-field" style="margin-bottom: 1.5rem;" data-attribute-filter>
+                    <option value="all">All Attributes</option>
+                    <option value="types">Product Types</option>
+                    <option value="materials">Materials</option>
+                    <option value="brands">Brands</option>
+                    <option value="sizes">Sizes / Dimensions</option>
+                    <option value="ranges">Ranges / Categories</option>
+                </select>
                 <div style="display: flex; justify-content: flex-end; gap: 1rem;">
-                    <button class="btn" style="background-color: #707b8e; color: white; border: none; padding: 0.5rem 1.5rem; border-radius: var(--ss-radius-sm); font-weight: 500;">Clear filters</button>
-                    <button class="btn" style="background-color: #707b8e; color: white; border: none; padding: 0.5rem 1.5rem; border-radius: var(--ss-radius-sm); font-weight: 500;">Filter</button>
+                    <button class="btn" data-filter-attributes="all" style="background-color: #707b8e; color: white; border: none; padding: 0.5rem 1.5rem; border-radius: var(--ss-radius-sm); font-weight: 500; cursor: pointer;">Clear filters</button>
+                    <button class="btn" data-filter-attributes="selected" style="background-color: #707b8e; color: white; border: none; padding: 0.5rem 1.5rem; border-radius: var(--ss-radius-sm); font-weight: 500; cursor: pointer;">Filter</button>
                 </div>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                
                 <!-- Product Types -->
-                <div class="card" style="padding: 2rem;">
+                <div id="attr-sec-types" class="card" style="padding: 2rem;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start;">
                         <div>
                             <h4 style="margin: 0 0 1.5rem 0; font-size: 0.95rem; font-weight: 600;">Current Product Types</h4>
                             <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
-                                <div style="display: flex; align-items: center; gap: 0.5rem; background: #f1f5f9; padding: 0.4rem 0.8rem; border-radius: 50px; font-size: 0.85rem; color: #334155;">[Product Type] <button style="background: none; border: none; padding: 0; cursor: pointer; color: #ef4444; display: flex;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg></button></div>
+                                @foreach (var t in Model.Facets.CookwareTypes)
+                                {
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; background: #f1f5f9; padding: 0.4rem 0.8rem; border-radius: 50px; font-size: 0.85rem; color: #334155;">@t</div>
+                                }
                             </div>
                         </div>
                         <div>
                             <h4 style="margin: 0 0 1.5rem 0; font-size: 0.95rem; font-weight: 500; color: #64748b;">New Value</h4>
                             <div style="display: flex; gap: 1rem;">
-                                <input type="text" class="input-field" placeholder="e.g. Strainer" style="flex: 1;" />
-                                <button class="btn btn-primary" style="padding: 0 2rem; border-radius: var(--ss-radius-sm);">Add</button>
+                                <input type="text" id="new-type-val" class="input-field" placeholder="e.g. Strainer" style="flex: 1;" />
+                                <button type="button" class="btn btn-primary" data-add-attribute="cookwareType" data-input="new-type-val" style="padding: 0 2rem; border-radius: var(--ss-radius-sm);">Add</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Materials -->
-                <div class="card" style="padding: 2rem;">
+                <div id="attr-sec-materials" class="card" style="padding: 2rem;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start;">
                         <div>
                             <h4 style="margin: 0 0 1.5rem 0; font-size: 0.95rem; font-weight: 600;">Current Materials</h4>
                             <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
-                                <div style="display: flex; align-items: center; gap: 0.5rem; background: #f1f5f9; padding: 0.4rem 0.8rem; border-radius: 50px; font-size: 0.85rem; color: #334155;">[Material] <button style="background: none; border: none; padding: 0; cursor: pointer; color: #ef4444; display: flex;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg></button></div>
+                                @foreach (var m in Model.Facets.Materials)
+                                {
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; background: #f1f5f9; padding: 0.4rem 0.8rem; border-radius: 50px; font-size: 0.85rem; color: #334155;">@m</div>
+                                }
                             </div>
                         </div>
                         <div>
                             <h4 style="margin: 0 0 1.5rem 0; font-size: 0.95rem; font-weight: 500; color: #64748b;">New Value</h4>
                             <div style="display: flex; gap: 1rem;">
-                                <input type="text" class="input-field" placeholder="e.g. Ceramic" style="flex: 1;" />
-                                <button class="btn btn-primary" style="padding: 0 2rem; border-radius: var(--ss-radius-sm);">Add</button>
+                                <input type="text" id="new-mat-val" class="input-field" placeholder="e.g. Ceramic" style="flex: 1;" />
+                                <button type="button" class="btn btn-primary" data-add-attribute="material" data-input="new-mat-val" style="padding: 0 2rem; border-radius: var(--ss-radius-sm);">Add</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Brands -->
-                <div class="card" style="padding: 2rem;">
+                <div id="attr-sec-brands" class="card" style="padding: 2rem;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start;">
                         <div>
                             <h4 style="margin: 0 0 1.5rem 0; font-size: 0.95rem; font-weight: 600;">Current brands</h4>
                             <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
-                                <div style="display: flex; align-items: center; gap: 0.5rem; background: #f1f5f9; padding: 0.4rem 0.8rem; border-radius: 50px; font-size: 0.85rem; color: #334155;">[Brand] <button style="background: none; border: none; padding: 0; cursor: pointer; color: #ef4444; display: flex;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg></button></div>
+                                @foreach (var b in Model.Facets.Brands)
+                                {
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; background: #f1f5f9; padding: 0.4rem 0.8rem; border-radius: 50px; font-size: 0.85rem; color: #334155;">@b</div>
+                                }
                             </div>
                         </div>
                         <div>
                             <h4 style="margin: 0 0 1.5rem 0; font-size: 0.95rem; font-weight: 500; color: #64748b;">New Value</h4>
                             <div style="display: flex; gap: 1rem;">
-                                <input type="text" class="input-field" placeholder="e.g. Le Creuset" style="flex: 1;" />
-                                <button class="btn btn-primary" style="padding: 0 2rem; border-radius: var(--ss-radius-sm);">Add</button>
+                                <input type="text" id="new-brand-val" class="input-field" placeholder="e.g. Le Creuset" style="flex: 1;" />
+                                <button type="button" class="btn btn-primary" data-add-attribute="brand" data-input="new-brand-val" style="padding: 0 2rem; border-radius: var(--ss-radius-sm);">Add</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Types (Sizes) -->
-                <div class="card" style="padding: 2rem;">
+                <!-- Sizes -->
+                <div id="attr-sec-sizes" class="card" style="padding: 2rem;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start;">
                         <div>
                             <h4 style="margin: 0 0 1.5rem 0; font-size: 0.95rem; font-weight: 600;">Current Types</h4>
                             <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
-                                <div style="display: flex; align-items: center; gap: 0.5rem; background: #f1f5f9; padding: 0.4rem 0.8rem; border-radius: 50px; font-size: 0.85rem; color: #334155;">[Size/Type] <button style="background: none; border: none; padding: 0; cursor: pointer; color: #ef4444; display: flex;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg></button></div>
+                                @foreach (var s in Model.Facets.SizeLabels)
+                                {
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; background: #f1f5f9; padding: 0.4rem 0.8rem; border-radius: 50px; font-size: 0.85rem; color: #334155;">@s</div>
+                                }
                             </div>
                         </div>
                         <div>
                             <h4 style="margin: 0 0 1.5rem 0; font-size: 0.95rem; font-weight: 500; color: #64748b;">New Value</h4>
                             <div style="display: flex; gap: 1rem;">
-                                <input type="text" class="input-field" placeholder="e.g. 36cm" style="flex: 1;" />
-                                <button class="btn btn-primary" style="padding: 0 2rem; border-radius: var(--ss-radius-sm);">Add</button>
+                                <input type="text" id="new-size-val" class="input-field" placeholder="e.g. 36cm" style="flex: 1;" />
+                                <button type="button" class="btn btn-primary" data-add-attribute="sizeLabel" data-input="new-size-val" style="padding: 0 2rem; border-radius: var(--ss-radius-sm);">Add</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Ranges -->
-                <div class="card" style="padding: 2rem;">
+                <div id="attr-sec-ranges" class="card" style="padding: 2rem;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start;">
                         <div>
                             <h4 style="margin: 0 0 1.5rem 0; font-size: 0.95rem; font-weight: 600;">Current Ranges</h4>
                             <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
-                                <div style="display: flex; align-items: center; gap: 0.5rem; background: #f1f5f9; padding: 0.4rem 0.8rem; border-radius: 50px; font-size: 0.85rem; color: #334155;">[Range] <button style="background: none; border: none; padding: 0; cursor: pointer; color: #ef4444; display: flex;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg></button></div>
+                                @foreach (var r in Model.Facets.Categories)
+                                {
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; background: #f1f5f9; padding: 0.4rem 0.8rem; border-radius: 50px; font-size: 0.85rem; color: #334155;">@r</div>
+                                }
                             </div>
                         </div>
                         <div>
                             <h4 style="margin: 0 0 1.5rem 0; font-size: 0.95rem; font-weight: 500; color: #64748b;">New Value</h4>
                             <div style="display: flex; gap: 1rem;">
-                                <input type="text" class="input-field" placeholder="e.g. Signature" style="flex: 1;" />
-                                <button class="btn btn-primary" style="padding: 0 2rem; border-radius: var(--ss-radius-sm);">Add</button>
+                                <input type="text" id="new-range-val" class="input-field" placeholder="e.g. Signature" style="flex: 1;" />
+                                <button type="button" class="btn btn-primary" data-add-attribute="category" data-input="new-range-val" style="padding: 0 2rem; border-radius: var(--ss-radius-sm);">Add</button>
                             </div>
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
 
+        <!-- 6. Manage Journal Tab -->
         <div id="tab-journal" class="admin-tab-content" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <h3 style="margin: 0;">Manage Journal</h3>
-                <button class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem;" data-click-action="action15">
+                <button class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem;" data-toggle-form="journal">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add New Entry
                 </button>
             </div>
@@ -368,25 +536,26 @@
             <!-- Add New Journal Entry Form -->
             <div id="form-add-journal" class="card" style="padding: 3rem; margin-bottom: 2rem; border-top: 4px solid var(--ss-brand); display: none;">
                 <h3 style="margin-bottom: 2rem;">Add New Entry</h3>
-                <form style="display: flex; flex-direction: column; gap: 2rem;">
+                <form data-admin-save method="post" action="/Admin/Journal/Create" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 2rem;">
+                    @Html.AntiForgeryToken()
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
                         <div>
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Title</label>
-                            <input type="text" class="input-field" required />
+                            <input type="text" name="title" class="input-field" placeholder="Article Title" required />
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Article Images</label>
-                            <button type="button" class="btn btn-outline" style="display: flex; align-items: center; gap: 0.5rem; width: fit-content;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Image</button>
-                            <small style="color: var(--ss-ink-muted); display: block; margin-top: 0.5rem;">Select image file (under 2MB)</small>
+                            <input type="file" name="imageFile" class="input-field" accept="image/*" />
+                            <small style="color: var(--ss-ink-muted); display: block; margin-top: 0.5rem;">Select image file (under 10MB)</small>
                         </div>
                     </div>
                     <div>
                         <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Content</label>
-                        <textarea class="input-field" rows="8" required></textarea>
+                        <textarea name="content" class="input-field" rows="8" placeholder="Write your journal post content here..." required></textarea>
                     </div>
                     <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem;">
-                        <button type="button" class="btn btn-outline" data-click-action="action16">Cancel</button>
-                        <button type="button" class="btn btn-primary">Save Entry</button>
+                        <button type="button" class="btn btn-outline" data-toggle-form="journal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Entry</button>
                     </div>
                 </form>
             </div>
@@ -401,129 +570,153 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr style="border-bottom: 1px solid var(--ss-border);">
-                            <td style="padding: 1.5rem; font-weight: 500;">[Article Title]</td>
-                            <td style="padding: 1.5rem; color: var(--ss-ink-muted);">[Date]</td>
-                            <td style="padding: 1.5rem; text-align: right;">
-                                <button style="padding: 0.5rem; color: #3b82f6; border: none; background: none; cursor: pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-                                <button style="padding: 0.5rem; color: #ef4444; border: none; background: none; cursor: pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
-                            </td>
-                        </tr>
+                        @if (Model.NewsPosts.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="3" style="padding: 2rem; text-align: center; color: var(--ss-ink-muted);">No journal entries found.</td>
+                            </tr>
+                        }
+                        @foreach (var post in Model.NewsPosts)
+                        {
+                            <tr style="border-bottom: 1px solid var(--ss-border);">
+                                <td style="padding: 1.5rem; font-weight: 500;">@post.Title</td>
+                                <td style="padding: 1.5rem; color: var(--ss-ink-muted);">@post.CreatedAt.ToString("d MMM yyyy")</td>
+                                <td style="padding: 1.5rem; text-align: right;">
+                                    <div style="display: inline-flex; gap: 0.5rem; align-items: center;">
+                                        <a href="#journal" data-edit-journal="@post.Id" style="padding: 0.5rem; color: #3b82f6; border: none; background: none; cursor: pointer; display: flex;" title="Edit Post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></a>
+                                        <form method="post" action="/Admin/Journal/@post.Id/delete" data-confirm="Are you sure you want to delete this journal post?" style="margin: 0; display: inline;">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" style="padding: 0.5rem; color: #ef4444; border: none; background: none; cursor: pointer; display: flex;" title="Delete Post"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
         </div>
 
+        <!-- 7. Manage Gallery Tab -->
         <div id="tab-gallery" class="admin-tab-content" style="display: none;">
             <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 2rem;">
-                <button class="btn btn-primary" style="padding: 0.5rem 1.5rem; font-weight: 500; border: none; border-radius: var(--ss-radius-sm);" data-click-action="action17">
+                <button class="btn btn-primary" style="padding: 0.5rem 1.5rem; font-weight: 500; border: none; border-radius: var(--ss-radius-sm);" data-toggle-form="gallery-image">
                     Add New Image
                 </button>
             </div>
 
             <!-- Add Image Form -->
-            <div id="form-add-gallery-image" style="display: none; background: white; padding: 3rem; border-radius: var(--ss-radius-md); box-shadow: var(--ss-shadow-1);">
+            <div id="form-add-gallery-image" style="display: none; background: white; padding: 3rem; border-radius: var(--ss-radius-md); box-shadow: var(--ss-shadow-1); margin-bottom: 2rem;">
                 <h3 style="margin: 0 0 2rem 0; font-size: 1.5rem;">Add Image</h3>
-                <div style="margin-bottom: 3rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #475569; font-size: 0.95rem;">Upload Image</label>
-                    <div style="border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm); padding: 0.5rem;">
-                        <button type="button" style="background: white; border: 1px solid #000; color: #000; padding: 0.4rem 1.5rem; border-radius: var(--ss-radius-sm); font-weight: 600; font-size: 0.9rem; cursor: pointer;">Add</button>
+                <form data-admin-save method="post" action="/Admin/Gallery/Create" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <div style="margin-bottom: 3rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #475569; font-size: 0.95rem;">Upload Image</label>
+                        <input type="file" name="file" class="input-field" accept="image/*" required />
+                        <small style="color: #94a3b8; display: block; margin-top: 0.5rem; font-size: 0.8rem;">Select an image file (under 10MB)</small>
                     </div>
-                    <small style="color: #94a3b8; display: block; margin-top: 0.5rem; font-size: 0.8rem;">Select an image file (under 2MB)</small>
-                </div>
-                <div style="display: flex; justify-content: flex-end; gap: 1rem;">
-                    <button type="button" style="background: black; color: white; border: none; padding: 0.6rem 2rem; border-radius: var(--ss-radius-sm); font-weight: 500; cursor: pointer;" data-click-action="action18">Cancel</button>
-                    <button type="button" class="btn btn-primary" style="padding: 0.6rem 2rem; border-radius: var(--ss-radius-sm); border: none; font-weight: 500; cursor: pointer;">Save Changes</button>
-                </div>
+                    <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                        <button type="button" style="background: black; color: white; border: none; padding: 0.6rem 2rem; border-radius: var(--ss-radius-sm); font-weight: 500; cursor: pointer;" data-toggle-form="gallery-image">Cancel</button>
+                        <button type="submit" class="btn btn-primary" style="padding: 0.6rem 2rem; border-radius: var(--ss-radius-sm); border: none; font-weight: 500; cursor: pointer;">Save Changes</button>
+                    </div>
+                </form>
             </div>
 
             <div id="gallery-container" class="card" style="padding: 2rem; display: flex; flex-direction: column; align-items: center;">
-                <button style="background: white; border: 1px solid #1e293b; color: #1e293b; padding: 0.5rem 3rem; border-radius: var(--ss-radius-sm); font-weight: 600; font-size: 0.95rem; margin-bottom: 2rem;">
-                    Gallery
-                </button>
+                <div style="background: white; border: 1px solid #1e293b; color: #1e293b; padding: 0.5rem 3rem; border-radius: var(--ss-radius-sm); font-weight: 600; font-size: 0.95rem; margin-bottom: 2rem;">Gallery</div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem; width: 100%;">
-                    
-                    <!-- Placeholder 1 -->
-                    <div style="position: relative; border-radius: var(--ss-radius-md); overflow: hidden; background: #e2e8f0; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;">
-                        <span style="color: #64748b; font-weight: 500;">[Gallery Image]</span>
-                        <div style="position: absolute; top: 0.75rem; right: 0.75rem; display: flex; gap: 0.5rem;">
-                            <button style="background: white; width: 28px; height: 28px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #475569; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-                            <button style="background: white; width: 28px; height: 28px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #475569; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg></button>
+                    @if (Model.GalleryImages.Count == 0)
+                    {
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--ss-ink-muted);">
+                            No images in the gallery yet. Click "Add New Image" above to upload media.
                         </div>
-                    </div>
-                    <!-- Placeholder 2 -->
-                    <div style="position: relative; border-radius: var(--ss-radius-md); overflow: hidden; background: #e2e8f0; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;">
-                        <span style="color: #64748b; font-weight: 500;">[Gallery Image]</span>
-                        <div style="position: absolute; top: 0.75rem; right: 0.75rem; display: flex; gap: 0.5rem;">
-                            <button style="background: white; width: 28px; height: 28px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #475569; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-                            <button style="background: white; width: 28px; height: 28px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #475569; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg></button>
+                    }
+                    @foreach (var img in Model.GalleryImages)
+                    {
+                        <div style="position: relative; border-radius: var(--ss-radius-md); overflow: hidden; background: #e2e8f0; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;">
+                            <img src="/api/media/@img.Id/thumb" alt="@img.FileName" style="width: 100%; height: 100%; object-fit: cover;" />
+                            <div style="position: absolute; top: 0.75rem; right: 0.75rem; display: flex; gap: 0.5rem;">
+                                <a href="/api/media/@img.Id" target="_blank" style="background: white; width: 28px; height: 28px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #475569; box-shadow: 0 1px 3px rgba(0,0,0,0.1);" title="View Original"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></a>
+                                <form method="post" action="/Admin/Gallery/@img.Id/delete" data-confirm="Are you sure you want to delete this image?" style="margin: 0;">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" style="background: white; width: 28px; height: 28px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #ef4444; box-shadow: 0 1px 3px rgba(0,0,0,0.1);" title="Delete Image"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg></button>
+                                </form>
+                            </div>
                         </div>
-                    </div>
-                    <!-- Placeholder 3 -->
-                    <div style="position: relative; border-radius: var(--ss-radius-md); overflow: hidden; background: #e2e8f0; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;">
-                        <span style="color: #64748b; font-weight: 500;">[Gallery Image]</span>
-                        <div style="position: absolute; top: 0.75rem; right: 0.75rem; display: flex; gap: 0.5rem;">
-                            <button style="background: white; width: 28px; height: 28px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #475569; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-                            <button style="background: white; width: 28px; height: 28px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #475569; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg></button>
-                        </div>
-                    </div>
-                    <!-- Placeholder 4 -->
-                    <div style="position: relative; border-radius: var(--ss-radius-md); overflow: hidden; background: #e2e8f0; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;">
-                        <span style="color: #64748b; font-weight: 500;">[Gallery Image]</span>
-                        <div style="position: absolute; top: 0.75rem; right: 0.75rem; display: flex; gap: 0.5rem;">
-                            <button style="background: white; width: 28px; height: 28px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #475569; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-                            <button style="background: white; width: 28px; height: 28px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #475569; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg></button>
-                        </div>
-                    </div>
-
+                    }
                 </div>
             </div>
         </div>
 
+        <!-- 8. Manage Reviews Tab -->
         <div id="tab-reviews" class="admin-tab-content" style="display: none;">
             <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 2rem;">
-                <select style="padding: 0.6rem 1rem; border-radius: var(--ss-radius-sm); border: 1px solid #e2e8f0; width: 150px; background: white; font-size: 0.95rem; font-weight: 500; color: #1e293b; cursor: pointer;">
-                    <option>All Ratings</option>
+                <select id="review-rating-filter" onchange="filterReviews(this.value)" style="padding: 0.6rem 1rem; border-radius: var(--ss-radius-sm); border: 1px solid #e2e8f0; width: 150px; background: white; font-size: 0.95rem; font-weight: 500; color: #1e293b; cursor: pointer;">
+                    <option value="all">All Ratings</option>
+                    <option value="5">5 Stars</option>
+                    <option value="4">4 Stars</option>
+                    <option value="3">3 Stars</option>
+                    <option value="2">2 Stars</option>
+                    <option value="1">1 Star</option>
                 </select>
             </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
-                <div class="card" style="padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem; border-left: 4px solid #8b5cf6;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div style="display: flex; gap: 1rem; align-items: center;">
-                            <div style="padding: 0.75rem; background: #ede9fe; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
-                            </div>
-                            <div>
-                                <h4 style="margin: 0 0 0.25rem 0; font-size: 1.1rem; color: #1e293b; font-weight: 600;">[Product Name]</h4>
-                                <div style="color: #64748b; font-size: 0.85rem; font-weight: 500;">
-                                    <strong>[Customer Name]</strong> &bull; [Date] &bull; [Rating] Stars
+
+            <div id="reviews-list-container" style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
+                @if (Model.Reviews.Count == 0)
+                {
+                    <div class="card" style="padding: 2.5rem; text-align: center; color: var(--ss-ink-muted);">
+                        No reviews found.
+                    </div>
+                }
+                @foreach (var rev in Model.Reviews)
+                {
+                    <div class="card review-card-item" data-rating="@rev.Rating" style="padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem; border-left: 4px solid #8b5cf6;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                <div style="padding: 0.75rem; background: #ede9fe; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+                                </div>
+                                <div>
+                                    <h4 style="margin: 0 0 0.25rem 0; font-size: 1.1rem; color: #1e293b; font-weight: 600;">@rev.ProductName</h4>
+                                    <div style="color: #64748b; font-size: 0.85rem; font-weight: 500;">
+                                        <strong>@rev.ClientName</strong> &bull; @rev.CreatedAt.ToString("d MMM yyyy") &bull; @rev.Rating Stars &bull; <span style="font-weight: 600; color: @(rev.Status == "Approved" ? "#10b981" : rev.Status == "Rejected" ? "#ef4444" : "#f59e0b")">@rev.Status</span>
+                                    </div>
                                 </div>
                             </div>
+                            <form method="post" action="/Admin/Reviews/@rev.Id/delete" data-confirm="Are you sure you want to delete this review?" style="margin: 0;">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" style="color: #ef4444; background: none; border: none; cursor: pointer; display: flex;" title="Delete Review"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+                            </form>
                         </div>
-                        <button style="color: #ef4444; background: none; border: none; cursor: pointer; display: flex;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
-                    </div>
 
-                    <div style="padding: 1.5rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm); font-size: 0.95rem; color: #334155;">
-                        <div style="font-weight: 600; margin-bottom: 0.25rem; color: #1e293b;">Comment:</div>
-                        <div>[Review Content]</div>
-                    </div>
+                        <div style="padding: 1.5rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm); font-size: 0.95rem; color: #334155;">
+                            <div style="font-weight: 600; margin-bottom: 0.25rem; color: #1e293b;">@rev.Title</div>
+                            <div>@rev.Body</div>
+                        </div>
 
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <button style="background: white; color: #1e293b; padding: 0.5rem 1rem; font-size: 0.9rem; border: 1px solid #cbd5e1; border-radius: var(--ss-radius-sm); font-weight: 500; cursor: pointer;">Reply to Customer</button>
-                        <div style="display: flex; gap: 1rem;">
-                            <button style="background: #e26a2c; color: white; border: none; padding: 0.6rem 1.5rem; border-radius: var(--ss-radius-sm); font-weight: 500; cursor: pointer;">Reject Review</button>
-                            <button style="background: #76cfa6; color: white; border: none; padding: 0.6rem 1.5rem; border-radius: var(--ss-radius-sm); font-weight: 500; cursor: pointer;">Approve review</button>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <a href="mailto:?subject=Response to your review of @rev.ProductName" style="background: white; color: #1e293b; padding: 0.5rem 1rem; font-size: 0.9rem; border: 1px solid #cbd5e1; border-radius: var(--ss-radius-sm); font-weight: 500; text-decoration: none; cursor: pointer;">Reply to Customer</a>
+                            <div style="display: flex; gap: 1rem;">
+                                <form method="post" action="/Admin/Reviews/@rev.Id/reject" style="margin: 0;">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" style="background: #e26a2c; color: white; border: none; padding: 0.6rem 1.5rem; border-radius: var(--ss-radius-sm); font-weight: 500; cursor: pointer;">Reject Review</button>
+                                </form>
+                                <form method="post" action="/Admin/Reviews/@rev.Id/approve" style="margin: 0;">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" style="background: #76cfa6; color: white; border: none; padding: 0.6rem 1.5rem; border-radius: var(--ss-radius-sm); font-weight: 500; cursor: pointer;">Approve review</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                </div>
+                }
             </div>
         </div>
 
+        <!-- 9. Manage Partners Tab -->
         <div id="tab-partners" class="admin-tab-content" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <h3 style="margin: 0;">Manage Partners</h3>
-                <button class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem;" data-click-action="action19">
+                <button class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem;" data-toggle-form="partner">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add New Partner
                 </button>
             </div>
@@ -531,24 +724,27 @@
             <!-- Add Partner Form -->
             <div id="form-add-partner" style="display: none; background: white; padding: 3rem; border-radius: var(--ss-radius-md); box-shadow: var(--ss-shadow-1); margin-bottom: 2rem;">
                 <h3 style="margin: 0 0 2rem 0; font-size: 1.5rem;">Add Partner</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
-                    <div>
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #475569; font-size: 0.95rem;">Partner Name</label>
-                        <input type="text" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm); font-size: 1rem; color: #1e293b;" />
+                <form method="post" action="/Admin/Partners/Create">
+                    @Html.AntiForgeryToken()
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #475569; font-size: 0.95rem;">Partner Name</label>
+                            <input type="text" name="name" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm); font-size: 1rem; color: #1e293b;" />
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #475569; font-size: 0.95rem;">Location / Address</label>
+                            <input type="text" name="location" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm); font-size: 1rem; color: #1e293b;" />
+                        </div>
                     </div>
-                    <div>
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #475569; font-size: 0.95rem;">Location / Address</label>
-                        <input type="text" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm); font-size: 1rem; color: #1e293b;" />
+                    <div style="margin-bottom: 3rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #475569; font-size: 0.95rem;">Description</label>
+                        <textarea name="description" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm); font-size: 1rem; color: #1e293b; min-height: 120px;"></textarea>
                     </div>
-                </div>
-                <div style="margin-bottom: 3rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #475569; font-size: 0.95rem;">Description</label>
-                    <textarea style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm); font-size: 1rem; color: #1e293b; min-height: 120px;"></textarea>
-                </div>
-                <div style="display: flex; justify-content: flex-end; gap: 1rem;">
-                    <button type="button" style="background: black; color: white; border: none; padding: 0.6rem 2rem; border-radius: var(--ss-radius-sm); font-weight: 500; cursor: pointer;" data-click-action="action20">Cancel</button>
-                    <button type="button" style="background: #e26a2c; color: white; border: none; padding: 0.6rem 2rem; border-radius: var(--ss-radius-sm); font-weight: 500; cursor: pointer;">Save Changes</button>
-                </div>
+                    <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                        <button type="button" style="background: black; color: white; border: none; padding: 0.6rem 2rem; border-radius: var(--ss-radius-sm); font-weight: 500; cursor: pointer;" data-toggle-form="partner">Cancel</button>
+                        <button type="submit" style="background: #e26a2c; color: white; border: none; padding: 0.6rem 2rem; border-radius: var(--ss-radius-sm); font-weight: 500; cursor: pointer;">Save Changes</button>
+                    </div>
+                </form>
             </div>
 
             <div id="partners-grid" class="card" style="overflow-x: auto;">
@@ -561,77 +757,76 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr style="border-bottom: 1px solid var(--ss-border);">
-                            <td style="padding: 1.5rem; font-weight: 500;">
-                                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg> [Partner Name]
-                                </div>
-                            </td>
-                            <td style="padding: 1.5rem; color: var(--ss-ink-muted);">[Location]</td>
-                            <td style="padding: 1.5rem; text-align: right;">
-                                <button style="padding: 0.5rem; color: #3b82f6; border: none; background: none; cursor: pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-                                <button style="padding: 0.5rem; color: #ef4444; border: none; background: none; cursor: pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
-                            </td>
-                        </tr>
+                        @if (Model.Partners.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="3" style="padding: 2rem; text-align: center; color: var(--ss-ink-muted);">No retail partners found.</td>
+                            </tr>
+                        }
+                        @foreach (var partner in Model.Partners)
+                        {
+                            <tr style="border-bottom: 1px solid var(--ss-border);">
+                                <td style="padding: 1.5rem; font-weight: 500;">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg> @partner.Name
+                                    </div>
+                                </td>
+                                <td style="padding: 1.5rem; color: var(--ss-ink-muted);">@partner.Location</td>
+                                <td style="padding: 1.5rem; text-align: right;">
+                                    <form method="post" action="/Admin/Partners/@partner.Id/delete" data-confirm="Are you sure you want to delete this retail partner?" style="margin: 0; display: inline;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" style="padding: 0.5rem; color: #ef4444; border: none; background: none; cursor: pointer;" title="Delete Partner"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
         </div>
 
+        <!-- 10. Settings Tab -->
         <div id="tab-settings" class="admin-tab-content" style="display: none;">
             <div class="card" style="padding: 3rem; max-width: 600px; margin: 0 auto;">
                 <h3 style="margin-bottom: 2rem;">System Settings</h3>
-                <form style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <form method="post" action="/Admin/Settings" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    @Html.AntiForgeryToken()
                     <div>
                         <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Sales / Contact System Email</label>
-                        <input type="email" class="input-field" value="[System Email]" />
+                        <input type="email" name="salesNotificationEmail" class="input-field" value="@Model.Settings.SalesNotificationEmail" required />
                     </div>
                     <div>
                         <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Bulk Order Threshold (R)</label>
-                        <input type="number" class="input-field" value="2000" />
+                        <input type="number" step="0.01" name="bulkOrderThreshold" class="input-field" value="@Model.Settings.BulkOrderThreshold" required />
                     </div>
                     <div>
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Payment Instructions (Checkout)</label>
-                        <textarea rows="4" class="input-field">[Payment Instructions]</textarea>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Flat Shipping Rate (R)</label>
+                        <input type="number" step="0.01" name="shippingFlatRate" class="input-field" value="@Model.Settings.ShippingFlatRate" required />
                     </div>
-                    <button type="button" class="btn btn-primary" style="width: fit-content;">Save Settings</button>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Currency</label>
+                        <input type="text" name="displayCurrency" class="input-field" value="@Model.Settings.DisplayCurrency" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: fit-content;">Save Settings</button>
                 </form>
             </div>
         </div>
 
+        <!-- 11. Manage Admins Tab (MasterAdmin only) -->
         @if (User.IsInRole("MasterAdmin")) {
         <div id="tab-admins" class="admin-tab-content" style="display: none;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-                <!-- Admin Roles -->
+                <!-- Admin Roles Reference -->
                 <div class="card" style="padding: 2.5rem; background: white; border-radius: var(--ss-radius-md); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                    <h3 style="margin: 0 0 1.5rem 0; font-size: 1.5rem;">Admin Roles</h3>
-                    <div style="margin-bottom: 2rem;">
-                        <input type="text" placeholder="Role Name" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm); margin-bottom: 1.5rem; font-size: 0.95rem; color: #475569;" />
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.9rem; color: #475569; margin-bottom: 1.5rem;">
-                            <label style="display: flex; gap: 0.5rem; cursor: pointer;"><input type="checkbox"/> All</label>
-                            <label style="display: flex; gap: 0.5rem; cursor: pointer;"><input type="checkbox"/> Products</label>
-                            <label style="display: flex; gap: 0.5rem; cursor: pointer;"><input type="checkbox"/> News</label>
-                            <label style="display: flex; gap: 0.5rem; cursor: pointer;"><input type="checkbox"/> Orders</label>
-                            <label style="display: flex; gap: 0.5rem; cursor: pointer;"><input type="checkbox"/> Bookings</label>
-                            <label style="display: flex; gap: 0.5rem; cursor: pointer;"><input type="checkbox"/> Messages</label>
-                            <label style="display: flex; gap: 0.5rem; cursor: pointer;"><input type="checkbox"/> Gallery</label>
-                            <label style="display: flex; gap: 0.5rem; cursor: pointer;"><input type="checkbox"/> Reviews</label>
-                            <label style="display: flex; gap: 0.5rem; cursor: pointer;"><input type="checkbox"/> Partners</label>
-                            <label style="display: flex; gap: 0.5rem; cursor: pointer;"><input type="checkbox"/> Settings</label>
-                        </div>
-                        <button style="width: 100%; padding: 0.75rem; background: #e26a2c; color: white; border: none; border-radius: var(--ss-radius-sm); font-weight: 600; cursor: pointer;">Create Role</button>
-                    </div>
-
+                    <h3 style="margin: 0 0 1.5rem 0; font-size: 1.5rem;">Configured System Roles</h3>
                     <div style="display: flex; flex-direction: column; gap: 1rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem; border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm);">
-                            <div>
-                                <h4 style="margin: 0 0 0.25rem 0; font-size: 1.1rem; color: #1e293b;">[Role Name]</h4>
-                                <div style="font-size: 0.85rem; color: #94a3b8;">Access: [Permissions]</div>
-                            </div>
-                            <div style="display: flex; gap: 0.75rem;">
-                                <button style="color: #3b82f6; background: none; border: none; cursor: pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-                                <button style="color: #ef4444; background: none; border: none; cursor: pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
-                            </div>
+                        <div style="padding: 1.25rem; border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm);">
+                            <h4 style="margin: 0 0 0.25rem 0; font-size: 1.1rem; color: #1e293b;">Master Admin</h4>
+                            <div style="font-size: 0.85rem; color: #64748b;">Access: Full system control (Catalogue, Accounts, Audit Log, Settings, Orders, Reviews, News)</div>
+                        </div>
+                        <div style="padding: 1.25rem; border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm);">
+                            <h4 style="margin: 0 0 0.25rem 0; font-size: 1.1rem; color: #1e293b;">Sales Admin</h4>
+                            <div style="font-size: 0.85rem; color: #64748b;">Access: Operational control (Orders, Inquiries, Bulk Requests, Reviews, Partners, Journal)</div>
                         </div>
                     </div>
                 </div>
@@ -639,34 +834,42 @@
                 <!-- Admin Users -->
                 <div class="card" style="padding: 2.5rem; background: white; border-radius: var(--ss-radius-md); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
                     <h3 style="margin: 0 0 1.5rem 0; font-size: 1.5rem;">Admin Users</h3>
-                    <div style="margin-bottom: 2rem;">
-                        <input type="text" placeholder="Username" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm); margin-bottom: 1rem; font-size: 0.95rem; color: #475569;" />
-                        <input type="password" placeholder="Password" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm); margin-bottom: 1rem; font-size: 0.95rem; color: #475569;" />
-                        <select style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm); margin-bottom: 1.5rem; font-size: 0.95rem; color: #475569; background: white;">
-                            <option>Select Role...</option>
+                    <form method="post" action="/Admin/Users/Create" style="margin-bottom: 2rem;">
+                        @Html.AntiForgeryToken()
+                        <input type="email" name="email" placeholder="Email / Username" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm); margin-bottom: 1rem; font-size: 0.95rem; color: #475569;" />
+                        <input type="password" name="password" placeholder="Password (min 8 chars)" required minlength="8" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm); margin-bottom: 1rem; font-size: 0.95rem; color: #475569;" />
+                        <select name="role" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm); margin-bottom: 1.5rem; font-size: 0.95rem; color: #475569; background: white;">
+                            <option value="SalesAdmin">SalesAdmin</option>
+                            <option value="MasterAdmin">MasterAdmin</option>
                         </select>
-                        <button style="width: 100%; padding: 0.75rem; background: #e26a2c; color: white; border: none; border-radius: var(--ss-radius-sm); font-weight: 600; cursor: pointer;">Create User</button>
-                    </div>
+                        <button type="submit" style="width: 100%; padding: 0.75rem; background: #e26a2c; color: white; border: none; border-radius: var(--ss-radius-sm); font-weight: 600; cursor: pointer;">Create User</button>
+                    </form>
 
                     <div style="display: flex; flex-direction: column; gap: 1rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem; border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm);">
-                            <div>
-                                <h4 style="margin: 0 0 0.25rem 0; font-size: 1.1rem; color: #1e293b;">[Username]</h4>
-                                <div style="font-size: 0.85rem; color: #94a3b8;">Role: [Assigned Role]</div>
+                        @foreach (var admin in Model.AdminUsers)
+                        {
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem; border: 1px solid #e2e8f0; border-radius: var(--ss-radius-sm);">
+                                <div>
+                                    <h4 style="margin: 0 0 0.25rem 0; font-size: 1.1rem; color: #1e293b;">@admin.Email</h4>
+                                    <div style="font-size: 0.85rem; color: #94a3b8;">Role: @admin.Role | Active: @admin.IsActive</div>
+                                </div>
+                                <div style="display: flex; gap: 0.75rem;">
+                                    <form method="post" action="/Admin/Users/@admin.Id/delete" data-confirm="Are you sure you want to delete this administrator?" style="margin: 0;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" style="color: #ef4444; background: none; border: none; cursor: pointer;" title="Delete User"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+                                    </form>
+                                </div>
                             </div>
-                            <div style="display: flex; gap: 0.75rem;">
-                                <button style="color: #3b82f6; background: none; border: none; cursor: pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-                                <button style="color: #ef4444; background: none; border: none; cursor: pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
-                            </div>
-                        </div>
+                        }
                     </div>
                 </div>
             </div>
         </div>
-
         }
 
     </div>
 </div>
 
-<script src="~/js/admin-index-1.js" asp-append-version="true"></script>
+@section Scripts {
+    <script src="~/js/admin-dashboard.js" asp-append-version="true"></script>
+}

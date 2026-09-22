@@ -3,10 +3,10 @@
 
 <div class="animate-fade-in">
     <!-- Hero Section -->
-    <section style="position: relative; width: 100%; display: flex; align-items: flex-end; justify-content: center; background-color: var(--ss-ink);">
-        <img src="/images/home_banner.jpg" alt="Premium Cookware" style="width: 100%; height: auto; display: block;" />
+    <section style="position: relative; width: 100%; display: flex; align-items: flex-end; justify-content: center; background-color: #0A0909;">
+        <img src="/images/home_banner.jpg" alt="Premium Cookware" style="width: 100%; height: 765px; display: block;" />
         
-        <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 30%; background: linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%); pointer-events: none;"></div>
+       
 
         <div class="container" style="position: absolute; z-index: 10; display: flex; justify-content: center; bottom: 15%;">
             <div style="display: flex; gap: 1rem;">
@@ -40,43 +40,52 @@
     </section>
 
     <!-- About Us Section -->
-    <section class="section-light">
+    <section class="section-light" style="padding: 4rem 0;">
         <div class="container">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 6rem; align-items: center;">
-                <div style="position: relative;">
-                    <div style="width: 100%; height: 550px; position: relative; border-radius: var(--ss-radius-lg); overflow: hidden; box-shadow: var(--ss-shadow-2);">
-                        <img src="/images/about_home.jpg" alt="Premium Cookware Selection" style="width: 100%; height: 100%; object-fit: cover;" />
-                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255,255,255,0.95); padding: 1.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: var(--ss-shadow-3); cursor: pointer;">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="var(--ss-brand)" stroke="var(--ss-brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
-                        </div>
-                    </div>
-                    
-                    <div class="card" style="position: absolute; bottom: -2rem; right: -2rem; padding: 2rem; width: 280px; border-radius: var(--ss-radius-sm);">
-                        <div style="display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1.5rem;">
-                            <div style="padding: 0.75rem; background: var(--ss-surface-solid); border-radius: 50%;">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ss-brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
-                            </div>
-                            <h4 style="margin: 0; font-size: 1rem; color: var(--ss-ink);">Built to Last</h4>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 1.25rem;">
-                            <div style="padding: 0.75rem; background: var(--ss-surface-solid); border-radius: 50%;">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ss-brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
-                            </div>
-                            <h4 style="margin: 0; font-size: 1rem; color: var(--ss-ink);">Even Heat Distribution</h4>
-                        </div>
-                    </div>
+
+                <!-- Left Column: Image feature -->
+                <div style="position: relative; border-radius: var(--ss-radius-lg); overflow: hidden; box-shadow: 0 24px 48px rgba(0,0,0,0.12);">
+                    <img src="/images/about_home.jpg" alt="Premium Cookware Selection" style="width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block;" />
                 </div>
-                
-                <div style="padding-right: 2rem;">
-                    <h2 style="margin-bottom: 2rem; font-size: 3rem;">Our Heritage.</h2>
-                    <p style="color: var(--ss-ink); margin-bottom: 1.5rem; font-size: 1.25rem; line-height: 1.8;">
+
+                <!-- Right Column -->
+                <div>
+                    <h2 style="margin-top: 0; margin-bottom: 1.5rem; font-size: 3rem; font-weight: 700; color: var(--ss-ink); line-height: 1.2;">Our Heritage.</h2>
+
+                    <p style="color: var(--ss-ink); margin-bottom: 1rem; font-size: 1.15rem; line-height: 1.8;">
                         At Simmer & Sear, we believe that every great meal starts with the right tools. Our passion is providing durable, beautiful, and highly functional cookware that inspires chefs and home cooks alike.
                     </p>
-                    <p style="color: var(--ss-ink-muted); margin-bottom: 3rem; font-size: 1.125rem; line-height: 1.8;">
+                    <p style="color: var(--ss-ink-muted); margin-bottom: 3rem; font-size: 1.15rem; line-height: 1.8;">
                         Providing the highest quality materials straight to your kitchen.
                     </p>
-                    <a href="/About" class="btn btn-secondary">Read Our Story</a>
+
+                    <!-- Editorial feature list separated by a subtle border -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 3rem; padding-top: 2rem; border-top: 1px solid rgba(0,0,0,0.1);">
+
+                        <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                            <div style="padding: 0.75rem; background: var(--ss-surface-solid); border-radius: 50%; color: var(--ss-brand); flex-shrink: 0;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" /><path d="m9 12 2 2 4-4" /></svg>
+                            </div>
+                            <div style="padding-top: 0.5rem;">
+                                <h4 style="margin: 0; font-size: 1.05rem; font-weight: 600; color: var(--ss-ink);">Built to Last</h4>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                            <div style="padding: 0.75rem; background: var(--ss-surface-solid); border-radius: 50%; color: var(--ss-brand); flex-shrink: 0;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" /></svg>
+                            </div>
+                            <div style="padding-top: 0.5rem;">
+                                <h4 style="margin: 0; font-size: 1.05rem; font-weight: 600; color: var(--ss-ink);">Even Heat Distribution</h4>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <a href="/About" class="btn btn-secondary" style="display: inline-block; padding: 1rem 2.5rem; font-weight: 600; letter-spacing: 0.5px;">Read Our Story</a>
                 </div>
+
             </div>
         </div>
     </section>

@@ -139,6 +139,11 @@ public sealed class MemoryUsers : IUserRepository
         }
         return Task.CompletedTask;
     }
+    public Task DeleteAsync(string id, CancellationToken ct = default)
+    {
+        Items.RemoveAll(u => u.Id == id);
+        return Task.CompletedTask;
+    }
 }
 
 public sealed class MemoryAudit : IAuditLogRepository

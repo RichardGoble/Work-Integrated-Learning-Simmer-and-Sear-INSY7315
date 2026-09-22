@@ -98,4 +98,12 @@ public sealed class UserRepository(IMongoDatabase database)
                   .Set(u => u.LockedOutUntil, null)
                   .Set(u => u.LastLogin, DateTime.UtcNow),
             cancellationToken: ct);
+
+    public async Task DeleteAsync(string id, CancellationToken ct = default)
+    {
+        if (IsValidId(id))
+        {
+            await Collection.DeleteOneAsync(Filter.Eq(u => u.Id, id), ct);
+        }
+    }
 }

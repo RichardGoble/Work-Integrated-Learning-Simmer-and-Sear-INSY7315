@@ -53,6 +53,7 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IProductAttributeRepository, ProductAttributeRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<ISiteSettingsRepository, SiteSettingsRepository>();
@@ -63,6 +64,8 @@ public static class DependencyInjection
         services.AddScoped<INewsPostRepository, NewsPostRepository>();
         services.AddScoped<IWishlistRepository, WishlistRepository>();
         services.AddScoped<IQuotationDocumentRepository, QuotationDocumentRepository>();
+        services.AddScoped<IContactRepository, ContactRepository>();
+        services.AddScoped<IPartnerRepository, PartnerRepository>();
         services.AddMemoryCache();
         services.AddScoped<ISiteSettingsProvider, CachedSiteSettingsProvider>();
 

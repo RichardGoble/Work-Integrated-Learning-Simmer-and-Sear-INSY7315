@@ -28,6 +28,9 @@ public sealed class MediaAssetRepository(IMongoDatabase database)
 
     public async Task DeleteAsync(string id, CancellationToken ct = default) =>
         await Collection.DeleteOneAsync(Filter.Eq(m => m.Id, id), ct);
+
+    public async Task<IReadOnlyList<MediaAsset>> ListAsync(int limit = 50, CancellationToken ct = default) =>
+        await Collection.Find(Filter.Empty).SortByDescending(m => m.UploadedAt).Limit(limit).ToListAsync(ct);
     public async Task<IReadOnlyList<MediaAsset>> FindOrphansAsync(
         DateTime olderThanUtc, CancellationToken ct = default)
     {

@@ -1,3 +1,25 @@
+if (typeof window.showTab !== 'function') {
+    window.showTab = function(tabId) {
+        document.querySelectorAll('.admin-tab-content').forEach(function(el) { el.style.display = 'none'; });
+        document.querySelectorAll('.admin-tab-btn').forEach(function(b) {
+            b.classList.remove('btn-secondary');
+            b.classList.add('btn-outline');
+        });
+        var targetContent = document.getElementById('tab-' + tabId);
+        var targetBtn = document.getElementById('btn-' + tabId);
+        if (targetContent) targetContent.style.display = 'block';
+        if (targetBtn) {
+            targetBtn.classList.remove('btn-outline');
+            targetBtn.classList.add('btn-secondary');
+        }
+        if (history.replaceState) {
+            history.replaceState(null, null, '#' + tabId);
+        } else {
+            window.location.hash = tabId;
+        }
+    };
+}
+
 const pageActions = {
     'action1': function(event) { showTab('orders') },
     'action2': function(event) { showTab('bulk') },

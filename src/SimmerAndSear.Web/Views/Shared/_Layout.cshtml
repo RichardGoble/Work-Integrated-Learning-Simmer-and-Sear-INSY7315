@@ -64,7 +64,13 @@
 
                         @if (User.Identity != null && User.Identity.IsAuthenticated)
                         {
-                            <div style="display: flex; gap: 0.5rem;">
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                @if (User.IsInRole("MasterAdmin") || User.IsInRole("SalesAdmin"))
+                                {
+                                    <a href="/Admin" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem; color: var(--ss-brand); border-color: var(--ss-brand);">
+                                        Admin Dashboard
+                                    </a>
+                                }
                                 <a href="/Auth/Profile" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
                                     My Profile
                                 </a>

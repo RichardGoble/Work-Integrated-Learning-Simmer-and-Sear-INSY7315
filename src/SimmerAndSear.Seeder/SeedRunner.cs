@@ -78,10 +78,16 @@ public sealed class SeedRunner(
             var existing = await users.GetByEmailAsync(account.Email.Trim(), ct);
             if (existing is not null)
             {
-                if (existing.Role != account.Role || existing.UserType != account.Type || !existing.IsActive)
+                if (!string.IsNullOrWhiteSpace(account.Password) && account.Password.Length is >= 12 and <= 128)
                 {
-                    logger.LogError("The configured {Role} account exists with different permissions or is inactive.", account.Role);
-                    problems++;
+                    existing.PasswordHash = hasher.Hash(account.Password);
+                    existing.IsActive = true;
+                    existing.FailedLoginAttempts = 0;
+                    existing.LockedOutUntil = null;
+                    existing.Role = account.Role;
+                    existing.UserType = account.Type;
+                    await users.UpdateAsync(existing, ct);
+                    logger.LogInformation("Updated {Role} account {Email} password.", account.Role, account.Email);
                 }
                 continue;
             }

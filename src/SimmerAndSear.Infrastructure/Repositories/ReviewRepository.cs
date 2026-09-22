@@ -60,4 +60,12 @@ public sealed class ReviewRepository(IMongoDatabase database, IOrderRepository o
         review.UpdatedAt = DateTime.UtcNow;
         await Collection.ReplaceOneAsync(Filter.Eq(r => r.Id, review.Id), review, cancellationToken: ct);
     }
+
+    public async Task DeleteAsync(string id, CancellationToken ct = default)
+    {
+        if (IsValidId(id))
+        {
+            await Collection.DeleteOneAsync(Filter.Eq(r => r.Id, id), ct);
+        }
+    }
 }
