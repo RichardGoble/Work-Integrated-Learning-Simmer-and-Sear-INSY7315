@@ -5,6 +5,12 @@
     <p><strong>Name:</strong> @User.Identity?.Name</p>
     <p><strong>Email:</strong> @User.FindFirstValue(ClaimTypes.Email)</p>
     <p><strong>Role:</strong> @User.FindFirstValue(ClaimTypes.Role)</p>
+    @if (User.IsInRole("MasterAdmin") || User.IsInRole("SalesAdmin"))
+    {
+        <div style="margin-bottom: 1.5rem;">
+            <a href="/Admin" class="btn btn-outline" style="color: var(--ss-brand); border-color: var(--ss-brand); text-decoration: none; display: inline-block;">Go to Admin Dashboard</a>
+        </div>
+    }
     <form asp-controller="Auth" asp-action="Logout" method="post">
         <button class="btn btn-primary" type="submit">Sign out</button>
     </form>

@@ -51,4 +51,10 @@ public sealed class OrderRepository(IMongoDatabase database)
         order.UpdatedAt = DateTime.UtcNow;
         await Collection.ReplaceOneAsync(Filter.Eq(o => o.Id, order.Id), order, cancellationToken: ct);
     }
+
+    public async Task DeleteAsync(string id, CancellationToken ct = default)
+    {
+        if (!IsValidId(id)) return;
+        await Collection.DeleteOneAsync(Filter.Eq(o => o.Id, id), cancellationToken: ct);
+    }
 }
