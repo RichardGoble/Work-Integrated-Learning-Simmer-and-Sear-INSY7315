@@ -157,6 +157,18 @@ public sealed class WishlistServiceTests
         }
 
         public Task UpdateAsync(Order order, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task DeleteAsync(string id, CancellationToken ct = default)
+        {
+            Items.RemoveAll(o => o.Id == id);
+            return Task.CompletedTask;
+        }
+
+        public Task<bool> HasDeliveredOrderWithProductAsync(string clientId, string productId, CancellationToken ct = default) =>
+            Task.FromResult(Items.Any(o =>
+                o.ClientId == clientId &&
+                o.Status == SimmerAndSear.Domain.Enums.OrderStatus.Delivered &&
+                o.Items.Any(i => i.ProductId == productId)));
     }
 
     private sealed class MemoryCartRepository : ICartRepository

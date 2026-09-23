@@ -9,6 +9,7 @@ public sealed class AdminDashboardVm
     public List<Order> CheckoutOrders { get; set; } = [];
     public List<Order> BulkRequests { get; set; } = [];
     public List<ContactRequest> Inquiries { get; set; } = [];
+    public List<Booking> Bookings { get; set; } = [];
     public List<ProductSummaryResponse> Products { get; set; } = [];
     public CatalogueFacets Facets { get; set; } = CatalogueFacets.Empty;
     public List<NewsPost> NewsPosts { get; set; } = [];

@@ -90,5 +90,11 @@ public sealed class AdminAccountServiceTests
             Task.CompletedTask;
 
         public Task RecordSuccessfulLoginAsync(string userId, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task DeleteAsync(string id, CancellationToken ct = default)
+        {
+            Items.RemoveAll(u => u.Id == id);
+            return Task.CompletedTask;
+        }
     }
 }
