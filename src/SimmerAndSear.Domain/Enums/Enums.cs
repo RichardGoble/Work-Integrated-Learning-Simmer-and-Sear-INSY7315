@@ -54,6 +54,8 @@ public enum BookingStatus { Requested, Confirmed, Completed, Cancelled }
 //Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum> [Accessed 18 September 2026].
 // ────────────────────────────────────────────────────────────────────────────
 public enum ContactStatus { New, InProgress, Resolved, Closed }
+
+public enum ContactNotificationStatus { Pending, Sent, Failed }
 // ── References ──────────────────────────────────────────────────────────────
 //Microsoft, 2026. Enumeration types - C# reference [Source code].
 //Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum> [Accessed 18 September 2026].

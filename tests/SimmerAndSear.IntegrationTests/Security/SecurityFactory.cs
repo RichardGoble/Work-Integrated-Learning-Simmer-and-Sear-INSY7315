@@ -32,6 +32,9 @@ public sealed class SecurityFactory : WebApplicationFactory<Program>
     public MemoryWishlists Wishlists { get; } = new();
     public MemoryQuotationDocuments Quotations { get; } = new();
     public MemoryFileStore Files { get; } = new();
+    public MemoryContacts Contacts { get; } = new();
+    public MemoryBookings Bookings { get; } = new();
+    public MemoryReviews Reviews { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -59,6 +62,14 @@ public sealed class SecurityFactory : WebApplicationFactory<Program>
             services.RemoveAll<IFileStore>();
             services.AddSingleton<IQuotationDocumentRepository>(Quotations);
             services.AddSingleton<IFileStore>(Files);
+            services.RemoveAll<IContactRepository>();
+            services.RemoveAll<IBookingRepository>();
+            services.RemoveAll<IReviewRepository>();
+            services.RemoveAll<SimmerAndSear.Application.Engagement.ITransactionalEmailSender>();
+            services.AddSingleton<IContactRepository>(Contacts);
+            services.AddSingleton<IBookingRepository>(Bookings);
+            services.AddSingleton<IReviewRepository>(Reviews);
+            services.AddSingleton<SimmerAndSear.Application.Engagement.ITransactionalEmailSender, FakeEmailSender>();
             services.AddSingleton<IStartupFilter, RemoteAddressFilter>();
         });
     }
@@ -182,6 +193,16 @@ public sealed class MemoryOrders : IOrderRepository
         return Task.FromResult(order.Id);
     }
     public Task UpdateAsync(Order order, CancellationToken ct = default) => Task.CompletedTask;
+    public Task DeleteAsync(string id, CancellationToken ct = default)
+    {
+        Items.RemoveAll(o => o.Id == id);
+        return Task.CompletedTask;
+    }
+    public Task<bool> HasDeliveredOrderWithProductAsync(string clientId, string productId, CancellationToken ct = default) =>
+        Task.FromResult(Items.Any(o =>
+            o.ClientId == clientId &&
+            o.Status == OrderStatus.Delivered &&
+            o.Items.Any(i => i.ProductId == productId)));
 }
 
 public sealed class MemoryWishlists : IWishlistRepository
@@ -203,7 +224,7 @@ public sealed class MemoryWishlists : IWishlistRepository
 
 public sealed class FixedSiteSettings : ISiteSettingsProvider
 {
-    private readonly SiteSettings _settings = new();
+    private readonly SiteSettings _settings = new() { SalesNotificationEmail = "sales@example.com" };
     public Task<SiteSettings> CurrentAsync(CancellationToken ct = default) => Task.FromResult(_settings);
     public void Invalidate()
     {
@@ -243,3 +264,141 @@ public sealed class MemoryFileStore : IFileStore
         return Task.CompletedTask;
     }
 }
+
+public sealed class MemoryContacts : IContactRepository
+{
+    public List<ContactRequest> Items { get; } = [];
+
+    public Task<ContactRequest?> GetAsync(string id, CancellationToken ct = default) =>
+        Task.FromResult(Items.Find(c => c.Id == id));
+
+    public Task<List<ContactRequest>> ListAsync(CancellationToken ct = default) =>
+        Task.FromResult(Items.OrderByDescending(c => c.SubmittedAt).ToList());
+
+    public Task<string> CreateAsync(ContactRequest request, CancellationToken ct = default)
+    {
+        if (string.IsNullOrEmpty(request.Id)) request.Id = Guid.NewGuid().ToString("N");
+        Items.Add(request);
+        return Task.FromResult(request.Id);
+    }
+
+    public Task UpdateStatusAsync(string id, ContactStatus status, string handledBy, CancellationToken ct = default)
+    {
+        var item = Items.Find(c => c.Id == id);
+        if (item is not null)
+        {
+            item.Status = status;
+            item.HandledBy = handledBy;
+            item.UpdatedAt = DateTime.UtcNow;
+        }
+        return Task.CompletedTask;
+    }
+
+    public Task UpdateNotificationStateAsync(
+        string id, ContactNotificationStatus status, string? error, DateTime? sentAt, CancellationToken ct = default)
+    {
+        var item = Items.Find(c => c.Id == id);
+        if (item is not null)
+        {
+            item.NotificationStatus = status;
+            item.NotificationError = error;
+            item.NotificationSentAt = sentAt;
+        }
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteAsync(string id, CancellationToken ct = default)
+    {
+        Items.RemoveAll(c => c.Id == id);
+        return Task.CompletedTask;
+    }
+}
+
+public sealed class MemoryBookings : IBookingRepository
+{
+    public List<Booking> Items { get; } = [];
+
+    public Task<Booking?> GetAsync(string id, CancellationToken ct = default) =>
+        Task.FromResult(Items.Find(b => b.Id == id));
+
+    public Task<List<Booking>> ListAsync(CancellationToken ct = default) =>
+        Task.FromResult(Items.OrderByDescending(b => b.CreatedAt).ToList());
+
+    public Task<List<Booking>> ListForClientAsync(string clientId, CancellationToken ct = default) =>
+        Task.FromResult(Items.Where(b => b.ClientId == clientId).OrderByDescending(b => b.CreatedAt).ToList());
+
+    public Task<string> CreateAsync(Booking booking, CancellationToken ct = default)
+    {
+        if (string.IsNullOrEmpty(booking.Id)) booking.Id = Guid.NewGuid().ToString("N");
+        Items.Add(booking);
+        return Task.FromResult(booking.Id);
+    }
+
+    public Task UpdateStatusAsync(string id, BookingStatus status, CancellationToken ct = default)
+    {
+        var item = Items.Find(b => b.Id == id);
+        if (item is not null)
+        {
+            item.Status = status;
+            item.UpdatedAt = DateTime.UtcNow;
+        }
+        return Task.CompletedTask;
+    }
+}
+
+public sealed class FakeEmailSender : SimmerAndSear.Application.Engagement.ITransactionalEmailSender
+{
+    public List<(string Email, string Name, string Subject, string Text)> SentEmails { get; } = [];
+
+    public Task<bool> SendEmailAsync(
+        string recipientEmail, string recipientName, string subject, string textContent, CancellationToken ct = default)
+    {
+        SentEmails.Add((recipientEmail, recipientName, subject, textContent));
+        return Task.FromResult(true);
+    }
+}
+
+public sealed class MemoryReviews : IReviewRepository
+{
+    public List<Review> Items { get; } = [];
+
+    public Task<Review?> GetAsync(string id, CancellationToken ct = default) =>
+        Task.FromResult(Items.Find(r => r.Id == id));
+
+    public Task<Page<Review>> ListAsync(int pageNumber, int pageSize, CancellationToken ct = default) =>
+        Task.FromResult(new Page<Review>(Items, Items.Count, pageNumber, pageSize));
+
+    public Task<Page<Review>> ListByStatusAsync(ReviewStatus status, int pageNumber, int pageSize, CancellationToken ct = default)
+    {
+        var filtered = Items.Where(r => r.Status == status).ToList();
+        return Task.FromResult(new Page<Review>(filtered, filtered.Count, pageNumber, pageSize));
+    }
+
+    public Task<Page<Review>> ListForProductAsync(string productId, int pageNumber, int pageSize, CancellationToken ct = default)
+    {
+        var filtered = Items.Where(r => r.ProductId == productId && r.Status == ReviewStatus.Approved).ToList();
+        return Task.FromResult(new Page<Review>(filtered, filtered.Count, pageNumber, pageSize));
+    }
+
+    public Task<bool> HasCompletedOrderForProductAsync(string clientId, string productId, CancellationToken ct = default) =>
+        Task.FromResult(true);
+
+    public Task<bool> HasExistingReviewAsync(string clientId, string productId, CancellationToken ct = default) =>
+        Task.FromResult(false);
+
+    public Task<string> CreateAsync(Review review, CancellationToken ct = default)
+    {
+        review.Id = Guid.NewGuid().ToString("N");
+        Items.Add(review);
+        return Task.FromResult(review.Id);
+    }
+
+    public Task UpdateAsync(Review review, CancellationToken ct = default) => Task.CompletedTask;
+
+    public Task DeleteAsync(string id, CancellationToken ct = default)
+    {
+        Items.RemoveAll(r => r.Id == id);
+        return Task.CompletedTask;
+    }
+}
+

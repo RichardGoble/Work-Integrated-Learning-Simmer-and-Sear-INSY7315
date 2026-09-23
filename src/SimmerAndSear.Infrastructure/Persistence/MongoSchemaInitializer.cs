@@ -84,7 +84,9 @@ public sealed class MongoSchemaInitializer(
                      MongoCollections.Reviews,
                      MongoCollections.NewsPosts,
                      MongoCollections.Wishlists,
-                     MongoCollections.QuotationDocuments
+                     MongoCollections.QuotationDocuments,
+                     MongoCollections.ContactRequests,
+                     MongoCollections.Bookings
                  })
         {
             try
@@ -418,5 +420,25 @@ public sealed class MongoSchemaInitializer(
                 Builders<QuotationDocument>.IndexKeys.Ascending(d => d.OrderId),
                 new CreateIndexOptions { Name = "ux_quotationDocuments_order", Unique = true }),
             cancellationToken: ct);
+
+        var contacts = database.GetCollection<ContactRequest>(MongoCollections.ContactRequests);
+
+        await contacts.Indexes.CreateOneAsync(
+            new CreateIndexModel<ContactRequest>(
+                Builders<ContactRequest>.IndexKeys.Ascending(c => c.Status).Descending(c => c.SubmittedAt),
+                new CreateIndexOptions { Name = "ix_contact_status_submitted" }),
+            cancellationToken: ct);
+
+        var bookings = database.GetCollection<Booking>(MongoCollections.Bookings);
+
+        await bookings.Indexes.CreateManyAsync(
+        [
+            new CreateIndexModel<Booking>(
+                Builders<Booking>.IndexKeys.Ascending(b => b.Status).Ascending(b => b.PreferredDateTime),
+                new CreateIndexOptions { Name = "ix_bookings_status_preferred" }),
+            new CreateIndexModel<Booking>(
+                Builders<Booking>.IndexKeys.Ascending(b => b.ClientId).Descending(b => b.CreatedAt),
+                new CreateIndexOptions { Name = "ix_bookings_client_created", Sparse = true })
+        ], ct);
     }
 }

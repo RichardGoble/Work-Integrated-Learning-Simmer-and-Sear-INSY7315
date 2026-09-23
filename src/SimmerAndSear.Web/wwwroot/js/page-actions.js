@@ -42,7 +42,7 @@ const pageActions = {
     'action19': function(event) { document.getElementById('form-add-partner').style.display='block'; document.getElementById('partners-grid').style.display='none'; },
     'action20': function(event) { document.getElementById('form-add-partner').style.display='none'; document.getElementById('partners-grid').style.display='block'; },
     'action21': function(event) { event.preventDefault(); window.location.href='/Cart/OrderConfirmation'; },
-    'action22': function(event) { event.preventDefault(); alert('Message sent (UI mock)'); },
+    'action22': function(event) { /* Obsolete UI mock removed for S6 */ },
     'action23': function(event) { togglePreference('dark-mode') },
     'action24': function(event) { togglePreference('high-contrast') },
     'action25': function(event) { togglePreference('large-text') },

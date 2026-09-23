@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using SimmerAndSear.Application.Catalogue;
 using SimmerAndSear.Contracts.Catalogue;
+using SimmerAndSear.Application.Engagement;
+using SimmerAndSear.Contracts.Engagement;
 using SimmerAndSear.Web.ViewModels;
 using SimmerAndSear.Web.ViewModels.Components;
 
@@ -13,7 +15,7 @@ namespace SimmerAndSear.Web.Controllers;
 //Microsoft, 2026. Views in ASP.NET Core MVC [Source code].
 //Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/views/overview?view=aspnetcore-10.0> [Accessed 18 September 2026].
 // ────────────────────────────────────────────────────────────────────────────
-public class HomeController(CatalogueService catalogue, SimmerAndSear.Application.Abstractions.IContactRepository contacts) : Controller
+public class HomeController(CatalogueService catalogue, ContactService contactService) : Controller
 {
     private const int FeaturedCount = 3;
 
@@ -55,19 +57,20 @@ public class HomeController(CatalogueService catalogue, SimmerAndSear.Applicatio
     }
 
     [HttpPost("/Contact")]
-    public async Task<IActionResult> Contact(string fullName, string email, string message, CancellationToken ct)
+    public async Task<IActionResult> Contact(
+        string fullName, string email, string? phone, string? inquiryType, string message, CancellationToken ct)
     {
         ViewData["Title"] = "Contact Us";
         if (!string.IsNullOrWhiteSpace(fullName) && !string.IsNullOrWhiteSpace(email) && !string.IsNullOrWhiteSpace(message))
         {
-            await contacts.CreateAsync(new SimmerAndSear.Domain.Entities.ContactRequest
-            {
-                FullName = fullName.Trim(),
-                Email = email.Trim(),
-                Message = message.Trim(),
-                SubmittedAt = DateTime.UtcNow,
-                Status = SimmerAndSear.Domain.Enums.ContactStatus.New
-            }, ct);
+            var request = new CreateContactRequest(
+                fullName.Trim(),
+                email.Trim(),
+                phone?.Trim(),
+                string.IsNullOrWhiteSpace(inquiryType) ? "General Inquiry" : inquiryType.Trim(),
+                message.Trim()
+            );
+            await contactService.SubmitAsync(request, ct);
             ViewData["SuccessMessage"] = "Thank you for reaching out! Your message has been sent successfully.";
         }
         return View();

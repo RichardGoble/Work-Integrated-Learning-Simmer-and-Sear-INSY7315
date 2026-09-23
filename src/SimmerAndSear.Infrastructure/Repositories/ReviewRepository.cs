@@ -29,13 +29,8 @@ public sealed class ReviewRepository(IMongoDatabase database, IOrderRepository o
             pageSize,
             ct: ct);
 
-    public async Task<bool> HasCompletedOrderForProductAsync(string clientId, string productId, CancellationToken ct = default)
-    {
-        var allOrders = await orders.ListForClientAsync(clientId, 1, 100, ct);
-        return allOrders.Items.Any(o =>
-            o.Status == Domain.Enums.OrderStatus.Delivered &&
-            o.Items.Any(i => i.ProductId == productId));
-    }
+    public async Task<bool> HasCompletedOrderForProductAsync(string clientId, string productId, CancellationToken ct = default) =>
+        await orders.HasDeliveredOrderWithProductAsync(clientId, productId, ct);
 
     public async Task<bool> HasExistingReviewAsync(string clientId, string productId, CancellationToken ct = default)
     {

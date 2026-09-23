@@ -28,6 +28,7 @@ public class AdminController(
     IAuditLogRepository audit,
     IOrderRepository orders,
     IContactRepository contacts,
+    IBookingRepository bookingRepo,
     IPartnerRepository partners,
     CatalogueService catalogue,
     IProductAttributeRepository attributes,
@@ -53,6 +54,7 @@ public class AdminController(
         var bulkRequests = ordersPage.Items.Where(o => o.OrderType == OrderType.QuoteRequest).ToList();
 
         var inquiries = await contacts.ListAsync(ct);
+        var bookings = await bookingRepo.ListAsync(ct);
 
         productFilter = (productFilter ?? new ProductFilter()) with { PageSize = 100 };
         var productsPage = await catalogue.SearchAsync(productFilter, includeUnpublished: true, ct);
@@ -82,6 +84,7 @@ public class AdminController(
             CheckoutOrders = checkoutOrders,
             BulkRequests = bulkRequests,
             Inquiries = inquiries,
+            Bookings = bookings,
             Products = productsPage.Items.ToList(),
             Facets = facets,
             NewsPosts = newsPage.Items.ToList(),

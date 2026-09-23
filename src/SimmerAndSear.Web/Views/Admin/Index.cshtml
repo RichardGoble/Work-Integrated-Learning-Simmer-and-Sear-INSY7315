@@ -22,7 +22,7 @@
         <div style="display: flex; gap: 0.75rem; margin-bottom: 2rem; border-bottom: 1px solid var(--ss-border); padding-bottom: 1rem; overflow-x: auto; flex-wrap: nowrap; white-space: nowrap;">
             <button type="button" id="btn-orders" class="btn btn-secondary admin-tab-btn" data-click-action="action1">Manage Orders <span style="background: var(--ss-brand); color: white; padding: 0.1rem 0.5rem; border-radius: 50px; font-size: 0.75rem; margin-left: 0.5rem;">@Model.CheckoutOrders.Count</span></button>
             <button type="button" id="btn-bulk" class="btn btn-outline admin-tab-btn" data-click-action="action2">Bulk Requests <span style="background: var(--ss-brand); color: white; padding: 0.1rem 0.5rem; border-radius: 50px; font-size: 0.75rem; margin-left: 0.5rem;">@Model.BulkRequests.Count</span></button>
-            <button type="button" id="btn-inquiries" class="btn btn-outline admin-tab-btn" data-click-action="action3">Manage Inquiries <span style="background: var(--ss-brand); color: white; padding: 0.1rem 0.5rem; border-radius: 50px; font-size: 0.75rem; margin-left: 0.5rem;">@Model.Inquiries.Count</span></button>
+            <button type="button" id="btn-inquiries" class="btn btn-outline admin-tab-btn" data-click-action="action3">Manage Inquiries <span style="background: var(--ss-brand); color: white; padding: 0.1rem 0.5rem; border-radius: 50px; font-size: 0.75rem; margin-left: 0.5rem;">@(Model.Inquiries.Count + Model.Bookings.Count)</span></button>
             <button type="button" id="btn-products" class="btn btn-outline admin-tab-btn" data-click-action="action4">Manage Catalogue</button>
             <button type="button" id="btn-attributes" class="btn btn-outline admin-tab-btn" data-click-action="action5">Manage Attributes</button>
             <button type="button" id="btn-journal" class="btn btn-outline admin-tab-btn" data-click-action="action6">Manage Journal</button>
@@ -167,8 +167,8 @@
 
         <!-- 3. Manage Inquiries Tab -->
         <div id="tab-inquiries" class="admin-tab-content" style="display: none;">
-            <h3 style="margin-bottom: 1.5rem;">Manage Inquiries</h3>
-            <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
+            <h3 style="margin-bottom: 1.5rem;">Contact Inquiries (@Model.Inquiries.Count)</h3>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-bottom: 3rem;">
                 @if (Model.Inquiries.Count == 0)
                 {
                     <div class="card" style="padding: 2.5rem; text-align: center; color: var(--ss-ink-muted);">
@@ -178,15 +178,22 @@
                 @foreach (var inq in Model.Inquiries)
                 {
                     <div class="card" style="padding: 2rem; display: flex; flex-direction: column; gap: 1rem; border-left: 4px solid var(--ss-brand);">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
                             <div style="display: flex; gap: 1rem; align-items: center;">
                                 <div style="padding: 0.75rem; background: var(--ss-surface-solid); border-radius: 50%;">
                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ss-brand)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                                 </div>
                                 <div>
-                                    <h4 style="margin: 0 0 0.25rem 0; font-size: 1.25rem; color: var(--ss-ink);">@inq.InquiryType from @inq.FullName</h4>
-                                    <div style="color: var(--ss-ink-muted); font-size: 0.9rem;">
-                                        <a href="mailto:@inq.Email" style="color: #3b82f6">@inq.Email</a> &bull; @inq.SubmittedAt.ToString("d MMM yyyy, HH:mm")
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                        <h4 style="margin: 0; font-size: 1.25rem; color: var(--ss-ink);">@inq.InquiryType from @inq.FullName</h4>
+                                        <span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 4px; background: rgba(242, 93, 7, 0.1); color: var(--ss-brand); font-weight: 600;">@inq.Status</span>
+                                        <span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 4px; background: @(inq.NotificationStatus == SimmerAndSear.Domain.Enums.ContactNotificationStatus.Sent ? "#ecfdf5; color: #065f46" : inq.NotificationStatus == SimmerAndSear.Domain.Enums.ContactNotificationStatus.Failed ? "#fee2e2; color: #991b1b" : "#fef3c7; color: #92400e"); font-weight: 600;">Email: @inq.NotificationStatus</span>
+                                    </div>
+                                    <div style="color: var(--ss-ink-muted); font-size: 0.9rem; margin-top: 0.25rem;">
+                                        <a href="mailto:@inq.Email" style="color: #3b82f6">@inq.Email</a>
+                                        @if (!string.IsNullOrWhiteSpace(inq.Phone)) { <span>&bull; @inq.Phone</span> }
+                                        &bull; @inq.SubmittedAt.ToString("d MMM yyyy, HH:mm")
+                                        @if (!string.IsNullOrWhiteSpace(inq.HandledBy)) { <span>&bull; Handled by: @inq.HandledBy</span> }
                                     </div>
                                 </div>
                             </div>
@@ -197,6 +204,47 @@
                         </div>
                         <div style="padding: 1rem; border: 1px solid var(--ss-border); border-radius: var(--ss-radius-sm); font-size: 0.95rem;">
                             @inq.Message
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <h3 style="margin-bottom: 1.5rem;">Consultation Bookings (@Model.Bookings.Count)</h3>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
+                @if (Model.Bookings.Count == 0)
+                {
+                    <div class="card" style="padding: 2.5rem; text-align: center; color: var(--ss-ink-muted);">
+                        No consultation bookings found.
+                    </div>
+                }
+                @foreach (var b in Model.Bookings)
+                {
+                    <div class="card" style="padding: 2rem; display: flex; flex-direction: column; gap: 1rem; border-left: 4px solid #3b82f6;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                <div style="padding: 0.75rem; background: var(--ss-surface-solid); border-radius: 50%;">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                </div>
+                                <div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                        <h4 style="margin: 0; font-size: 1.25rem; color: var(--ss-ink);">Consultation: @b.ClientName</h4>
+                                        <span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 4px; background: rgba(59, 130, 246, 0.1); color: #2563eb; font-weight: 600;">@b.Status</span>
+                                        @if (!string.IsNullOrWhiteSpace(b.OrderId))
+                                        {
+                                            <span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 4px; background: rgba(245, 158, 11, 0.1); color: #d97706; font-weight: 600;">Quote Ref: @b.OrderId</span>
+                                        }
+                                    </div>
+                                    <div style="color: var(--ss-ink-muted); font-size: 0.9rem; margin-top: 0.25rem;">
+                                        <a href="mailto:@b.ClientEmail" style="color: #3b82f6">@b.ClientEmail</a>
+                                        @if (!string.IsNullOrWhiteSpace(b.ClientPhone)) { <span>&bull; @b.ClientPhone</span> }
+                                        &bull; <strong>Scheduled: @b.PreferredDateTime.ToString("d MMM yyyy, HH:mm") UTC</strong>
+                                        &bull; Created: @b.CreatedAt.ToString("d MMM yyyy")
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="padding: 1rem; border: 1px solid var(--ss-border); border-radius: var(--ss-radius-sm); font-size: 0.95rem;">
+                            <strong>Purpose:</strong> @b.Purpose
                         </div>
                     </div>
                 }

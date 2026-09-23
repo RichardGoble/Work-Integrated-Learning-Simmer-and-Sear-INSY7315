@@ -488,4 +488,116 @@ public sealed class SecurityTests
         pdf.StatusCode.ShouldBe(HttpStatusCode.OK);
         pdf.Content.Headers.ContentType!.MediaType.ShouldBe("application/pdf");
     }
+
+    [Theory]
+    [InlineData("GET", "/api/admin/contact", null, 401)]
+    [InlineData("GET", "/api/admin/contact", RoleName.Customer, 403)]
+    [InlineData("GET", "/api/admin/contact", RoleName.SalesAdmin, 200)]
+    [InlineData("GET", "/api/admin/contact", RoleName.MasterAdmin, 200)]
+    [InlineData("GET", "/api/admin/bookings", null, 401)]
+    [InlineData("GET", "/api/admin/bookings", RoleName.Customer, 403)]
+    [InlineData("GET", "/api/admin/bookings", RoleName.SalesAdmin, 200)]
+    [InlineData("GET", "/api/admin/bookings", RoleName.MasterAdmin, 200)]
+    [InlineData("PUT", "/api/admin/contact/650000000000000000000009", null, 401)]
+    [InlineData("PUT", "/api/admin/contact/650000000000000000000009", RoleName.Customer, 403)]
+    [InlineData("PUT", "/api/admin/contact/650000000000000000000009", RoleName.SalesAdmin, 404)]
+    [InlineData("PUT", "/api/admin/contact/650000000000000000000009", RoleName.MasterAdmin, 404)]
+    public async Task S6_admin_endpoints_enforce_role_matrix(string method, string path, RoleName? role, int expectedStatus)
+    {
+        using var factory = new SecurityFactory();
+        using var client = factory.Browser();
+        if (role is { } signedInRole)
+        {
+            var user = factory.AddUser(signedInRole);
+            (await Post(client, "/api/accounts/login", new { user.Email, password = Password })).EnsureSuccessStatusCode();
+        }
+
+        HttpResponseMessage response;
+        if (method == "PUT")
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Put, path) { Content = JsonContent.Create(new { status = "InProgress" }) };
+            request.Headers.Add("X-CSRF-TOKEN", await Token(client));
+            response = await client.SendAsync(request);
+        }
+        else
+        {
+            response = await client.GetAsync(path);
+        }
+
+        response.StatusCode.ShouldBe((HttpStatusCode)expectedStatus);
+        if (expectedStatus == 403)
+        {
+            factory.Audit.Items.ShouldContain(a => a.Action == AuditAction.AccessDenied && a.Summary.Contains("ACCESS_DENIED"));
+        }
+    }
+
+    [Fact]
+    public async Task S6_contact_submission_allows_anonymous_and_stores_request()
+    {
+        using var factory = new SecurityFactory();
+        using var client = factory.Browser();
+
+        var validContact = new
+        {
+            fullName = "Test Lead",
+            email = "lead@example.com",
+            phone = "0821234567",
+            inquiryType = "ProductInquiry",
+            message = "Hello, I would like more information on knives."
+        };
+
+        var response = await Post(client, "/api/contact", validContact);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        factory.Contacts.Items.ShouldHaveSingleItem();
+        factory.Contacts.Items[0].FullName.ShouldBe("Test Lead");
+        factory.Contacts.Items[0].NotificationStatus.ShouldBeOneOf(ContactNotificationStatus.Pending, ContactNotificationStatus.Sent);
+    }
+
+    [Fact]
+    public async Task S6_booking_submission_allows_anonymous_and_authenticated_customer()
+    {
+        using var factory = new SecurityFactory();
+        using var client = factory.Browser();
+
+        var bookingTime = DateTime.UtcNow.AddDays(3);
+        var anonBooking = new
+        {
+            fullName = "Anon Buyer",
+            email = "buyer@example.com",
+            phone = "0829876543",
+            preferredDateTime = bookingTime,
+            purpose = "Need consultation on cookware range."
+        };
+
+        var responseAnon = await Post(client, "/api/bookings", anonBooking);
+        responseAnon.StatusCode.ShouldBe(HttpStatusCode.Created);
+        factory.Bookings.Items.ShouldHaveSingleItem();
+
+        var customer = factory.AddUser(RoleName.Customer);
+        (await Post(client, "/api/accounts/login", new { customer.Email, password = Password })).EnsureSuccessStatusCode();
+
+        var customerBooking = new
+        {
+            fullName = "Logged In",
+            email = customer.Email,
+            phone = "0825551234",
+            preferredDateTime = bookingTime.AddHours(2),
+            purpose = "Existing customer booking."
+        };
+
+        var responseAuth = await Post(client, "/api/bookings", customerBooking);
+        responseAuth.StatusCode.ShouldBe(HttpStatusCode.Created);
+        factory.Bookings.Items.Count.ShouldBe(2);
+        factory.Bookings.Items.ShouldContain(b => b.ClientId == customer.Id);
+    }
+
+    [Fact]
+    public async Task S6_public_reviews_endpoint_allows_anonymous_access()
+    {
+        using var factory = new SecurityFactory();
+        using var client = factory.Browser();
+
+        var response = await client.GetAsync("/api/products/650000000000000000000009/reviews");
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
 }

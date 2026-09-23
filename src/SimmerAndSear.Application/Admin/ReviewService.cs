@@ -24,6 +24,25 @@ public sealed class ReviewService(IReviewRepository reviews, IProductRepository 
         return review is null ? null : Map(review);
     }
 
+    public async Task<Page<SimmerAndSear.Contracts.Engagement.PublicReviewResponse>> ListPublicForProductAsync(
+        string productId, int pageNumber, int pageSize, CancellationToken ct = default)
+    {
+        var page = await reviews.ListForProductAsync(productId, pageNumber, pageSize, ct);
+        var publicItems = page.Items.Select(r => new SimmerAndSear.Contracts.Engagement.PublicReviewResponse(
+            r.Id,
+            r.ProductId,
+            r.ProductName,
+            r.ClientName,
+            r.Rating,
+            r.Title,
+            r.Body,
+            r.CreatedAt
+        )).ToList();
+
+        return new Page<SimmerAndSear.Contracts.Engagement.PublicReviewResponse>(
+            publicItems, page.Total, page.PageNumber, page.PageSize);
+    }
+
     public async Task<(ReviewResponse? Review, string? Error)> SubmitAsync(
         string clientId, string clientName, SubmitReviewRequest request, CancellationToken ct = default)
     {
