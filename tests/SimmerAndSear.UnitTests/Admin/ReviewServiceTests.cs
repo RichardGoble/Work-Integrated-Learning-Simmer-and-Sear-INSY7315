@@ -254,6 +254,14 @@ public sealed class MemoryProductRepository : IProductRepository
         return Task.CompletedTask;
     }
 
+    public Task<bool> TryDecrementStockAsync(string productId, int quantity, CancellationToken ct = default)
+    {
+        var p = _items.Find(x => x.Id == productId);
+        if (p is null || quantity <= 0 || p.StockQuantity < quantity) return Task.FromResult(false);
+        p.StockQuantity -= quantity;
+        return Task.FromResult(true);
+    }
+
     public Task DeleteAsync(string id, CancellationToken ct = default)
     {
         var p = _items.Find(x => x.Id == id);

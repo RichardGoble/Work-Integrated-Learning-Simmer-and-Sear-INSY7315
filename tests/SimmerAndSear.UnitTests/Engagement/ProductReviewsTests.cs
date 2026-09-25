@@ -152,6 +152,14 @@ public sealed class ProductReviewsTests
 
         public Task<string> CreateAsync(Product product, CancellationToken ct = default) => throw new NotImplementedException();
         public Task UpdateAsync(Product product, CancellationToken ct = default) => throw new NotImplementedException();
+        public Task<bool> TryDecrementStockAsync(string productId, int quantity, CancellationToken ct = default)
+        {
+            var p = Items.Find(x => x.Id == productId);
+            if (p is null || quantity <= 0 || p.StockQuantity < quantity) return Task.FromResult(false);
+            p.StockQuantity -= quantity;
+            return Task.FromResult(true);
+        }
+
         public Task DeleteAsync(string id, CancellationToken ct = default) => throw new NotImplementedException();
     }
 }
