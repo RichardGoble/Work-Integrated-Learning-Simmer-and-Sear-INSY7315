@@ -1,6 +1,8 @@
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using SimmerAndSear.Application.Abstractions;
 using SimmerAndSear.Application.Commerce;
 using SimmerAndSear.Contracts.Commerce;
 using SimmerAndSear.Domain.Enums;
@@ -23,6 +25,7 @@ namespace SimmerAndSear.Web.Controllers;
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public sealed class PaymentsController(
     OrderService orders,
+    IPaymentGateway gateway,
     IOptions<PaymentOptions> options,
     AuditWriter audit,
     ILogger<PaymentsController> logger) : ControllerBase
@@ -80,4 +83,71 @@ public sealed class PaymentsController(
 
         return Ok(result.Order);
     }
+    [HttpPost("/api/payments/notify")]
+    [AllowAnonymous]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> Notify(CancellationToken ct)
+    {
+        using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+        var rawBody = await reader.ReadToEndAsync(ct);
+
+        var notification = await gateway.VerifyNotificationAsync(
+            rawBody, HttpContext.Connection.RemoteIpAddress?.ToString(), ct);
+
+        if (!notification.IsTrustworthy)
+        {
+            await audit.WriteAsync(AuditAction.AccessDenied, "Payment", null,
+                $"ACCESS_DENIED payment notification refused: {notification.Rejection}");
+
+            return Ok();
+        }
+
+        if (!notification.IsComplete)
+        {
+            logger.LogInformation(
+                "Payment notification for {OrderId} reported {Status}; order left unpaid.",
+                notification.OrderId, notification.PaymentStatus);
+
+            return Ok();
+        }
+
+        var result = await orders.ConfirmPaymentAsync(
+            notification.OrderId!, gateway.Provider,
+            notification.GatewayReference ?? "unknown", notification.Amount, ct);
+
+        switch (result.Outcome)
+        {
+            case PaymentOutcome.AlreadyConfirmed:
+                return Ok();
+
+            case PaymentOutcome.AmountMismatch:
+                await audit.WriteAsync(AuditAction.AccessDenied, "Order", notification.OrderId,
+                    $"ACCESS_DENIED payment of {notification.Amount:F2} does not match the order total");
+                return Ok();
+
+            case PaymentOutcome.OrderNotFound:
+            case PaymentOutcome.NotAwaitingPayment:
+                logger.LogWarning(
+                    "Payment notification for {OrderId} could not be applied: {Outcome}.",
+                    notification.OrderId, result.Outcome);
+                return Ok();
+        }
+
+        await audit.WriteAsync(AuditAction.Update, "Order", notification.OrderId,
+            $"Payment {notification.GatewayReference} received for {result.Order!.OrderReference} " +
+            $"({result.Order.Total:F2} {result.Order.Currency})");
+
+        if (result.HasStockShortfall)
+        {
+            logger.LogWarning("Order {Reference} paid but stock could not be taken for: {Lines}",
+                result.Order.OrderReference, string.Join(", ", result.StockShortfalls!));
+
+            await audit.WriteAsync(AuditAction.Update, "Order", notification.OrderId,
+                $"STOCK SHORTFALL on {result.Order.OrderReference}: " +
+                string.Join(", ", result.StockShortfalls!));
+        }
+
+        return Ok();
+    }
+
 }

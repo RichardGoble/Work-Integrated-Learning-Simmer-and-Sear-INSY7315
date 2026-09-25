@@ -88,6 +88,31 @@ public sealed class OrderService(
         return order is null ? null : Describe(order, PaidMessage);
     }
 
+    /// <summary>
+    /// Describes an order to a payment gateway, without handing it a domain entity.
+    /// </summary>
+    public async Task<PaymentRequest?> GetPaymentRequestAsync(
+        string orderId, CancellationToken ct = default)
+    {
+        var order = await orders.GetAsync(orderId, ct);
+
+        if (order is null)
+        {
+            return null;
+        }
+
+        var units = order.Items.Sum(i => i.Quantity);
+        var lines = order.Items.Count;
+
+        return new PaymentRequest(
+            order.Id,
+            order.OrderReference,
+            order.Total,
+            order.ShippingDetails?.FullName ?? string.Empty,
+            order.ShippingDetails?.Email ?? string.Empty,
+            $"{units} item{(units == 1 ? "" : "s")} across {lines} line{(lines == 1 ? "" : "s")}");
+    }
+
     public async Task<PaymentResult> ConfirmPaymentAsync(
         string orderId, string provider, string gatewayReference, decimal amountPaid,
         CancellationToken ct = default)

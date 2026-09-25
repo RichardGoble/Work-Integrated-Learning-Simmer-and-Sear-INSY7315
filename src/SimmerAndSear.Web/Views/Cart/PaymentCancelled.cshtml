@@ -1,0 +1,32 @@
+@using SimmerAndSear.Web.ViewModels
+@using SimmerAndSear.Contracts.Commerce
+@model OrderResponse
+@{
+    ViewData["Title"] = "Payment cancelled";
+}
+
+<div style="background: #f3f4f6; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 4rem 1.5rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+    <div class="card" style="background: white; border-radius: 12px; padding: 4rem 3rem; text-align: center; max-width: 600px; width: 100%; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 1.5rem;">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>
+        </svg>
+
+        <h1 style="font-size: 2rem; font-weight: 800; color: #111827; margin: 0 0 1rem 0;">Payment cancelled</h1>
+
+        <p style="color: #6b7280; font-size: 1.05rem; margin: 0 auto 2rem auto; line-height: 1.5; max-width: 440px;">
+            No payment was taken. Your order <strong>#@Model.OrderReference</strong> is still here
+            and waiting &mdash; you can pay for it whenever you are ready.
+        </p>
+
+        <div style="background: #f1f5f9; padding: 1.5rem 2rem; border-radius: 12px; margin-bottom: 2.5rem; display: flex; justify-content: space-between; font-weight: 700; color: #334155;">
+            <span>Amount due</span>
+            <span>@Money.Format(Model.Total, Model.Currency)</span>
+        </div>
+
+        <div style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap;">
+            <a href="/Catalogue" style="background: white; border: 1px solid #111827; color: #111827; padding: 0.8rem 2rem; border-radius: 6px; font-weight: 600; text-decoration: none; font-size: 0.95rem; display: inline-block;">Continue Shopping</a>
+            <a href="/Auth/Profile" style="background: #cd6228; color: white; border: none; padding: 0.8rem 2rem; border-radius: 6px; font-weight: 600; text-decoration: none; font-size: 0.95rem; display: inline-block;">View Order History</a>
+        </div>
+    </div>
+</div>
