@@ -14,7 +14,14 @@ public interface IOrderFulfilmentStrategy
     string Name { get; }
 
    
-    Order CreateOrder(Cart cart, string clientId, ShippingDetails shipping, SiteSettings settings);
+
+    Order CreateOrder(
+        Cart cart,
+        string clientId,
+        ShippingDetails shipping,
+        SiteSettings settings,
+        string? companyName = null,
+        string? customerNotes = null);
 
    
     string NextStepMessage { get; }

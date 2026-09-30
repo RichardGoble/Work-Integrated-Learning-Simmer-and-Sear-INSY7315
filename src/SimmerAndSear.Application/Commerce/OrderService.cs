@@ -71,7 +71,9 @@ public sealed class OrderService(
         }
 
         var strategy = strategies.For(cart, site);
-        var order = strategy.CreateOrder(cart, clientId, ToShippingDetails(request), site);
+        var order = strategy.CreateOrder(
+            cart, clientId, ToShippingDetails(request), site,
+            Blank(request.CompanyName), Blank(request.CustomerNotes));
 
         await orders.CreateAsync(order, ct);
 
@@ -197,6 +199,9 @@ public sealed class OrderService(
         order.OrderType == Domain.Enums.OrderType.QuoteRequest
             ? new QuotationFulfilmentStrategy().NextStepMessage
             : new PaymentFulfilmentStrategy().NextStepMessage;
+
+    private static string? Blank(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private static ShippingDetails ToShippingDetails(CheckoutRequest request) => new()
     {

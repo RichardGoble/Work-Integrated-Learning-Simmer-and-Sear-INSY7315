@@ -58,6 +58,19 @@
 
         @if (Model.IsQuotation)
         {
+            @* The quotation is rendered on first request and stored, so this link is
+               live the moment the request is placed. *@
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; text-align: left; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                <div>
+                    <h4 style="margin: 0 0 0.25rem 0; color: #1e293b; font-size: 1.1rem; font-weight: 700;">Your Quotation Document</h4>
+                    <p style="margin: 0; color: #64748b; font-size: 0.9rem;">A branded PDF of this request, ready to share with your team.</p>
+                </div>
+                <a href="/api/orders/@Model.Id/quotation" target="_blank" rel="noopener" style="background: #1e293b; color: white; padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 600; text-decoration: none; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.5rem; white-space: nowrap;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                    Download PDF
+                </a>
+            </div>
+
             <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 1.5rem; text-align: left; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
                 <div>
                     <h4 style="margin: 0 0 0.25rem 0; color: #92400e; font-size: 1.1rem; font-weight: 700;">Need a Bespoke Cookware Consultation?</h4>

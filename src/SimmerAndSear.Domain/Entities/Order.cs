@@ -45,7 +45,8 @@ public sealed class Order : IEntity
     }
 
     public static Order FromQuoteRequest(
-        Cart cart, string clientId, ShippingDetails? shipping = null, string currency = "ZAR")
+        Cart cart, string clientId, ShippingDetails? shipping = null, string currency = "ZAR",
+        string? companyName = null, string? customerNotes = null)
     {
         var order = Build(cart, clientId, currency);
 
@@ -54,6 +55,8 @@ public sealed class Order : IEntity
         order.ShippingDetails = shipping;
         order.ShippingCost = 0m;
         order.Total = order.Subtotal;
+        order.CompanyName = companyName;
+        order.CustomerNotes = customerNotes;
 
         return order;
     }
