@@ -23,13 +23,17 @@
             <button type="button" id="btn-orders" class="btn btn-secondary admin-tab-btn" data-click-action="action1">Manage Orders <span style="background: var(--ss-brand); color: white; padding: 0.1rem 0.5rem; border-radius: 50px; font-size: 0.75rem; margin-left: 0.5rem;">@Model.CheckoutOrders.Count</span></button>
             <button type="button" id="btn-bulk" class="btn btn-outline admin-tab-btn" data-click-action="action2">Bulk Requests <span style="background: var(--ss-brand); color: white; padding: 0.1rem 0.5rem; border-radius: 50px; font-size: 0.75rem; margin-left: 0.5rem;">@Model.BulkRequests.Count</span></button>
             <button type="button" id="btn-inquiries" class="btn btn-outline admin-tab-btn" data-click-action="action3">Manage Inquiries <span style="background: var(--ss-brand); color: white; padding: 0.1rem 0.5rem; border-radius: 50px; font-size: 0.75rem; margin-left: 0.5rem;">@(Model.Inquiries.Count + Model.Bookings.Count)</span></button>
+@if (Model.ShowMasterSections) {
             <button type="button" id="btn-products" class="btn btn-outline admin-tab-btn" data-click-action="action4">Manage Catalogue</button>
             <button type="button" id="btn-attributes" class="btn btn-outline admin-tab-btn" data-click-action="action5">Manage Attributes</button>
             <button type="button" id="btn-journal" class="btn btn-outline admin-tab-btn" data-click-action="action6">Manage Journal</button>
             <button type="button" id="btn-gallery" class="btn btn-outline admin-tab-btn" data-click-action="action7">Manage Gallery</button>
+}
             <button type="button" id="btn-reviews" class="btn btn-outline admin-tab-btn" data-click-action="action8">Manage Reviews</button>
             <button type="button" id="btn-partners" class="btn btn-outline admin-tab-btn" data-click-action="action9">Manage Partners</button>
+@if (Model.ShowMasterSections) {
             <button type="button" id="btn-settings" class="btn btn-outline admin-tab-btn" data-click-action="action10">Settings</button>
+}
 @if (User.IsInRole("MasterAdmin")) {
             <button type="button" id="btn-admins" class="btn btn-outline admin-tab-btn" data-click-action="action11">Manage Admins</button>
             <a class="btn btn-outline" href="/Admin/Audit">Audit log</a>
@@ -251,6 +255,8 @@
             </div>
         </div>
 
+@* The catalogue, attributes, journal and gallery are all CatalogueManage. *@
+@if (Model.ShowMasterSections) {
         <!-- 4. Manage Catalogue Tab -->
         <div id="tab-products" class="admin-tab-content" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
@@ -722,6 +728,7 @@
                 </div>
             </div>
         </div>
+}
 
         <!-- 8. Manage Reviews Tab -->
         <div id="tab-reviews" class="admin-tab-content" style="display: none;">
@@ -860,6 +867,7 @@
             </div>
         </div>
 
+@if (Model.ShowMasterSections) {
         <!-- 10. Settings Tab -->
         <div id="tab-settings" class="admin-tab-content" style="display: none;">
             <div class="card" style="padding: 3rem; max-width: 600px; margin: 0 auto;">
@@ -886,6 +894,7 @@
                 </form>
             </div>
         </div>
+}
 
         <!-- 11. Manage Admins Tab (MasterAdmin only) -->
         @if (User.IsInRole("MasterAdmin")) {

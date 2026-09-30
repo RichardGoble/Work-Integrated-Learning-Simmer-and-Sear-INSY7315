@@ -19,4 +19,6 @@ public sealed class AdminDashboardVm
     public SiteSettingsResponse Settings { get; set; } = new(0, "ZAR", 0, 30, true, string.Empty, false, string.Empty, DateTime.UtcNow);
     public List<User> AdminUsers { get; set; } = [];
     public ProductFilter ProductFilter { get; set; } = new();
+
+    public bool ShowMasterSections { get; set; }
 }

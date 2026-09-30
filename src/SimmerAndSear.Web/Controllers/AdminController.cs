@@ -49,6 +49,9 @@ public class AdminController(
     {
         ViewData["Title"] = "Admin Dashboard";
 
+
+        var isMaster = User.IsInRole(nameof(RoleName.MasterAdmin));
+
         var ordersPage = await orders.ListAsync(1, 200, ct);
 
         var checkoutOrders = ordersPage.Items.Where(o => o.OrderType == OrderType.Checkout).ToList();
@@ -56,29 +59,10 @@ public class AdminController(
 
         var inquiries = await contacts.ListAsync(ct);
         var bookings = await bookingRepo.ListAsync(ct);
-
-        productFilter = (productFilter ?? new ProductFilter()) with { PageSize = 100 };
-        var productsPage = await catalogue.SearchAsync(productFilter, includeUnpublished: true, ct);
-        var facets = await catalogue.GetFacetsAsync(includeUnpublished: true, ct);
-        var saved = await attributes.GetAsync(ct);
-        static string[] Merge(IReadOnlyList<string> a, IReadOnlyList<string> b) =>
-            a.Concat(b).Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.OrdinalIgnoreCase).ToArray();
-        facets = new CatalogueFacets(Merge(facets.Brands, saved.Brands), Merge(facets.Categories, saved.Categories),
-            Merge(facets.CookwareTypes, saved.CookwareTypes), Merge(facets.Materials, saved.Materials), Merge(facets.SizeLabels, saved.SizeLabels));
-        var newsPage = await newsRepo.ListAsync(1, 100, ct);
-        var galleryImages = await gallery.ListAsync(ct);
         var reviewsPage = await reviewService.ListAsync(1, 100, ct: ct);
-
         var partnerList = await partners.ListAsync(ct);
 
-        var settings = await settingsService.GetAsync(ct);
-
-        List<User> adminUsers = [];
-        if (User.IsInRole("MasterAdmin"))
-        {
-            var usersPage = await userRepo.ListAsync(1, 100, ct);
-            adminUsers = usersPage.Items.Where(u => u.UserType == UserType.Admin).ToList();
-        }
+        productFilter = (productFilter ?? new ProductFilter()) with { PageSize = 100 };
 
         var vm = new AdminDashboardVm
         {
@@ -86,16 +70,34 @@ public class AdminController(
             BulkRequests = bulkRequests,
             Inquiries = inquiries,
             Bookings = bookings,
-            Products = productsPage.Items.ToList(),
-            Facets = facets,
-            NewsPosts = newsPage.Items.ToList(),
-            GalleryImages = galleryImages,
             Reviews = reviewsPage.Items.ToList(),
             Partners = partnerList,
-            Settings = settings,
-            AdminUsers = adminUsers,
-            ProductFilter = productFilter
+            ProductFilter = productFilter,
+            ShowMasterSections = isMaster
         };
+
+        if (!isMaster)
+        {
+            return View(vm);
+        }
+
+        var productsPage = await catalogue.SearchAsync(productFilter, includeUnpublished: true, ct);
+        var facets = await catalogue.GetFacetsAsync(includeUnpublished: true, ct);
+        var saved = await attributes.GetAsync(ct);
+        static string[] Merge(IReadOnlyList<string> a, IReadOnlyList<string> b) =>
+            a.Concat(b).Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.OrdinalIgnoreCase).ToArray();
+        facets = new CatalogueFacets(Merge(facets.Brands, saved.Brands), Merge(facets.Categories, saved.Categories),
+            Merge(facets.CookwareTypes, saved.CookwareTypes), Merge(facets.Materials, saved.Materials), Merge(facets.SizeLabels, saved.SizeLabels));
+
+        var newsPage = await newsRepo.ListAsync(1, 100, ct);
+        var usersPage = await userRepo.ListAsync(1, 100, ct);
+
+        vm.Products = productsPage.Items.ToList();
+        vm.Facets = facets;
+        vm.NewsPosts = newsPage.Items.ToList();
+        vm.GalleryImages = await gallery.ListAsync(ct);
+        vm.Settings = await settingsService.GetAsync(ct);
+        vm.AdminUsers = usersPage.Items.Where(u => u.UserType == UserType.Admin).ToList();
 
         return View(vm);
     }

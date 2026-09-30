@@ -134,4 +134,68 @@ public sealed class AdminDashboardTests
             await factory.Services.GetRequiredService<IMongoClient>().DropDatabaseAsync(databaseName);
         }
     }
+
+    [Theory]
+    [InlineData(RoleName.SalesAdmin, false)]
+    [InlineData(RoleName.MasterAdmin, true)]
+    public async Task Dashboard_shows_only_the_sections_the_role_can_act_on(RoleName role, bool master)
+    {
+        using var security = new SecurityFactory();
+        var databaseName = "admin_roles_" + Guid.NewGuid().ToString("N");
+        using var factory = security.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+            services.PostConfigure<MongoOptions>(options => { options.Database = databaseName; options.ApplySchemaOnStartup = true; })));
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var user = security.AddUser(role);
+        try
+        {
+            var csrf = await client.GetFromJsonAsync<JsonElement>("/api/accounts/csrf");
+            using var login = new HttpRequestMessage(HttpMethod.Post, "/api/accounts/login")
+            {
+                Content = JsonContent.Create(new { user.Email, password = SecurityTests.Password })
+            };
+            login.Headers.Add("X-CSRF-TOKEN", csrf.GetProperty("token").GetString());
+            (await client.SendAsync(login)).EnsureSuccessStatusCode();
+
+            csrf = await client.GetFromJsonAsync<JsonElement>("/api/accounts/csrf");
+            client.DefaultRequestHeaders.Add("X-CSRF-TOKEN", csrf.GetProperty("token").GetString());
+
+            var html = await client.GetStringAsync("/Admin");
+
+            foreach (var shared in new[] { "btn-orders", "btn-bulk", "btn-inquiries", "btn-reviews", "btn-partners" })
+            {
+                Assert.Contains($"id=\"{shared}\"", html);
+            }
+
+            foreach (var restricted in new[] { "btn-products", "btn-attributes", "btn-journal", "btn-gallery", "btn-settings", "btn-admins" })
+            {
+                if (master)
+                {
+                    Assert.Contains($"id=\"{restricted}\"", html);
+                }
+                else
+                {
+                    Assert.DoesNotContain($"id=\"{restricted}\"", html);
+                }
+            }
+
+            using var settings = new MultipartFormDataContent
+            {
+                { new StringContent(csrf.GetProperty("token").GetString()!), "__RequestVerificationToken" },
+                { new StringContent("9000"), "bulkOrderThreshold" },
+                { new StringContent("120"), "shippingFlatRate" },
+                { new StringContent("ZAR"), "displayCurrency" },
+                { new StringContent("sales@simmerandsear.local"), "salesNotificationEmail" }
+            };
+
+            var saved = await client.PostAsync("/Admin/Settings", settings);
+
+            Assert.Equal(
+                master ? HttpStatusCode.Redirect : HttpStatusCode.Forbidden,
+                saved.StatusCode);
+        }
+        finally
+        {
+            await factory.Services.GetRequiredService<IMongoClient>().DropDatabaseAsync(databaseName);
+        }
+    }
 }
