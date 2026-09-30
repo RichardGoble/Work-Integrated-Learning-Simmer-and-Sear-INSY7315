@@ -75,6 +75,7 @@ public static class DependencyInjection
         services.AddScoped<IDatabaseHealth, MongoDatabaseHealth>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IQuotationPdfRenderer, QuestQuotationPdfRenderer>();
+        services.AddSingleton<IWishlistLookbookRenderer, QuestLookbookPdfRenderer>();
 
      
         services.AddOptions<PayFastOptions>()

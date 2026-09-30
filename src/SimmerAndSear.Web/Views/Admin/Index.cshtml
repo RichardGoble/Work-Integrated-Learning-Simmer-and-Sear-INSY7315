@@ -140,7 +140,7 @@
                         <div style="background: var(--ss-surface-solid); padding: 1rem; border-radius: var(--ss-radius-sm);">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                                 <h5 style="margin: 0;">Requested Items (Est. Total: @req.Currency @req.Total.ToString("N2"))</h5>
-                                <a href="#" onclick="alert('The B2B Lookbook PDF is currently being updated.'); return false;" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem; text-decoration: none;">View Lookbook (PDF)</a>
+                                <a href="/api/admin/orders/@req.Id/quotation" target="_blank" rel="noopener" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem; text-decoration: none;">View Quotation (PDF)</a>
                             </div>
                             <ul style="margin: 0; padding-left: 1.5rem; font-size: 0.9rem;">
                                 @foreach (var item in req.Items)

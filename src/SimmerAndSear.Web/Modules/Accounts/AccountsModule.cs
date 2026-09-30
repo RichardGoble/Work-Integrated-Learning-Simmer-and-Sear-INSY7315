@@ -18,6 +18,7 @@ public sealed class AccountsModule : IModule
     public void Register(IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<WishlistService>();
+        services.AddScoped<LookbookService>();
         services.AddScoped<AdminAccountService>();
     }
 }
