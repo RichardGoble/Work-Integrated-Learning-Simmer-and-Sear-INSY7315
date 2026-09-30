@@ -280,8 +280,10 @@
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Product Images</label>
-                            <input type="file" name="imageFile" class="input-field" accept="image/*" />
-                            <small style="color: var(--ss-ink-muted); display: block; margin-top: 0.5rem;">Select image file (under 10MB)</small>
+                            <input type="file" name="imageFiles" class="input-field" accept="image/*" multiple />
+                            <small style="color: var(--ss-ink-muted); display: block; margin-top: 0.5rem;">Select one or more image files (each under 10MB). Uploads are added to the gallery.</small>
+                            @* Filled in by admin-dashboard.js when an existing product is opened. *@
+                            <div id="product-image-gallery" data-product-id="" style="display: none; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;"></div>
                         </div>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.5rem;">

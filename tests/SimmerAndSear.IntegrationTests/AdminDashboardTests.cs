@@ -67,11 +67,11 @@ public sealed class AdminDashboardTests
             };
             client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
             fields["description"] = "Test";
-            var invalid = await Post("/Admin/Products/Create", fields, "imageFile");
+            var invalid = await Post("/Admin/Products/Create", fields, "imageFiles");
             Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
             Assert.Contains("10 characters", await invalid.Content.ReadAsStringAsync());
             fields["description"] = "A durable copper pan for testing.";
-            var create = await Post("/Admin/Products/Create", fields, "imageFile");
+            var create = await Post("/Admin/Products/Create", fields, "imageFiles");
             Assert.True(create.StatusCode == HttpStatusCode.OK, await create.Content.ReadAsStringAsync());
             Assert.True((await create.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("success").GetBoolean());
             client.DefaultRequestHeaders.Accept.Clear();
@@ -85,6 +85,33 @@ public sealed class AdminDashboardTests
             var updated = await client.GetFromJsonAsync<ProductDetailResponse>($"/Admin/Products/{product.Id}");
             Assert.Equal("Updated Copper Pan", updated!.Name);
             Assert.Single(updated.Images);
+
+    
+            Assert.Equal(HttpStatusCode.Redirect,
+                (await Post($"/Admin/Products/{product.Id}/edit", fields, "imageFiles")).StatusCode);
+            var twoImages = await client.GetFromJsonAsync<ProductDetailResponse>($"/Admin/Products/{product.Id}");
+            Assert.Equal(2, twoImages!.Images.Count);
+            Assert.True(twoImages.Images[0].IsPrimary);
+            Assert.False(twoImages.Images[1].IsPrimary);
+
+            var second = twoImages.Images[1].MediaAssetId;
+            Assert.Equal(HttpStatusCode.Redirect,
+                (await Post($"/Admin/Products/{product.Id}/images/{second}/primary", new())).StatusCode);
+            var promoted = await client.GetFromJsonAsync<ProductDetailResponse>($"/Admin/Products/{product.Id}");
+            Assert.Equal(second, Assert.Single(promoted!.Images, i => i.IsPrimary).MediaAssetId);
+
+            var demoted = promoted.Images.First(i => !i.IsPrimary).MediaAssetId;
+            Assert.Equal(HttpStatusCode.Redirect,
+                (await Post($"/Admin/Products/{product.Id}/images/{demoted}/delete", new())).StatusCode);
+            var oneImage = await client.GetFromJsonAsync<ProductDetailResponse>($"/Admin/Products/{product.Id}");
+            Assert.Single(oneImage!.Images);
+            Assert.Null(await scope.ServiceProvider.GetRequiredService<IMediaAssetRepository>().GetAsync(demoted));
+
+       
+            var lastImage = oneImage.Images[0].MediaAssetId;
+            var refused = await Post($"/Admin/Products/{product.Id}/images/{lastImage}/delete", new());
+            Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+            Assert.Contains("at least one image", await refused.Content.ReadAsStringAsync());
             fields["price"] = "-1";
             Assert.Equal(HttpStatusCode.BadRequest, (await Post($"/Admin/Products/{product.Id}/edit", fields)).StatusCode);
 

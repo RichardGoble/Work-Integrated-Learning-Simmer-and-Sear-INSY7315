@@ -39,12 +39,13 @@ public class AdminController(
     NewsService newsService,
     SiteSettingsService settingsService,
     IUserRepository userRepo,
-    IMediaAssetRepository mediaRepo,
     IMediaService mediaService,
     CurrentUser current,
     AuditWriter auditWriter,
     IPasswordHasher hasher) : Controller
 {
+    private const int MaxProductImages = 8;
+
     public async Task<IActionResult> Index([FromQuery] ProductFilter productFilter, CancellationToken ct = default)
     {
         ViewData["Title"] = "Admin Dashboard";
@@ -194,7 +195,7 @@ public class AdminController(
     [HttpPost("Admin/Products/Create")]
     [HttpPost("Admin/Products/{id}/edit")]
     [Authorize(Policy = nameof(Permission.CatalogueManage))]
-    public async Task<IActionResult> SaveProduct([FromForm] UpdateProductRequest request, IFormFile? imageFile, CancellationToken ct, string? id = null)
+    public async Task<IActionResult> SaveProduct([FromForm] UpdateProductRequest request, IFormFile[]? imageFiles, CancellationToken ct, string? id = null)
     {
         if (id is null && string.IsNullOrWhiteSpace(request.Sku))
         {
@@ -212,11 +213,29 @@ public class AdminController(
         }).ToList() ?? [];
         try
         {
-            if (imageFile is { Length: > 0 })
+            
+            foreach (var file in imageFiles ?? [])
             {
-                await using var stream = imageFile.OpenReadStream();
-                var asset = await mediaService.UploadAsync(stream, imageFile.FileName, imageFile.Length, current.Id, ct);
-                request.Images = [new ProductImageRequest { MediaAssetId = asset.Id, AltText = request.Name, IsPrimary = true }];
+                if (file is not { Length: > 0 })
+                {
+                    continue;
+                }
+
+                if (request.Images.Count >= MaxProductImages)
+                {
+                    return BadRequest(new { message = $"A product can hold at most {MaxProductImages} images." });
+                }
+
+                await using var stream = file.OpenReadStream();
+                var asset = await mediaService.UploadAsync(stream, file.FileName, file.Length, current.Id, ct);
+
+                request.Images.Add(new ProductImageRequest
+                {
+                    MediaAssetId = asset.Id,
+                    AltText = request.Name,
+                    DisplayOrder = request.Images.Count,
+                    IsPrimary = request.Images.Count == 0
+                });
             }
             if (id is null) await catalogue.CreateAsync(request, ct);
             else await catalogue.UpdateAsync(id, request, ct);
@@ -228,6 +247,57 @@ public class AdminController(
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+
+    [HttpPost("Admin/Products/{id}/images/{mediaAssetId}/delete"), Authorize(Policy = nameof(Permission.CatalogueManage))]
+    public async Task<IActionResult> DeleteProductImage(string id, string mediaAssetId, CancellationToken ct)
+    {
+        try
+        {
+            var (product, removed) = await catalogue.RemoveImageAsync(id, mediaAssetId, ct);
+
+            if (product is null)
+            {
+                return NotFound();
+            }
+
+            
+            if (removed)
+            {
+                await mediaService.DeleteAsync(mediaAssetId, ct);
+                await auditWriter.WriteAsync(AuditAction.Update, $"Product image removed: {id} ({mediaAssetId})");
+            }
+
+            if (Request.Headers.Accept.ToString().Contains("application/json"))
+            {
+                return Ok(product);
+            }
+            return Redirect("/Admin#products");
+        }
+        catch (ProductRuleException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("Admin/Products/{id}/images/{mediaAssetId}/primary"), Authorize(Policy = nameof(Permission.CatalogueManage))]
+    public async Task<IActionResult> SetPrimaryProductImage(string id, string mediaAssetId, CancellationToken ct)
+    {
+        var product = await catalogue.SetPrimaryImageAsync(id, mediaAssetId, ct);
+
+        if (product is null)
+        {
+            return NotFound();
+        }
+
+        await auditWriter.WriteAsync(AuditAction.Update, $"Product primary image set: {id} ({mediaAssetId})");
+
+        if (Request.Headers.Accept.ToString().Contains("application/json"))
+        {
+            return Ok(product);
+        }
+        return Redirect("/Admin#products");
     }
 
     [HttpPost("Admin/Products/{id}/delete"), Authorize(Policy = nameof(Permission.CatalogueManage))]
@@ -358,7 +428,7 @@ public class AdminController(
     
         if (replaced is { Length: > 0 })
         {
-            await mediaRepo.DeleteAsync(replaced, ct);
+            await mediaService.DeleteAsync(replaced, ct);
         }
 
         await auditWriter.WriteAsync(AuditAction.Update, $"Gallery position {slot} set to {mediaAssetId}");
@@ -378,7 +448,7 @@ public class AdminController(
 
         if (existing is { MediaAssetId.Length: > 0 })
         {
-            await mediaRepo.DeleteAsync(existing.MediaAssetId, ct);
+            await mediaService.DeleteAsync(existing.MediaAssetId, ct);
         }
 
         await auditWriter.WriteAsync(AuditAction.Delete, $"Gallery position {slot} cleared");

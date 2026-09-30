@@ -161,6 +161,8 @@ public sealed class LookbookServiceTests
         public Task<MediaStreamResult?> GetOriginalStreamAsync(string id, CancellationToken ct = default) =>
             Task.FromResult<MediaStreamResult?>(null);
 
+        public Task DeleteAsync(string id, CancellationToken ct = default) => Task.CompletedTask;
+
         public Task<MediaStreamResult?> GetThumbnailStreamAsync(string id, CancellationToken ct = default)
         {
             if (Throw)
