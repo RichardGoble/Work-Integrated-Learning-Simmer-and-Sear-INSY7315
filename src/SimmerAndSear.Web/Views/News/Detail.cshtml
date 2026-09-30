@@ -1,8 +1,11 @@
+@using SimmerAndSear.Contracts.Admin
+@model NewsPostResponse
+
 <div class="animate-fade-in">
   <!-- Header -->
   <div class="page-header" style="padding: 4rem 0;">
     <h1 style="color: white; margin: 0; text-align: center; font-size: 2.5rem; font-weight: 700;">
-      [Article Title]
+      @Model.Title
     </h1>
   </div>
   
@@ -21,26 +24,34 @@
       <div style="background-color: #e5e9f0; padding: 4rem; border-radius: 8px; max-width: 800px;">
         
         <h2 style="color: #2e3440; font-size: 1.75rem; line-height: 1.5; margin-top: 0; margin-bottom: 2.5rem; font-weight: 600;">
-          [Article Lead Paragraph / Subtitle Goes Here]
+          Published @(Model.PublishedAt ?? Model.CreatedAt).ToLocalTime().ToString("d MMMM yyyy") by @Model.AuthorName
         </h2>
         
         <div style="color: #4c566a; line-height: 1.7; font-size: 1.05rem; margin-bottom: 3rem;">
-          <p>[Main Article HTML Content Goes Here]</p>
-          <p>[The backend team will inject the paragraphs, lists, and headers from the database into this block.]</p>
+          @* Bodies are plain text by design - HTML is not accepted from the editor, so each
+             paragraph is rendered as text and Razor encodes it. *@
+          @foreach (var paragraph in Paragraphs(Model.Body))
+          {
+            <p>@paragraph</p>
+          }
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-          <!-- Placeholder Image Blocks -->
-          <div style="background-color: #d8dee9; border-radius: var(--ss-radius); aspect-ratio: 3/4; display: flex; align-items: center; justify-content: center; color: #4c566a; font-weight: 500; border: 2px dashed #c2c9d6;">
-             [Article Image 1]
+        @if (!string.IsNullOrWhiteSpace(Model.ImageMediaAssetId))
+        {
+          <div style="border-radius: var(--ss-radius); overflow: hidden;">
+            <img src="@Model.ImageUrl" alt="@Model.Title" loading="lazy" style="width: 100%; height: auto; display: block;" />
           </div>
-          <div style="background-color: #d8dee9; border-radius: var(--ss-radius); aspect-ratio: 3/4; display: flex; align-items: center; justify-content: center; color: #4c566a; font-weight: 500; border: 2px dashed #c2c9d6;">
-             [Article Image 2]
-          </div>
-        </div>
+        }
 
       </div>
       
     </div>
   </section>
 </div>
+
+@functions {
+    static IEnumerable<string> Paragraphs(string body) =>
+        (body ?? string.Empty)
+            .Replace("\r\n", "\n")
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+}

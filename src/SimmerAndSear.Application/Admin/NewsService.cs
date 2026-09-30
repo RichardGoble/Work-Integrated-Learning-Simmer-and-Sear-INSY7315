@@ -18,6 +18,22 @@ public sealed class NewsService(INewsPostRepository newsPosts)
         return new Page<NewsPostResponse>([.. page.Items.Select(Map)], page.Total, page.PageNumber, page.PageSize);
     }
 
+
+    public async Task<Page<NewsPostResponse>> ListPublishedAsync(
+        int pageNumber, int pageSize, CancellationToken ct = default)
+    {
+        var page = await newsPosts.ListByStatusAsync(PostStatus.Published, pageNumber, pageSize, ct);
+        return new Page<NewsPostResponse>([.. page.Items.Select(Map)], page.Total, page.PageNumber, page.PageSize);
+    }
+
+
+    public async Task<NewsPostResponse?> GetPublishedAsync(string id, CancellationToken ct = default)
+    {
+        var post = await newsPosts.GetAsync(id, ct);
+
+        return post is null || post.Status != PostStatus.Published ? null : Map(post);
+    }
+
     public async Task<NewsPostResponse?> GetAsync(string id, CancellationToken ct = default)
     {
         var post = await newsPosts.GetAsync(id, ct);

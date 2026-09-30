@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using SimmerAndSear.Application.Admin;
 
 namespace SimmerAndSear.Web.Controllers;
 
@@ -9,19 +10,31 @@ namespace SimmerAndSear.Web.Controllers;
 //Microsoft, 2026. Views in ASP.NET Core MVC [Source code].
 //Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/views/overview?view=aspnetcore-10.0> [Accessed 18 September 2026].
 // ────────────────────────────────────────────────────────────────────────────
-public class NewsController : Controller
+
+
+public class NewsController(NewsService news) : Controller
 {
+    private const int PageSize = 10;
+
     [Route("/news")]
-    public IActionResult Index()
+    public async Task<IActionResult> Index(int pageNumber = 1, CancellationToken ct = default)
     {
         ViewData["Title"] = "Journal";
-        return View();
+
+        return View(await news.ListPublishedAsync(pageNumber < 1 ? 1 : pageNumber, PageSize, ct));
     }
 
     [Route("/news/{id}")]
-    public IActionResult Detail(string id = "1")
+    public async Task<IActionResult> Detail(string id, CancellationToken ct = default)
     {
-        ViewData["Title"] = "Article Detail";
-        return View();
+        var post = await news.GetPublishedAsync(id, ct);
+
+        if (post is null)
+        {
+            return NotFound();
+        }
+
+        ViewData["Title"] = post.Title;
+        return View(post);
     }
 }

@@ -54,6 +54,9 @@ public static class MongoConventions
         MapWithObjectId<NewsPost>();
         MapWithObjectId<Wishlist>();
         MapWithObjectId<QuotationDocument>();
+        MapWithObjectId<RetailPartner>();
+        MapWithObjectId<ContactRequest>();
+        MapWithObjectId<Booking>();
         MapWithStringId<SiteSettings>();
     }
 

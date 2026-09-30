@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using SimmerAndSear.Application.Abstractions;
 using SimmerAndSear.Application.Catalogue;
 using SimmerAndSear.Contracts.Catalogue;
 using SimmerAndSear.Application.Engagement;
@@ -15,7 +16,10 @@ namespace SimmerAndSear.Web.Controllers;
 //Microsoft, 2026. Views in ASP.NET Core MVC [Source code].
 //Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/views/overview?view=aspnetcore-10.0> [Accessed 18 September 2026].
 // ────────────────────────────────────────────────────────────────────────────
-public class HomeController(CatalogueService catalogue, ContactService contactService) : Controller
+public class HomeController(
+    CatalogueService catalogue,
+    ContactService contactService,
+    IPartnerRepository partners) : Controller
 {
     private const int FeaturedCount = 3;
 
@@ -43,10 +47,10 @@ public class HomeController(CatalogueService catalogue, ContactService contactSe
     }
 
     [Route("/About")]
-    public IActionResult About()
+    public async Task<IActionResult> About(CancellationToken ct)
     {
         ViewData["Title"] = "About Simmer & Sear";
-        return View();
+        return View(await partners.ListAsync(ct));
     }
 
     [HttpGet("/Contact")]
