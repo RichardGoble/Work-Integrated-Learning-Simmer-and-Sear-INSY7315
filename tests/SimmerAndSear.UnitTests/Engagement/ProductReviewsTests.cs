@@ -114,6 +114,12 @@ public sealed class ProductReviewsTests
             return Task.FromResult(new Page<Review>(approved, approved.Count, pageNumber, pageSize));
         }
 
+        public Task<Page<Review>> ListForClientAsync(string clientId, int pageNumber, int pageSize, CancellationToken ct = default)
+        {
+            var mine = Items.Where(r => r.ClientId == clientId).ToList();
+            return Task.FromResult(new Page<Review>(mine, mine.Count, pageNumber, pageSize));
+        }
+
         public Task<bool> HasCompletedOrderForProductAsync(string clientId, string productId, CancellationToken ct = default) =>
             Task.FromResult(clientId == "cust_with_order");
 

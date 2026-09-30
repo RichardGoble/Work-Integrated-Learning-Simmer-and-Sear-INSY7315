@@ -284,39 +284,42 @@
                             <input type="number" min="0.01" max="1000000" step="0.01" name="price" class="input-field" placeholder="1299.00" required />
                         </div>
                         <div>
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Product Type</label>
-                            <input type="text" name="cookwareType" minlength="1" maxlength="80" class="input-field" placeholder="Skillet / Pot / Pan" list="type-list" required />
-                            <datalist id="type-list">
+                            <label for="type-list" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Product Type</label>
+                            @* Selects, not free text: a typo here creates a whole new facet that
+                               splits the catalogue filters. New values are added deliberately in
+                               the Attributes section, and the ids are the ones that section appends to. *@
+                            <select id="type-list" name="cookwareType" class="input-field" required>
+                                <option value="">Select a type&hellip;</option>
                                 @foreach (var t in Model.Facets.CookwareTypes) { <option value="@t">@t</option> }
-                            </datalist>
+                            </select>
                         </div>
                         <div>
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Material</label>
-                            <input type="text" name="material" minlength="0" maxlength="120" class="input-field" placeholder="Cast Iron / Stainless Steel" list="mat-list" />
-                            <datalist id="mat-list">
+                            <label for="mat-list" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Material</label>
+                            <select id="mat-list" name="material" class="input-field">
+                                <option value="">Not specified</option>
                                 @foreach (var m in Model.Facets.Materials) { <option value="@m">@m</option> }
-                            </datalist>
+                            </select>
                         </div>
                         <div>
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Brand</label>
-                            <input type="text" name="brand" minlength="1" maxlength="80" class="input-field" placeholder="Simmer & Sear" list="brand-list" required />
-                            <datalist id="brand-list">
+                            <label for="brand-list" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Brand</label>
+                            <select id="brand-list" name="brand" class="input-field" required>
+                                <option value="">Select a brand&hellip;</option>
                                 @foreach (var b in Model.Facets.Brands) { <option value="@b">@b</option> }
-                            </datalist>
+                            </select>
                         </div>
                         <div>
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Range</label>
-                            <input type="text" name="category" minlength="1" maxlength="80" class="input-field" placeholder="Signature" list="cat-list" required />
-                            <datalist id="cat-list">
+                            <label for="cat-list" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Range</label>
+                            <select id="cat-list" name="category" class="input-field" required>
+                                <option value="">Select a range&hellip;</option>
                                 @foreach (var c in Model.Facets.Categories) { <option value="@c">@c</option> }
-                            </datalist>
+                            </select>
                         </div>
                         <div>
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Size</label>
-                            <input type="text" name="sizeLabel" minlength="0" maxlength="40" class="input-field" placeholder="28cm" list="size-list" />
-                            <datalist id="size-list">
+                            <label for="size-list" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Size</label>
+                            <select id="size-list" name="sizeLabel" class="input-field">
+                                <option value="">Not specified</option>
                                 @foreach (var s in Model.Facets.SizeLabels) { <option value="@s">@s</option> }
-                            </datalist>
+                            </select>
                         </div>
                     </div>
                     <div>

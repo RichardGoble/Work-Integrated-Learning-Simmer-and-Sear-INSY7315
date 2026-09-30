@@ -189,6 +189,12 @@ public sealed class MemoryReviewRepository : IReviewRepository
     public Task<Page<Review>> ListForProductAsync(string productId, int pageNumber, int pageSize, CancellationToken ct = default) =>
         Task.FromResult(new Page<Review>(_items.Where(r => r.ProductId == productId && r.Status == ReviewStatus.Approved).ToList(), 0, pageNumber, pageSize));
 
+    public Task<Page<Review>> ListForClientAsync(string clientId, int pageNumber, int pageSize, CancellationToken ct = default)
+    {
+        var mine = _items.Where(r => r.ClientId == clientId).ToList();
+        return Task.FromResult(new Page<Review>(mine, mine.Count, pageNumber, pageSize));
+    }
+
     public Task<bool> HasCompletedOrderForProductAsync(string clientId, string productId, CancellationToken ct = default) =>
         Task.FromResult(_completedOrders.Any(o => o.ClientId == clientId && o.ProductId == productId));
 

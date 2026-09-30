@@ -73,6 +73,44 @@
         return response.json();
     }
 
+    async function addToWishlist(productId) {
+        const response = await fetch('/api/wishlist/items', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'X-CSRF-TOKEN': await getCsrfToken(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ productId: productId })
+        });
+
+        if (response.status === 401) {
+          
+            window.location.href = '/Auth/Login?returnUrl=' +
+                encodeURIComponent(window.location.pathname + window.location.search);
+            return null;
+        }
+
+        if (!response.ok) {
+            const problem = await response.json().catch(() => null);
+            throw new Error(problem && problem.title ? problem.title : 'Could not add that to your wishlist.');
+        }
+
+        return response.json();
+    }
+
+    function markSaved(button, count) {
+        const heart = button.querySelector('svg');
+        if (heart) heart.setAttribute('fill', 'var(--ss-brand)');
+
+        button.setAttribute('title', 'Saved to your wishlist');
+
+        const badge = document.querySelector('a[href="/Wishlist"] .nav-badge');
+        if (badge && typeof count === 'number') {
+            badge.textContent = count;
+        }
+    }
+
     document.addEventListener('submit', function (event) {
         const form = event.target.closest('[data-wishlist-quote]');
         if (!form) return;
@@ -92,6 +130,24 @@
     });
 
     document.addEventListener('click', function (event) {
+        const addButton = event.target.closest('[data-add-to-wishlist]');
+        if (addButton) {
+            const productId = addButton.getAttribute('data-add-to-wishlist');
+            if (!productId || busy) return;
+
+            busy = true;
+            addToWishlist(productId)
+                .then(function (wishlist) {
+                    busy = false;
+                    if (wishlist) markSaved(addButton, wishlist.count);
+                })
+                .catch(function (error) {
+                    busy = false;
+                    window.alert(error.message);
+                });
+            return;
+        }
+
         const moveButton = event.target.closest('[data-wishlist-move]');
         if (moveButton) {
             const productId = moveButton.getAttribute('data-wishlist-move');
