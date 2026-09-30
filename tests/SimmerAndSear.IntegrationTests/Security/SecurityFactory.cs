@@ -362,6 +362,12 @@ public sealed class MemoryReviews : IReviewRepository
 {
     public List<Review> Items { get; } = [];
 
+    public Task<Page<Review>> ListForClientAsync(string clientId, int pageNumber, int pageSize, CancellationToken ct = default)
+    {
+        var mine = Items.Where(r => r.ClientId == clientId).ToList();
+        return Task.FromResult(new Page<Review>(mine, mine.Count, pageNumber, pageSize));
+    }
+
     public Task<Review?> GetAsync(string id, CancellationToken ct = default) =>
         Task.FromResult(Items.Find(r => r.Id == id));
 

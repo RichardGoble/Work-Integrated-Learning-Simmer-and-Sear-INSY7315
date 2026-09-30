@@ -30,6 +30,7 @@ public class AdminController(
     IContactRepository contacts,
     IBookingRepository bookingRepo,
     IPartnerRepository partners,
+    IGalleryRepository gallery,
     CatalogueService catalogue,
     IProductAttributeRepository attributes,
     IReviewRepository reviewRepo,
@@ -38,15 +39,19 @@ public class AdminController(
     NewsService newsService,
     SiteSettingsService settingsService,
     IUserRepository userRepo,
-    IMediaAssetRepository mediaRepo,
     IMediaService mediaService,
     CurrentUser current,
     AuditWriter auditWriter,
     IPasswordHasher hasher) : Controller
 {
+    private const int MaxProductImages = 8;
+
     public async Task<IActionResult> Index([FromQuery] ProductFilter productFilter, CancellationToken ct = default)
     {
         ViewData["Title"] = "Admin Dashboard";
+
+
+        var isMaster = User.IsInRole(nameof(RoleName.MasterAdmin));
 
         var ordersPage = await orders.ListAsync(1, 200, ct);
 
@@ -55,29 +60,10 @@ public class AdminController(
 
         var inquiries = await contacts.ListAsync(ct);
         var bookings = await bookingRepo.ListAsync(ct);
-
-        productFilter = (productFilter ?? new ProductFilter()) with { PageSize = 100 };
-        var productsPage = await catalogue.SearchAsync(productFilter, includeUnpublished: true, ct);
-        var facets = await catalogue.GetFacetsAsync(includeUnpublished: true, ct);
-        var saved = await attributes.GetAsync(ct);
-        static string[] Merge(IReadOnlyList<string> a, IReadOnlyList<string> b) =>
-            a.Concat(b).Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.OrdinalIgnoreCase).ToArray();
-        facets = new CatalogueFacets(Merge(facets.Brands, saved.Brands), Merge(facets.Categories, saved.Categories),
-            Merge(facets.CookwareTypes, saved.CookwareTypes), Merge(facets.Materials, saved.Materials), Merge(facets.SizeLabels, saved.SizeLabels));
-        var newsPage = await newsRepo.ListAsync(1, 100, ct);
-        var galleryImages = (await mediaRepo.ListAsync(50, ct)).ToList();
         var reviewsPage = await reviewService.ListAsync(1, 100, ct: ct);
-
         var partnerList = await partners.ListAsync(ct);
 
-        var settings = await settingsService.GetAsync(ct);
-
-        List<User> adminUsers = [];
-        if (User.IsInRole("MasterAdmin"))
-        {
-            var usersPage = await userRepo.ListAsync(1, 100, ct);
-            adminUsers = usersPage.Items.Where(u => u.UserType == UserType.Admin).ToList();
-        }
+        productFilter = (productFilter ?? new ProductFilter()) with { PageSize = 100 };
 
         var vm = new AdminDashboardVm
         {
@@ -85,16 +71,34 @@ public class AdminController(
             BulkRequests = bulkRequests,
             Inquiries = inquiries,
             Bookings = bookings,
-            Products = productsPage.Items.ToList(),
-            Facets = facets,
-            NewsPosts = newsPage.Items.ToList(),
-            GalleryImages = galleryImages,
             Reviews = reviewsPage.Items.ToList(),
             Partners = partnerList,
-            Settings = settings,
-            AdminUsers = adminUsers,
-            ProductFilter = productFilter
+            ProductFilter = productFilter,
+            ShowMasterSections = isMaster
         };
+
+        if (!isMaster)
+        {
+            return View(vm);
+        }
+
+        var productsPage = await catalogue.SearchAsync(productFilter, includeUnpublished: true, ct);
+        var facets = await catalogue.GetFacetsAsync(includeUnpublished: true, ct);
+        var saved = await attributes.GetAsync(ct);
+        static string[] Merge(IReadOnlyList<string> a, IReadOnlyList<string> b) =>
+            a.Concat(b).Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.OrdinalIgnoreCase).ToArray();
+        facets = new CatalogueFacets(Merge(facets.Brands, saved.Brands), Merge(facets.Categories, saved.Categories),
+            Merge(facets.CookwareTypes, saved.CookwareTypes), Merge(facets.Materials, saved.Materials), Merge(facets.SizeLabels, saved.SizeLabels));
+
+        var newsPage = await newsRepo.ListAsync(1, 100, ct);
+        var usersPage = await userRepo.ListAsync(1, 100, ct);
+
+        vm.Products = productsPage.Items.ToList();
+        vm.Facets = facets;
+        vm.NewsPosts = newsPage.Items.ToList();
+        vm.GalleryImages = await gallery.ListAsync(ct);
+        vm.Settings = await settingsService.GetAsync(ct);
+        vm.AdminUsers = usersPage.Items.Where(u => u.UserType == UserType.Admin).ToList();
 
         return View(vm);
     }
@@ -191,7 +195,7 @@ public class AdminController(
     [HttpPost("Admin/Products/Create")]
     [HttpPost("Admin/Products/{id}/edit")]
     [Authorize(Policy = nameof(Permission.CatalogueManage))]
-    public async Task<IActionResult> SaveProduct([FromForm] UpdateProductRequest request, IFormFile? imageFile, CancellationToken ct, string? id = null)
+    public async Task<IActionResult> SaveProduct([FromForm] UpdateProductRequest request, IFormFile[]? imageFiles, CancellationToken ct, string? id = null)
     {
         if (id is null && string.IsNullOrWhiteSpace(request.Sku))
         {
@@ -209,11 +213,29 @@ public class AdminController(
         }).ToList() ?? [];
         try
         {
-            if (imageFile is { Length: > 0 })
+            
+            foreach (var file in imageFiles ?? [])
             {
-                await using var stream = imageFile.OpenReadStream();
-                var asset = await mediaService.UploadAsync(stream, imageFile.FileName, imageFile.Length, current.Id, ct);
-                request.Images = [new ProductImageRequest { MediaAssetId = asset.Id, AltText = request.Name, IsPrimary = true }];
+                if (file is not { Length: > 0 })
+                {
+                    continue;
+                }
+
+                if (request.Images.Count >= MaxProductImages)
+                {
+                    return BadRequest(new { message = $"A product can hold at most {MaxProductImages} images." });
+                }
+
+                await using var stream = file.OpenReadStream();
+                var asset = await mediaService.UploadAsync(stream, file.FileName, file.Length, current.Id, ct);
+
+                request.Images.Add(new ProductImageRequest
+                {
+                    MediaAssetId = asset.Id,
+                    AltText = request.Name,
+                    DisplayOrder = request.Images.Count,
+                    IsPrimary = request.Images.Count == 0
+                });
             }
             if (id is null) await catalogue.CreateAsync(request, ct);
             else await catalogue.UpdateAsync(id, request, ct);
@@ -225,6 +247,57 @@ public class AdminController(
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+
+    [HttpPost("Admin/Products/{id}/images/{mediaAssetId}/delete"), Authorize(Policy = nameof(Permission.CatalogueManage))]
+    public async Task<IActionResult> DeleteProductImage(string id, string mediaAssetId, CancellationToken ct)
+    {
+        try
+        {
+            var (product, removed) = await catalogue.RemoveImageAsync(id, mediaAssetId, ct);
+
+            if (product is null)
+            {
+                return NotFound();
+            }
+
+            
+            if (removed)
+            {
+                await mediaService.DeleteAsync(mediaAssetId, ct);
+                await auditWriter.WriteAsync(AuditAction.Update, $"Product image removed: {id} ({mediaAssetId})");
+            }
+
+            if (Request.Headers.Accept.ToString().Contains("application/json"))
+            {
+                return Ok(product);
+            }
+            return Redirect("/Admin#products");
+        }
+        catch (ProductRuleException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("Admin/Products/{id}/images/{mediaAssetId}/primary"), Authorize(Policy = nameof(Permission.CatalogueManage))]
+    public async Task<IActionResult> SetPrimaryProductImage(string id, string mediaAssetId, CancellationToken ct)
+    {
+        var product = await catalogue.SetPrimaryImageAsync(id, mediaAssetId, ct);
+
+        if (product is null)
+        {
+            return NotFound();
+        }
+
+        await auditWriter.WriteAsync(AuditAction.Update, $"Product primary image set: {id} ({mediaAssetId})");
+
+        if (Request.Headers.Accept.ToString().Contains("application/json"))
+        {
+            return Ok(product);
+        }
+        return Redirect("/Admin#products");
     }
 
     [HttpPost("Admin/Products/{id}/delete"), Authorize(Policy = nameof(Permission.CatalogueManage))]
@@ -299,29 +372,86 @@ public class AdminController(
 
     // ── Gallery Operations ───────────────────────────────────────────────────
 
-    [HttpPost("Admin/Gallery/Create"), Authorize(Policy = nameof(Permission.CatalogueManage))]
-    public async Task<IActionResult> UploadGalleryImage(IFormFile? file, CancellationToken ct)
+
+    [HttpPost("Admin/Gallery/{slot:int}"), Authorize(Policy = nameof(Permission.CatalogueManage))]
+    public async Task<IActionResult> SaveGalleryImage(
+        int slot, IFormFile? file, string? caption, CancellationToken ct)
     {
-        if (file is not { Length: > 0 }) return BadRequest(new { message = "Choose an image to upload." });
-        try
+        if (!GalleryImage.IsValidSlot(slot))
         {
-            await using var stream = file.OpenReadStream();
-            var asset = await mediaService.UploadAsync(stream, file.FileName, file.Length, current.Id, ct);
-            await auditWriter.WriteAsync(AuditAction.Create, $"Gallery image uploaded: {asset.Id} ({asset.FileName})");
-            if (Request.Headers.Accept.ToString().Contains("application/json")) return Ok(new { success = true });
-            return Redirect("/Admin#gallery");
+            return BadRequest(new { message = $"The gallery has {GalleryImage.SlotCount} positions." });
         }
-        catch (MediaValidationException ex)
+
+        var existing = await gallery.GetBySlotAsync(slot, ct);
+
+        if (file is not { Length: > 0 } && existing is null)
         {
-            return BadRequest(new { message = ex.Message });
+            return BadRequest(new { message = "Choose an image for this position." });
         }
+
+
+        caption = caption?.Trim();
+        if (string.IsNullOrWhiteSpace(caption))
+        {
+            return BadRequest(new
+            {
+                message = "Describe the image. The caption is what a visitor using a screen reader hears."
+            });
+        }
+
+        var mediaAssetId = existing?.MediaAssetId;
+        string? replaced = null;
+
+        if (file is { Length: > 0 })
+        {
+            try
+            {
+                await using var stream = file.OpenReadStream();
+                var asset = await mediaService.UploadAsync(stream, file.FileName, file.Length, current.Id, ct);
+                replaced = mediaAssetId;
+                mediaAssetId = asset.Id;
+            }
+            catch (MediaValidationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        await gallery.SetAsync(new GalleryImage
+        {
+            Slot = slot,
+            MediaAssetId = mediaAssetId!,
+            Caption = caption,
+            UpdatedBy = current.Id ?? string.Empty
+        }, ct);
+
+    
+        if (replaced is { Length: > 0 })
+        {
+            await mediaService.DeleteAsync(replaced, ct);
+        }
+
+        await auditWriter.WriteAsync(AuditAction.Update, $"Gallery position {slot} set to {mediaAssetId}");
+
+        if (Request.Headers.Accept.ToString().Contains("application/json"))
+        {
+            return Ok(new { success = true });
+        }
+        return Redirect("/Admin#gallery");
     }
 
-    [HttpPost("Admin/Gallery/{id}/delete"), Authorize(Policy = nameof(Permission.CatalogueManage))]
-    public async Task<IActionResult> DeleteGalleryImage(string id, CancellationToken ct)
+    [HttpPost("Admin/Gallery/{slot:int}/clear"), Authorize(Policy = nameof(Permission.CatalogueManage))]
+    public async Task<IActionResult> ClearGalleryImage(int slot, CancellationToken ct)
     {
-        await mediaRepo.DeleteAsync(id, ct);
-        await auditWriter.WriteAsync(AuditAction.Delete, $"Gallery image deleted: {id}");
+        var existing = await gallery.GetBySlotAsync(slot, ct);
+        await gallery.ClearAsync(slot, ct);
+
+        if (existing is { MediaAssetId.Length: > 0 })
+        {
+            await mediaService.DeleteAsync(existing.MediaAssetId, ct);
+        }
+
+        await auditWriter.WriteAsync(AuditAction.Delete, $"Gallery position {slot} cleared");
 
         if (Request.Headers.Accept.ToString().Contains("application/json"))
         {

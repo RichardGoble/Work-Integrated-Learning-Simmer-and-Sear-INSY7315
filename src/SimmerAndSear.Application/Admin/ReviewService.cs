@@ -43,6 +43,13 @@ public sealed class ReviewService(IReviewRepository reviews, IProductRepository 
             publicItems, page.Total, page.PageNumber, page.PageSize);
     }
 
+    public async Task<Page<ReviewResponse>> ListForClientAsync(
+        string clientId, int pageNumber, int pageSize, CancellationToken ct = default)
+    {
+        var page = await reviews.ListForClientAsync(clientId, pageNumber, pageSize, ct);
+        return new Page<ReviewResponse>([.. page.Items.Select(Map)], page.Total, page.PageNumber, page.PageSize);
+    }
+
     public async Task<(ReviewResponse? Review, string? Error)> SubmitAsync(
         string clientId, string clientName, SubmitReviewRequest request, CancellationToken ct = default)
     {

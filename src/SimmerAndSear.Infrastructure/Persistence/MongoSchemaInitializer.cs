@@ -85,6 +85,7 @@ public sealed class MongoSchemaInitializer(
                      MongoCollections.NewsPosts,
                      MongoCollections.Wishlists,
                      MongoCollections.QuotationDocuments,
+                     MongoCollections.GalleryImages,
                      MongoCollections.ContactRequests,
                      MongoCollections.Bookings
                  })
@@ -262,6 +263,32 @@ public sealed class MongoSchemaInitializer(
                 }
             }
         }, ct);
+
+
+        await ApplyValidatorAsync(MongoCollections.GalleryImages, new BsonDocument
+        {
+            { "bsonType", "object" },
+            {
+                "required", new BsonArray { "slot", "mediaAssetId", "caption", "updatedAt" }
+            },
+            {
+                "properties", new BsonDocument
+                {
+                    {
+                        "slot", new BsonDocument
+                        {
+                            { "bsonType", "int" },
+                            { "minimum", 1 },
+                            { "maximum", GalleryImage.SlotCount }
+                        }
+                    },
+                    { "mediaAssetId", Str(minLength: 1) },
+                    { "caption", Str(minLength: 1) },
+                    { "updatedBy", new BsonDocument("bsonType", "string") },
+                    { "updatedAt", new BsonDocument("bsonType", "date") }
+                }
+            }
+        }, ct);
     }
 
     private static BsonDocument Str(int minLength) =>
@@ -358,7 +385,7 @@ public sealed class MongoSchemaInitializer(
 
         await orders.Indexes.CreateManyAsync(
         [
-            // Serves a customer's order history, which is the common read.
+         
             new CreateIndexModel<Order>(
                 Builders<Order>.IndexKeys.Ascending(o => o.ClientId).Descending(o => o.PlacedAt),
                 new CreateIndexOptions { Name = "ix_orders_client_placed" }),
@@ -440,5 +467,14 @@ public sealed class MongoSchemaInitializer(
                 Builders<Booking>.IndexKeys.Ascending(b => b.ClientId).Descending(b => b.CreatedAt),
                 new CreateIndexOptions { Name = "ix_bookings_client_created", Sparse = true })
         ], ct);
+
+        var gallery = database.GetCollection<GalleryImage>(MongoCollections.GalleryImages);
+
+        
+        await gallery.Indexes.CreateOneAsync(
+            new CreateIndexModel<GalleryImage>(
+                Builders<GalleryImage>.IndexKeys.Ascending(g => g.Slot),
+                new CreateIndexOptions { Name = "ux_gallery_slot", Unique = true }),
+            cancellationToken: ct);
     }
 }

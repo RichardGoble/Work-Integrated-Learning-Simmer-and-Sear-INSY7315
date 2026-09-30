@@ -114,6 +114,12 @@ public sealed class ProductReviewsTests
             return Task.FromResult(new Page<Review>(approved, approved.Count, pageNumber, pageSize));
         }
 
+        public Task<Page<Review>> ListForClientAsync(string clientId, int pageNumber, int pageSize, CancellationToken ct = default)
+        {
+            var mine = Items.Where(r => r.ClientId == clientId).ToList();
+            return Task.FromResult(new Page<Review>(mine, mine.Count, pageNumber, pageSize));
+        }
+
         public Task<bool> HasCompletedOrderForProductAsync(string clientId, string productId, CancellationToken ct = default) =>
             Task.FromResult(clientId == "cust_with_order");
 
@@ -152,6 +158,14 @@ public sealed class ProductReviewsTests
 
         public Task<string> CreateAsync(Product product, CancellationToken ct = default) => throw new NotImplementedException();
         public Task UpdateAsync(Product product, CancellationToken ct = default) => throw new NotImplementedException();
+        public Task<bool> TryDecrementStockAsync(string productId, int quantity, CancellationToken ct = default)
+        {
+            var p = Items.Find(x => x.Id == productId);
+            if (p is null || quantity <= 0 || p.StockQuantity < quantity) return Task.FromResult(false);
+            p.StockQuantity -= quantity;
+            return Task.FromResult(true);
+        }
+
         public Task DeleteAsync(string id, CancellationToken ct = default) => throw new NotImplementedException();
     }
 }

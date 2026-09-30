@@ -15,7 +15,9 @@ public sealed class PaymentFulfilmentStrategy : IOrderFulfilmentStrategy
 {
     public string Name => "Payment";
 
-    public Order CreateOrder(Cart cart, string clientId, ShippingDetails shipping, SiteSettings settings) =>
+    public Order CreateOrder(
+        Cart cart, string clientId, ShippingDetails shipping, SiteSettings settings,
+        string? companyName = null, string? customerNotes = null) =>
         Order.FromCart(cart, clientId, shipping, settings.ShippingFlatRate, settings.DisplayCurrency);
 
     public string NextStepMessage =>
@@ -26,8 +28,10 @@ public sealed class QuotationFulfilmentStrategy : IOrderFulfilmentStrategy
 {
     public string Name => "Quotation";
 
-    public Order CreateOrder(Cart cart, string clientId, ShippingDetails shipping, SiteSettings settings) =>
-        Order.FromQuoteRequest(cart, clientId, shipping, settings.DisplayCurrency);
+    public Order CreateOrder(
+        Cart cart, string clientId, ShippingDetails shipping, SiteSettings settings,
+        string? companyName = null, string? customerNotes = null) =>
+        Order.FromQuoteRequest(cart, clientId, shipping, settings.DisplayCurrency, companyName, customerNotes);
 
     public string NextStepMessage =>
         "This is a bulk order, so a sales agent will contact you to confirm pricing, " +

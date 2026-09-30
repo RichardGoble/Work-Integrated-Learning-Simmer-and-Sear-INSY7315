@@ -7,7 +7,6 @@ public sealed class Order : IEntity
 {
     public string Id { get; set; } = string.Empty;
 
-    /// <summary>Human-readable reference shown to the customer.</summary>
     public string OrderReference { get; set; } = string.Empty;
 
     public string ClientId { get; set; } = string.Empty;
@@ -46,7 +45,8 @@ public sealed class Order : IEntity
     }
 
     public static Order FromQuoteRequest(
-        Cart cart, string clientId, ShippingDetails? shipping = null, string currency = "ZAR")
+        Cart cart, string clientId, ShippingDetails? shipping = null, string currency = "ZAR",
+        string? companyName = null, string? customerNotes = null)
     {
         var order = Build(cart, clientId, currency);
 
@@ -55,6 +55,8 @@ public sealed class Order : IEntity
         order.ShippingDetails = shipping;
         order.ShippingCost = 0m;
         order.Total = order.Subtotal;
+        order.CompanyName = companyName;
+        order.CustomerNotes = customerNotes;
 
         return order;
     }
@@ -107,6 +109,29 @@ public sealed class Order : IEntity
         $"SS-{utcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..6].ToUpperInvariant()}";
 
     public bool HasLines => Items.Count > 0;
+
+    public bool AwaitsPayment => OrderType == OrderType.Checkout && Status == OrderStatus.AwaitingPayment;
+
+    public bool IsAlreadyPaidBy(string gatewayReference) =>
+        Status == OrderStatus.Paid &&
+        Payment is not null &&
+        string.Equals(Payment.GatewayReference, gatewayReference, StringComparison.Ordinal);
+
+
+    public void ConfirmPayment(string provider, string gatewayReference, decimal amount)
+    {
+        Payment = new Payment
+        {
+            Provider = provider,
+            GatewayReference = gatewayReference,
+            Amount = amount,
+            Status = PaymentStatus.Confirmed,
+            PaidAt = DateTime.UtcNow
+        };
+
+        Status = OrderStatus.Paid;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }
 
 public sealed class OrderItem

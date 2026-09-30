@@ -20,7 +20,8 @@ namespace SimmerAndSear.Web.Controllers;
 [ApiController, Route("api/wishlist")]
 [Authorize(Policy = Permissions.Customer)]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public sealed class WishlistApiController(WishlistService service, CurrentUser current) : ControllerBase
+public sealed class WishlistApiController(
+    WishlistService service, LookbookService lookbooks, CurrentUser current) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<WishlistResponse>> Get(CancellationToken ct) =>
@@ -62,6 +63,16 @@ public sealed class WishlistApiController(WishlistService service, CurrentUser c
             WishlistQuoteOutcome.EmptyWishlist => Problem(statusCode: 400, title: "Your wishlist is empty."),
             _ => Problem(statusCode: 409, title: result.Detail)
         };
+    }
+
+    [HttpGet("lookbook")]
+    public async Task<IActionResult> Lookbook(CancellationToken ct)
+    {
+        var lookbook = await lookbooks.BuildAsync(current.Id!, User.Identity?.Name ?? string.Empty, ct);
+
+        return lookbook is null
+            ? Problem(statusCode: 400, title: "Add something to your wishlist before downloading a lookbook.")
+            : File(lookbook.Content, "application/pdf", lookbook.FileName);
     }
 
     [HttpDelete]

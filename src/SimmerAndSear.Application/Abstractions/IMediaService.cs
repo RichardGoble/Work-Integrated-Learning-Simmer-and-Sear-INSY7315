@@ -27,4 +27,6 @@ public interface IMediaService
     Task<MediaStreamResult?> GetOriginalStreamAsync(string id, CancellationToken ct = default);
 
     Task<MediaStreamResult?> GetThumbnailStreamAsync(string id, CancellationToken ct = default);
+
+    Task DeleteAsync(string id, CancellationToken ct = default);
 }

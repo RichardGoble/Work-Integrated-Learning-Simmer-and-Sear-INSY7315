@@ -189,6 +189,12 @@ public sealed class MemoryReviewRepository : IReviewRepository
     public Task<Page<Review>> ListForProductAsync(string productId, int pageNumber, int pageSize, CancellationToken ct = default) =>
         Task.FromResult(new Page<Review>(_items.Where(r => r.ProductId == productId && r.Status == ReviewStatus.Approved).ToList(), 0, pageNumber, pageSize));
 
+    public Task<Page<Review>> ListForClientAsync(string clientId, int pageNumber, int pageSize, CancellationToken ct = default)
+    {
+        var mine = _items.Where(r => r.ClientId == clientId).ToList();
+        return Task.FromResult(new Page<Review>(mine, mine.Count, pageNumber, pageSize));
+    }
+
     public Task<bool> HasCompletedOrderForProductAsync(string clientId, string productId, CancellationToken ct = default) =>
         Task.FromResult(_completedOrders.Any(o => o.ClientId == clientId && o.ProductId == productId));
 
@@ -252,6 +258,14 @@ public sealed class MemoryProductRepository : IProductRepository
         var idx = _items.FindIndex(p => p.Id == product.Id);
         if (idx >= 0) _items[idx] = product;
         return Task.CompletedTask;
+    }
+
+    public Task<bool> TryDecrementStockAsync(string productId, int quantity, CancellationToken ct = default)
+    {
+        var p = _items.Find(x => x.Id == productId);
+        if (p is null || quantity <= 0 || p.StockQuantity < quantity) return Task.FromResult(false);
+        p.StockQuantity -= quantity;
+        return Task.FromResult(true);
     }
 
     public Task DeleteAsync(string id, CancellationToken ct = default)

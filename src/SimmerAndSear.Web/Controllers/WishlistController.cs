@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using SimmerAndSear.Application.Abstractions;
 using SimmerAndSear.Application.Wishlist;
 using SimmerAndSear.Web.Security;
+using SimmerAndSear.Web.ViewModels;
 
 namespace SimmerAndSear.Web.Controllers;
 
@@ -16,11 +18,20 @@ namespace SimmerAndSear.Web.Controllers;
 //Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/views/overview?view=aspnetcore-10.0> [Accessed 18 September 2026].
 // ────────────────────────────────────────────────────────────────────────────
 [Authorize(Policy = Permissions.Customer)]
-public class WishlistController(WishlistService wishlists, CurrentUser current) : Controller
+public class WishlistController(
+    WishlistService wishlists,
+    CurrentUser current,
+    ISiteSettingsProvider settings) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
         ViewData["Title"] = "My Wishlist";
-        return View(await wishlists.GetAsync(current.Id!, ct));
+
+        var site = await settings.CurrentAsync(ct);
+
+        return View(new WishlistPageVm(
+            await wishlists.GetAsync(current.Id!, ct),
+            site.BulkOrderThreshold,
+            site.DisplayCurrency));
     }
 }

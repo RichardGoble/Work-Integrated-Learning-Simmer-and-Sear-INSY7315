@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using SimmerAndSear.Application.Abstractions;
 using SimmerAndSear.Application.Commerce;
 using SimmerAndSear.Contracts.Commerce;
 using SimmerAndSear.Domain.Enums;
@@ -22,7 +23,8 @@ public class CartController(
     CartSession session,
     OrderService orders,
     CurrentUser current,
-    AuditWriter audit) : Controller
+    AuditWriter audit,
+    IPaymentGateway gateway) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -87,6 +89,19 @@ public class CartController(
         await audit.WriteAsync(AuditAction.Create,
             $"{order.OrderType} {order.OrderReference} placed for {order.Total:F2} {order.Currency}");
 
+    
+        if (!order.IsQuotation && gateway.IsConfigured &&
+            await orders.GetPaymentRequestAsync(order.Id, ct) is { } payment)
+        {
+            ViewData["HideNav"] = true;
+
+            return View("Redirecting", gateway.BuildRedirect(
+                payment,
+                returnPath: $"/Cart/PaymentReturn/{order.Id}",
+                cancelPath: $"/Cart/PaymentCancelled/{order.Id}",
+                notifyPath: "/api/payments/notify"));
+        }
+
         return RedirectToAction(nameof(OrderConfirmation), new { id = order.Id });
     }
 
@@ -95,9 +110,34 @@ public class CartController(
     {
         ViewData["Title"] = "Order Confirmed";
 
-        
+
         var order = await orders.GetForClientAsync(id, current.Id!, ct);
 
         return order is null ? NotFound() : View(order);
+    }
+
+    [HttpGet("/Cart/PaymentReturn/{id}"), Authorize(Policy = Permissions.Customer)]
+    public async Task<IActionResult> PaymentReturn(string id, CancellationToken ct)
+    {
+        ViewData["Title"] = "Payment received";
+
+        var order = await orders.GetForClientAsync(id, current.Id!, ct);
+
+        return order is null ? NotFound() : View("OrderConfirmation", order);
+    }
+
+    [HttpGet("/Cart/PaymentCancelled/{id}"), Authorize(Policy = Permissions.Customer)]
+    public async Task<IActionResult> PaymentCancelled(string id, CancellationToken ct)
+    {
+        ViewData["Title"] = "Payment cancelled";
+
+        var order = await orders.GetForClientAsync(id, current.Id!, ct);
+
+        if (order is null)
+        {
+            return NotFound();
+        }
+        ViewData["OrderReference"] = order.OrderReference;
+        return View(order);
     }
 }

@@ -29,6 +29,15 @@ public sealed class ReviewRepository(IMongoDatabase database, IOrderRepository o
             pageSize,
             ct: ct);
 
+    public Task<Page<Review>> ListForClientAsync(
+        string clientId, int pageNumber, int pageSize, CancellationToken ct = default) =>
+        PageAsync(
+            Filter.Eq(r => r.ClientId, clientId),
+            SortBy.Descending(r => r.CreatedAt),
+            pageNumber,
+            pageSize,
+            ct: ct);
+
     public async Task<bool> HasCompletedOrderForProductAsync(string clientId, string productId, CancellationToken ct = default) =>
         await orders.HasDeliveredOrderWithProductAsync(clientId, productId, ct);
 

@@ -71,7 +71,9 @@ public sealed class OrderService(
         }
 
         var strategy = strategies.For(cart, site);
-        var order = strategy.CreateOrder(cart, clientId, ToShippingDetails(request), site);
+        var order = strategy.CreateOrder(
+            cart, clientId, ToShippingDetails(request), site,
+            Blank(request.CompanyName), Blank(request.CustomerNotes));
 
         await orders.CreateAsync(order, ct);
 
@@ -82,6 +84,87 @@ public sealed class OrderService(
         return CheckoutResult.Placed(Describe(order, strategy.NextStepMessage));
     }
 
+    public async Task<OrderResponse?> GetAsync(string orderId, CancellationToken ct = default)
+    {
+        var order = await orders.GetAsync(orderId, ct);
+        return order is null ? null : Describe(order, PaidMessage);
+    }
+
+    /// <summary>
+    /// Describes an order to a payment gateway, without handing it a domain entity.
+    /// </summary>
+    public async Task<PaymentRequest?> GetPaymentRequestAsync(
+        string orderId, CancellationToken ct = default)
+    {
+        var order = await orders.GetAsync(orderId, ct);
+
+        if (order is null)
+        {
+            return null;
+        }
+
+        var units = order.Items.Sum(i => i.Quantity);
+        var lines = order.Items.Count;
+
+        return new PaymentRequest(
+            order.Id,
+            order.OrderReference,
+            order.Total,
+            order.ShippingDetails?.FullName ?? string.Empty,
+            order.ShippingDetails?.Email ?? string.Empty,
+            $"{units} item{(units == 1 ? "" : "s")} across {lines} line{(lines == 1 ? "" : "s")}");
+    }
+
+    public async Task<PaymentResult> ConfirmPaymentAsync(
+        string orderId, string provider, string gatewayReference, decimal amountPaid,
+        CancellationToken ct = default)
+    {
+        var order = await orders.GetAsync(orderId, ct);
+
+        if (order is null)
+        {
+            return PaymentResult.OrderNotFound();
+        }
+
+        if (order.IsAlreadyPaidBy(gatewayReference))
+        {
+            return PaymentResult.AlreadyConfirmed(Describe(order, PaidMessage));
+        }
+
+        if (!order.AwaitsPayment)
+        {
+            return PaymentResult.NotAwaitingPayment(Describe(order, PaidMessage));
+        }
+
+        if (decimal.Round(amountPaid, 2) != decimal.Round(order.Total, 2))
+        {
+            return PaymentResult.AmountMismatch(Describe(order, PaidMessage));
+        }
+
+        order.ConfirmPayment(provider, gatewayReference, amountPaid);
+        await orders.UpdateAsync(order, ct);
+
+        var shortfalls = await TakeStockAsync(order, ct);
+
+        return PaymentResult.Confirmed(Describe(order, PaidMessage), shortfalls);
+    }
+
+    private async Task<IReadOnlyList<string>> TakeStockAsync(Order order, CancellationToken ct)
+    {
+        var shortfalls = new List<string>();
+
+        foreach (var line in order.Items)
+        {
+            if (!await products.TryDecrementStockAsync(line.ProductId, line.Quantity, ct))
+            {
+                shortfalls.Add($"{line.ProductName} x{line.Quantity}");
+            }
+        }
+
+        return shortfalls;
+    }
+
+    private const string PaidMessage = "Payment received. Your order is being prepared.";
 
     public async Task<OrderResponse?> GetForClientAsync(
         string orderId, string clientId, CancellationToken ct = default)
@@ -116,6 +199,9 @@ public sealed class OrderService(
         order.OrderType == Domain.Enums.OrderType.QuoteRequest
             ? new QuotationFulfilmentStrategy().NextStepMessage
             : new PaymentFulfilmentStrategy().NextStepMessage;
+
+    private static string? Blank(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private static ShippingDetails ToShippingDetails(CheckoutRequest request) => new()
     {

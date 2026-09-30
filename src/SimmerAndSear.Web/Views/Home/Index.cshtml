@@ -1,5 +1,7 @@
 @using SimmerAndSear.Web.ViewModels.Components
-@model List<CardVm>
+@using SimmerAndSear.Web.ViewModels
+@using SimmerAndSear.Domain.Entities
+@model HomeVm
 
 <div class="animate-fade-in">
     <!-- Hero Section -->
@@ -31,7 +33,7 @@
             </div>
             
             <div class="mobile-scroll-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 3rem;">
-                @foreach (var product in Model)
+                @foreach (var product in Model.Featured)
                 {
                     <partial name="_Card" model="product" />
                 }
@@ -91,28 +93,38 @@
     </section>
 
     <!-- Gallery Section -->
-    <section id="gallery" class="section-accent">    
-        <div class="container">
-            <div style="text-align: center; margin-bottom: 4rem;">
-                <h2 style="font-size: 2.5rem; margin: 0;">In The Kitchen</h2>
-                <p style="color: var(--ss-ink-muted); font-size: 1.25rem; margin-top: 0.5rem;">See our cookware in action</p>
+    @* Four fixed positions, managed from the console. With none of them filled the
+       band is left out rather than shown empty. *@
+    @if (Model.HasGallery)
+    {
+        <section id="gallery" class="section-accent">
+            <div class="container">
+                <div style="text-align: center; margin-bottom: 4rem;">
+                    <h2 style="font-size: 2.5rem; margin: 0;">In The Kitchen</h2>
+                    <p style="color: var(--ss-ink-muted); font-size: 1.25rem; margin-top: 0.5rem;">See our cookware in action</p>
+                </div>
+                <div class="mobile-scroll-row gallery-scroll" style="display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 300px); gap: 1.5rem;">
+                    @for (var slot = 1; slot <= GalleryImage.SlotCount; slot++)
+                    {
+                        var image = Model.Slot(slot);
+                        var span = slot switch
+                        {
+                            1 => "grid-column: 1 / 3; grid-row: 1 / 3;",
+                            4 => "grid-column: 3 / 5;",
+                            _ => string.Empty
+                        };
+
+                        <div style="width: 100%; height: 100%; border-radius: var(--ss-radius-sm); overflow: hidden; box-shadow: var(--ss-shadow-1); background: #e5e9f0; @span">
+                            @if (image is not null)
+                            {
+                                <img src="/api/media/@image.MediaAssetId" alt="@image.Caption" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+                            }
+                        </div>
+                    }
+                </div>
             </div>
-            <div class="mobile-scroll-row gallery-scroll" style="display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 300px); gap: 1.5rem;">
-                <div style="width: 100%; height: 100%; border-radius: var(--ss-radius-sm); grid-column: 1 / 3; grid-row: 1 / 3; box-shadow: var(--ss-shadow-1); background: #e5e9f0; border: 2px dashed #c2c9d6; display: flex; align-items: center; justify-content: center; color: #4c566a; font-weight: 500; font-size: 1.25rem;">
-                    [Gallery Image 1]
-                </div>
-                <div style="width: 100%; height: 100%; border-radius: var(--ss-radius-sm); box-shadow: var(--ss-shadow-1); background: #e5e9f0; border: 2px dashed #c2c9d6; display: flex; align-items: center; justify-content: center; color: #4c566a; font-weight: 500;">
-                    [Gallery Image 2]
-                </div>
-                <div style="width: 100%; height: 100%; border-radius: var(--ss-radius-sm); box-shadow: var(--ss-shadow-1); background: #e5e9f0; border: 2px dashed #c2c9d6; display: flex; align-items: center; justify-content: center; color: #4c566a; font-weight: 500;">
-                    [Gallery Image 3]
-                </div>
-                <div style="width: 100%; height: 100%; border-radius: var(--ss-radius-sm); grid-column: 3 / 5; box-shadow: var(--ss-shadow-1); background: #e5e9f0; border: 2px dashed #c2c9d6; display: flex; align-items: center; justify-content: center; color: #4c566a; font-weight: 500; font-size: 1.25rem;">
-                    [Gallery Image 4]
-                </div>
-            </div>
-        </div>
-    </section>
+        </section>
+    }
 
     <!-- Quick Links Nav Section -->
     <section class="section-light">
@@ -176,4 +188,5 @@
 
 @section Scripts {
     <script src="~/js/catalogue.js" asp-append-version="true"></script>
+    <script src="~/js/wishlist.js" asp-append-version="true"></script>
 }

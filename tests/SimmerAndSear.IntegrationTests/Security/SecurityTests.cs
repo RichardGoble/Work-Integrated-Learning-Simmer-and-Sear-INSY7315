@@ -257,7 +257,7 @@ public sealed class SecurityTests
         {
            
             var expected = permission is Permission.AccountManage or Permission.AuditRead
-                or Permission.CatalogueManage ? master : sales;
+                or Permission.CatalogueManage or Permission.SettingsManage ? master : sales;
             (await authorization.AuthorizeAsync(principal, null, permission.ToString())).Succeeded.ShouldBe(expected);
         }
     }

@@ -14,6 +14,10 @@ public interface IReviewRepository
 
     Task<Page<Review>> ListForProductAsync(string productId, int pageNumber, int pageSize, CancellationToken ct = default);
 
+    /// <summary>A customer.s own reviews, newest first, whatever their moderation status.</summary>
+    Task<Page<Review>> ListForClientAsync(
+        string clientId, int pageNumber, int pageSize, CancellationToken ct = default);
+
     Task<bool> HasCompletedOrderForProductAsync(string clientId, string productId, CancellationToken ct = default);
 
     Task<bool> HasExistingReviewAsync(string clientId, string productId, CancellationToken ct = default);

@@ -6,6 +6,7 @@ using MongoDB.Driver.GridFS;
 using SimmerAndSear.Application.Abstractions;
 using SimmerAndSear.Infrastructure.Caching;
 using SimmerAndSear.Infrastructure.Documents;
+using SimmerAndSear.Infrastructure.Payments;
 using SimmerAndSear.Infrastructure.Persistence;
 using SimmerAndSear.Infrastructure.Repositories;
 using SimmerAndSear.Infrastructure.Security;
@@ -66,6 +67,7 @@ public static class DependencyInjection
         services.AddScoped<IQuotationDocumentRepository, QuotationDocumentRepository>();
         services.AddScoped<IContactRepository, ContactRepository>();
         services.AddScoped<IPartnerRepository, PartnerRepository>();
+        services.AddScoped<IGalleryRepository, GalleryRepository>();
         services.AddMemoryCache();
         services.AddScoped<ISiteSettingsProvider, CachedSiteSettingsProvider>();
 
@@ -73,8 +75,17 @@ public static class DependencyInjection
         services.AddScoped<IDatabaseHealth, MongoDatabaseHealth>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IQuotationPdfRenderer, QuestQuotationPdfRenderer>();
+        services.AddSingleton<IWishlistLookbookRenderer, QuestLookbookPdfRenderer>();
 
      
+        services.AddOptions<PayFastOptions>()
+            .Bind(configuration.GetSection(PayFastOptions.SectionName));
+
+        services.AddHttpClient(PayFastGateway.HttpClientName, client =>
+            client.Timeout = TimeSpan.FromSeconds(15));
+
+        services.AddScoped<IPaymentGateway, PayFastGateway>();
+
         services.AddSingleton<SchemaStatus>();
         services.AddSingleton<ISchemaStatus>(sp => sp.GetRequiredService<SchemaStatus>());
 

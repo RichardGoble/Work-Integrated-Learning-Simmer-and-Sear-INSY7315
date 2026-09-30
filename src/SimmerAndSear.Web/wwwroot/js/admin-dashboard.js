@@ -2,7 +2,6 @@
     const forms = {
         product: ['products-grid', '/Admin/Products/Create', 'Add New Product'],
         journal: ['journal-grid', '/Admin/Journal/Create', 'Add New Entry'],
-        'gallery-image': ['gallery-container', '/Admin/Gallery/Create', 'Add Image'],
         partner: ['partners-grid', '/Admin/Partners/Create', 'Add Partner']
     };
     const attributes = {
@@ -28,9 +27,13 @@
             }
             if (key === 'journal') form.elements.content.value = data.body;
         }
-        if (key === 'product' || key === 'journal') form.elements.imageFile.required = !data;
+        if (key === 'product') {
+            form.elements.imageFiles.required = !data;
+            renderProductImages(data);
+        }
+        if (key === 'journal') form.elements.imageFile.required = !data;
         panel.style.display = visible ? 'block' : 'none';
-        document.getElementById(forms[key][0]).style.display = visible ? 'none' : (key === 'gallery-image' ? 'flex' : 'block');
+        document.getElementById(forms[key][0]).style.display = visible ? 'none' : 'block';
         if (visible) form.querySelector('input:not([type="hidden"])')?.focus();
     }
 
@@ -147,6 +150,84 @@
             window.location.reload();
         } catch (error) { showError(form, error.message); }
         finally { submit.disabled = false; }
+    });
+
+    function galleryButton(label, colour) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = label;
+        button.style.cssText = 'background: none; border: none; padding: 0; cursor: pointer; font-size: 0.72rem; font-weight: 600; color: ' + colour + ';';
+        return button;
+    }
+
+    function renderProductImages(data) {
+        const gallery = document.getElementById('product-image-gallery');
+        const images = data?.images ?? [];
+        gallery.dataset.productId = data?.id ?? '';
+        gallery.replaceChildren();
+        gallery.style.display = images.length ? 'flex' : 'none';
+
+        for (const image of images) {
+            const tile = document.createElement('div');
+            tile.style.cssText = 'width: 92px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; background: white;';
+
+            const thumb = document.createElement('img');
+            thumb.src = '/api/media/' + encodeURIComponent(image.mediaAssetId) + '/thumb';
+            thumb.alt = image.altText ?? '';
+            thumb.style.cssText = 'width: 100%; height: 72px; object-fit: cover; display: block;';
+            tile.append(thumb);
+
+            const actions = document.createElement('div');
+            actions.style.cssText = 'display: flex; justify-content: space-between; align-items: center; gap: 0.25rem; padding: 0.35rem 0.4rem;';
+
+            if (image.isPrimary) {
+                const badge = document.createElement('span');
+                badge.textContent = 'Primary';
+                badge.style.cssText = 'font-size: 0.68rem; font-weight: 700; color: #166534;';
+                actions.append(badge);
+            } else {
+                const primary = galleryButton('Primary', '#2563eb');
+                primary.dataset.productImagePrimary = image.mediaAssetId;
+                actions.append(primary);
+
+                const remove = galleryButton('Remove', '#ef4444');
+                remove.dataset.productImageRemove = image.mediaAssetId;
+                actions.append(remove);
+            }
+
+            tile.append(actions);
+            gallery.append(tile);
+        }
+    }
+
+    document.addEventListener('click', async event => {
+        const button = event.target.closest('[data-product-image-primary], [data-product-image-remove]');
+        if (!button) return;
+        event.preventDefault();
+
+        const gallery = document.getElementById('product-image-gallery');
+        const productId = gallery.dataset.productId;
+        if (!productId) return;
+
+        const removing = Boolean(button.dataset.productImageRemove);
+        const mediaAssetId = button.dataset.productImageRemove || button.dataset.productImagePrimary;
+
+        if (removing && !window.confirm('Remove this image from the product?')) return;
+
+        const body = new FormData();
+        body.set('__RequestVerificationToken', document.querySelector('[name="__RequestVerificationToken"]').value);
+
+        button.disabled = true;
+        try {
+            const path = '/Admin/Products/' + encodeURIComponent(productId) + '/images/'
+                + encodeURIComponent(mediaAssetId) + (removing ? '/delete' : '/primary');
+            const response = await request(path, { method: 'POST', body });
+            renderProductImages(await response.json());
+        } catch (error) {
+            showError(document.getElementById('form-add-product'), error.message);
+        } finally {
+            button.disabled = false;
+        }
     });
 
     function restoreTab() {

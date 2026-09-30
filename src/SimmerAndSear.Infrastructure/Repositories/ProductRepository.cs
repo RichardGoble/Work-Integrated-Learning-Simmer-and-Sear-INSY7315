@@ -128,6 +128,25 @@ public sealed class ProductRepository(IMongoDatabase database)
         }
     }
 
+    public async Task<bool> TryDecrementStockAsync(
+        string productId, int quantity, CancellationToken ct = default)
+    {
+        if (!IsValidId(productId) || quantity <= 0)
+        {
+            return false;
+        }
+
+        var result = await Collection.UpdateOneAsync(
+            Filter.And(
+                Filter.Eq(p => p.Id, productId),
+                Filter.Gte(p => p.StockQuantity, quantity)),
+            Update.Inc(p => p.StockQuantity, -quantity)
+                  .Set(p => p.UpdatedAt, DateTime.UtcNow),
+            cancellationToken: ct);
+
+        return result.ModifiedCount == 1;
+    }
+
     public async Task DeleteAsync(string id, CancellationToken ct = default)
     {
         if (IsValidId(id))
