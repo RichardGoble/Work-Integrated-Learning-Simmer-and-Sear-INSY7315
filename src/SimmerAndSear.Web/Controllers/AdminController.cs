@@ -30,6 +30,7 @@ public class AdminController(
     IContactRepository contacts,
     IBookingRepository bookingRepo,
     IPartnerRepository partners,
+    IGalleryRepository gallery,
     CatalogueService catalogue,
     IProductAttributeRepository attributes,
     IReviewRepository reviewRepo,
@@ -65,7 +66,7 @@ public class AdminController(
         facets = new CatalogueFacets(Merge(facets.Brands, saved.Brands), Merge(facets.Categories, saved.Categories),
             Merge(facets.CookwareTypes, saved.CookwareTypes), Merge(facets.Materials, saved.Materials), Merge(facets.SizeLabels, saved.SizeLabels));
         var newsPage = await newsRepo.ListAsync(1, 100, ct);
-        var galleryImages = (await mediaRepo.ListAsync(50, ct)).ToList();
+        var galleryImages = await gallery.ListAsync(ct);
         var reviewsPage = await reviewService.ListAsync(1, 100, ct: ct);
 
         var partnerList = await partners.ListAsync(ct);
@@ -299,29 +300,86 @@ public class AdminController(
 
     // ── Gallery Operations ───────────────────────────────────────────────────
 
-    [HttpPost("Admin/Gallery/Create"), Authorize(Policy = nameof(Permission.CatalogueManage))]
-    public async Task<IActionResult> UploadGalleryImage(IFormFile? file, CancellationToken ct)
+
+    [HttpPost("Admin/Gallery/{slot:int}"), Authorize(Policy = nameof(Permission.CatalogueManage))]
+    public async Task<IActionResult> SaveGalleryImage(
+        int slot, IFormFile? file, string? caption, CancellationToken ct)
     {
-        if (file is not { Length: > 0 }) return BadRequest(new { message = "Choose an image to upload." });
-        try
+        if (!GalleryImage.IsValidSlot(slot))
         {
-            await using var stream = file.OpenReadStream();
-            var asset = await mediaService.UploadAsync(stream, file.FileName, file.Length, current.Id, ct);
-            await auditWriter.WriteAsync(AuditAction.Create, $"Gallery image uploaded: {asset.Id} ({asset.FileName})");
-            if (Request.Headers.Accept.ToString().Contains("application/json")) return Ok(new { success = true });
-            return Redirect("/Admin#gallery");
+            return BadRequest(new { message = $"The gallery has {GalleryImage.SlotCount} positions." });
         }
-        catch (MediaValidationException ex)
+
+        var existing = await gallery.GetBySlotAsync(slot, ct);
+
+        if (file is not { Length: > 0 } && existing is null)
         {
-            return BadRequest(new { message = ex.Message });
+            return BadRequest(new { message = "Choose an image for this position." });
         }
+
+
+        caption = caption?.Trim();
+        if (string.IsNullOrWhiteSpace(caption))
+        {
+            return BadRequest(new
+            {
+                message = "Describe the image. The caption is what a visitor using a screen reader hears."
+            });
+        }
+
+        var mediaAssetId = existing?.MediaAssetId;
+        string? replaced = null;
+
+        if (file is { Length: > 0 })
+        {
+            try
+            {
+                await using var stream = file.OpenReadStream();
+                var asset = await mediaService.UploadAsync(stream, file.FileName, file.Length, current.Id, ct);
+                replaced = mediaAssetId;
+                mediaAssetId = asset.Id;
+            }
+            catch (MediaValidationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        await gallery.SetAsync(new GalleryImage
+        {
+            Slot = slot,
+            MediaAssetId = mediaAssetId!,
+            Caption = caption,
+            UpdatedBy = current.Id ?? string.Empty
+        }, ct);
+
+    
+        if (replaced is { Length: > 0 })
+        {
+            await mediaRepo.DeleteAsync(replaced, ct);
+        }
+
+        await auditWriter.WriteAsync(AuditAction.Update, $"Gallery position {slot} set to {mediaAssetId}");
+
+        if (Request.Headers.Accept.ToString().Contains("application/json"))
+        {
+            return Ok(new { success = true });
+        }
+        return Redirect("/Admin#gallery");
     }
 
-    [HttpPost("Admin/Gallery/{id}/delete"), Authorize(Policy = nameof(Permission.CatalogueManage))]
-    public async Task<IActionResult> DeleteGalleryImage(string id, CancellationToken ct)
+    [HttpPost("Admin/Gallery/{slot:int}/clear"), Authorize(Policy = nameof(Permission.CatalogueManage))]
+    public async Task<IActionResult> ClearGalleryImage(int slot, CancellationToken ct)
     {
-        await mediaRepo.DeleteAsync(id, ct);
-        await auditWriter.WriteAsync(AuditAction.Delete, $"Gallery image deleted: {id}");
+        var existing = await gallery.GetBySlotAsync(slot, ct);
+        await gallery.ClearAsync(slot, ct);
+
+        if (existing is { MediaAssetId.Length: > 0 })
+        {
+            await mediaRepo.DeleteAsync(existing.MediaAssetId, ct);
+        }
+
+        await auditWriter.WriteAsync(AuditAction.Delete, $"Gallery position {slot} cleared");
 
         if (Request.Headers.Accept.ToString().Contains("application/json"))
         {

@@ -2,7 +2,6 @@
     const forms = {
         product: ['products-grid', '/Admin/Products/Create', 'Add New Product'],
         journal: ['journal-grid', '/Admin/Journal/Create', 'Add New Entry'],
-        'gallery-image': ['gallery-container', '/Admin/Gallery/Create', 'Add Image'],
         partner: ['partners-grid', '/Admin/Partners/Create', 'Add Partner']
     };
     const attributes = {
@@ -30,7 +29,7 @@
         }
         if (key === 'product' || key === 'journal') form.elements.imageFile.required = !data;
         panel.style.display = visible ? 'block' : 'none';
-        document.getElementById(forms[key][0]).style.display = visible ? 'none' : (key === 'gallery-image' ? 'flex' : 'block');
+        document.getElementById(forms[key][0]).style.display = visible ? 'none' : 'block';
         if (visible) form.querySelector('input:not([type="hidden"])')?.focus();
     }
 

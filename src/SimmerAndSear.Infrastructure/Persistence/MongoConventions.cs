@@ -57,6 +57,7 @@ public static class MongoConventions
         MapWithObjectId<RetailPartner>();
         MapWithObjectId<ContactRequest>();
         MapWithObjectId<Booking>();
+        MapWithObjectId<GalleryImage>();
         MapWithStringId<SiteSettings>();
     }
 

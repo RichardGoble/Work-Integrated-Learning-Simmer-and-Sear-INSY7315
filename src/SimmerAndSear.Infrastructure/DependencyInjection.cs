@@ -67,6 +67,7 @@ public static class DependencyInjection
         services.AddScoped<IQuotationDocumentRepository, QuotationDocumentRepository>();
         services.AddScoped<IContactRepository, ContactRepository>();
         services.AddScoped<IPartnerRepository, PartnerRepository>();
+        services.AddScoped<IGalleryRepository, GalleryRepository>();
         services.AddMemoryCache();
         services.AddScoped<ISiteSettingsProvider, CachedSiteSettingsProvider>();
 

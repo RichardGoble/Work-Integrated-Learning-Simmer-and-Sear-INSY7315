@@ -19,7 +19,8 @@ namespace SimmerAndSear.Web.Controllers;
 public class HomeController(
     CatalogueService catalogue,
     ContactService contactService,
-    IPartnerRepository partners) : Controller
+    IPartnerRepository partners,
+    IGalleryRepository gallery) : Controller
 {
     private const int FeaturedCount = 3;
 
@@ -43,7 +44,7 @@ public class HomeController(
             ProductId: p.Id,
             InStock: p.InStock)).ToList();
 
-        return View(featured);
+        return View(new HomeVm(featured, await gallery.ListAsync(ct)));
     }
 
     [Route("/About")]

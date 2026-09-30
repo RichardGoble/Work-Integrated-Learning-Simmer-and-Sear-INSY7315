@@ -94,9 +94,22 @@ public sealed class AdminDashboardTests
             Assert.Equal(PostStatus.Published, post.Status);
             Assert.Equal(HttpStatusCode.Redirect, (await Post($"/Admin/Journal/{post.Id}/edit", new() { ["title"] = "Updated News", ["content"] = "Updated journal content." })).StatusCode);
             Assert.Equal("Updated News", (await news.GetAsync(post.Id))!.Title);
-            Assert.Equal(HttpStatusCode.Redirect, (await Post("/Admin/Gallery/Create", new(), "file")).StatusCode);
+         
+            Assert.Equal(HttpStatusCode.Redirect,
+                (await Post("/Admin/Gallery/1", new() { ["caption"] = "Searing in a copper pan" }, "file")).StatusCode);
+            var gallery = scope.ServiceProvider.GetRequiredService<IGalleryRepository>();
+            var slot = Assert.Single(await gallery.ListAsync());
+            Assert.Equal(1, slot.Slot);
+            Assert.Equal("Searing in a copper pan", slot.Caption);
             var media = scope.ServiceProvider.GetRequiredService<IMediaAssetRepository>();
             Assert.Equal(3, (await media.ListAsync()).Count);
+
+        
+            Assert.Equal(HttpStatusCode.BadRequest,
+                (await Post("/Admin/Gallery/2", new() { ["caption"] = " " }, "file")).StatusCode);
+            Assert.Equal(HttpStatusCode.BadRequest,
+                (await Post("/Admin/Gallery/9", new() { ["caption"] = "Out of range" }, "file")).StatusCode);
+            Assert.Single(await gallery.ListAsync());
 
             var html = await client.GetStringAsync("/Admin?material=Copper");
             Assert.Contains("Updated Copper Pan", html);
@@ -110,9 +123,11 @@ public sealed class AdminDashboardTests
             Assert.Null(await products.GetAsync(product.Id));
             Assert.Equal(HttpStatusCode.Redirect, (await Post($"/Admin/Journal/{post.Id}/delete", new())).StatusCode);
             Assert.Null(await news.GetAsync(post.Id));
-            var image = (await media.ListAsync())[0];
-            Assert.Equal(HttpStatusCode.Redirect, (await Post($"/Admin/Gallery/{image.Id}/delete", new())).StatusCode);
-            Assert.Null(await media.GetAsync(image.Id));
+     
+            var galleryAssetId = (await gallery.GetBySlotAsync(1))!.MediaAssetId;
+            Assert.Equal(HttpStatusCode.Redirect, (await Post("/Admin/Gallery/1/clear", new())).StatusCode);
+            Assert.Empty(await gallery.ListAsync());
+            Assert.Null(await media.GetAsync(galleryAssetId));
         }
         finally
         {
