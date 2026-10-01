@@ -24,7 +24,7 @@
       <div style="background-color: #e5e9f0; padding: 4rem; border-radius: 8px; max-width: 800px;">
         
         <h2 style="color: #2e3440; font-size: 1.75rem; line-height: 1.5; margin-top: 0; margin-bottom: 2.5rem; font-weight: 600;">
-          Published @(Model.PublishedAt ?? Model.CreatedAt).ToLocalTime().ToString("d MMMM yyyy") by @Model.AuthorName
+          Published @((Model.PublishedAt ?? Model.CreatedAt).ToLocalTime().ToString("d MMMM yyyy")) by @Model.AuthorName
         </h2>
         
         <div style="color: #4c566a; line-height: 1.7; font-size: 1.05rem; margin-bottom: 3rem;">
