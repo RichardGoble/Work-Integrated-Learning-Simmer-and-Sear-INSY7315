@@ -73,6 +73,29 @@
         heart.title = wishlisted ? 'Remove from Wishlist' : 'Add to Wishlist';
     }
 
+    function updateWishlistBadge(count) {
+        if (typeof count !== 'number') return;
+
+        const link = document.querySelector('a[href="/Wishlist"]');
+        if (!link) return;
+
+        let badge = link.querySelector('.nav-badge');
+
+        if (count === 0) {
+            if (badge) badge.remove();
+            return;
+        }
+
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'nav-badge';
+            link.append(badge);
+        }
+
+        badge.textContent = count;
+        badge.setAttribute('aria-label', count + (count === 1 ? ' item' : ' items') + ' saved to your wishlist');
+    }
+
     function confirmOn(button, cart) {
         const original = button.innerHTML;
         const count = cart && typeof cart.totalQuantity === 'number' ? cart.totalQuantity : null;
@@ -152,7 +175,9 @@
 
             request
                 .then(function (wishlist) {
-                    if (wishlist) markWishlisted(heart, !wishlisted);
+                    if (!wishlist) return;
+                    markWishlisted(heart, !wishlisted);
+                    updateWishlistBadge(wishlist.count);
                 })
                 .catch(function (error) { window.alert(error.message); })
                 .finally(function () { pendingWishlist.delete(heart); });
