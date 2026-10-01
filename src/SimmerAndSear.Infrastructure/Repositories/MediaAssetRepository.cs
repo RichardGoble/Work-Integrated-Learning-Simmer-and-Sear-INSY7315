@@ -28,18 +28,32 @@ public sealed class MediaAssetRepository(IMongoDatabase database)
 
     public async Task DeleteAsync(string id, CancellationToken ct = default) =>
         await Collection.DeleteOneAsync(Filter.Eq(m => m.Id, id), ct);
+
+    public async Task<IReadOnlyList<MediaAsset>> ListAsync(int limit = 50, CancellationToken ct = default) =>
+        await Collection.Find(Filter.Empty).SortByDescending(m => m.UploadedAt).Limit(limit).ToListAsync(ct);
     public async Task<IReadOnlyList<MediaAsset>> FindOrphansAsync(
         DateTime olderThanUtc, CancellationToken ct = default)
     {
+  
         var referenced = await Database
             .GetCollection<Product>(MongoCollections.Products)
             .Distinct<string>("images.mediaAssetId", Builders<Product>.Filter.Empty, cancellationToken: ct)
             .ToListAsync(ct);
 
+        referenced.AddRange(await Database
+            .GetCollection<NewsPost>(MongoCollections.NewsPosts)
+            .Distinct<string>("imageMediaAssetId", Builders<NewsPost>.Filter.Empty, cancellationToken: ct)
+            .ToListAsync(ct));
+
+        referenced.AddRange(await Database
+            .GetCollection<GalleryImage>(MongoCollections.GalleryImages)
+            .Distinct<string>("mediaAssetId", Builders<GalleryImage>.Filter.Empty, cancellationToken: ct)
+            .ToListAsync(ct));
+
         return await Collection
             .Find(Filter.And(
                 Filter.Lt(m => m.UploadedAt, olderThanUtc),
-                Filter.Nin(m => m.Id, referenced)))
+                Filter.Nin(m => m.Id, referenced.Where(id => id is not null))))
             .Limit(500)
             .ToListAsync(ct);
     }

@@ -37,7 +37,7 @@ public sealed class MediaService(
             throw new MediaValidationException($"File exceeds maximum allowed size of {MaxUploadSizeBytes / (1024 * 1024)} MB.");
         }
 
-        // Buffer into MemoryStream if input stream is not seekable so we can validate, upload, and resize
+   
         MemoryStream? memoryBuffer = null;
         Stream seekableStream;
         if (stream.CanSeek)
@@ -79,21 +79,21 @@ public sealed class MediaService(
 
             try
             {
-                // 1. Upload original image
+               
                 seekableStream.Position = 0;
                 originalGridFsId = await fileStore.UploadAsync(
                     seekableStream, safeFileName, validation.ContentType, ct);
 
-                // 2. Generate thumbnail stream
+                
                 seekableStream.Position = 0;
                 await using var thumbStream = await imageProcessor.CreateThumbnailAsync(
                     seekableStream, maxDimension: 400, ct);
 
-                // 3. Upload thumbnail image
+               
                 thumbGridFsId = await fileStore.UploadAsync(
                     thumbStream, $"thumb_{safeFileName}", validation.ContentType, ct);
 
-                // 4. Persist MediaAsset entity
+                
                 var asset = new MediaAsset
                 {
                     FileName = safeFileName,
@@ -112,7 +112,7 @@ public sealed class MediaService(
             }
             catch
             {
-                // Compensating cleanup: do not leave orphaned GridFS files
+               
                 if (thumbGridFsId != null)
                 {
                     try { await fileStore.DeleteAsync(thumbGridFsId, CancellationToken.None); }
@@ -161,5 +161,34 @@ public sealed class MediaService(
         var stream = await fileStore.OpenDownloadAsync(asset.ThumbnailGridFsId, ct);
         var etag = $"\"{asset.ThumbnailGridFsId}\"";
         return new MediaStreamResult(stream, asset.ContentType, etag);
+    }
+
+    public async Task DeleteAsync(string id, CancellationToken ct = default)
+    {
+        var asset = await mediaRepository.GetAsync(id, ct);
+
+        if (asset is null)
+        {
+            return;
+        }
+
+       
+        await mediaRepository.DeleteAsync(id, ct);
+
+        foreach (var fileId in new[] { asset.GridFsId, asset.ThumbnailGridFsId })
+        {
+            if (string.IsNullOrWhiteSpace(fileId))
+            {
+                continue;
+            }
+
+            try
+            {
+                await fileStore.DeleteAsync(fileId, ct);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+            }
+        }
     }
 }

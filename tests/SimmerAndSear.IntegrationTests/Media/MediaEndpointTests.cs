@@ -343,6 +343,9 @@ public sealed class IntegrationMemoryMediaRepository : IMediaAssetRepository
         return Task.CompletedTask;
     }
 
+    public Task<IReadOnlyList<MediaAsset>> ListAsync(int limit = 50, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<MediaAsset>>(_items.Values.Take(limit).ToList());
+
     public Task<IReadOnlyList<MediaAsset>> FindOrphansAsync(DateTime olderThanUtc, CancellationToken ct = default) =>
         Task.FromResult<IReadOnlyList<MediaAsset>>(_items.Values.Where(a => a.UploadedAt < olderThanUtc).ToList());
 }

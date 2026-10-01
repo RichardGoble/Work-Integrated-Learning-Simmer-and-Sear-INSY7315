@@ -26,5 +26,7 @@ public interface IProductRepository
 
     Task UpdateAsync(Product product, CancellationToken ct = default);
 
+    Task<bool> TryDecrementStockAsync(string productId, int quantity, CancellationToken ct = default);
+
     Task DeleteAsync(string id, CancellationToken ct = default);
 }

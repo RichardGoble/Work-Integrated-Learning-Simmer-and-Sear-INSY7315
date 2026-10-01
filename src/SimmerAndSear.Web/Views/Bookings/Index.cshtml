@@ -1,0 +1,84 @@
+@{
+    ViewData["Title"] = "Book a Consultation";
+    var orderId = ViewData["OrderId"] as string;
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+}
+
+<div class="animate-fade-in">
+    <div class="page-header">
+        <div class="container">
+            <h1>Book a Consultation</h1>
+            <p>Schedule a dedicated session with our culinary cookware specialists.</p>
+        </div>
+    </div>
+
+    <section class="section-light">
+        <div class="container" style="max-width: 760px; margin: 0 auto;">
+            <div class="card" style="padding: 3rem;">
+                @if (!string.IsNullOrWhiteSpace(orderId))
+                {
+                    <div style="background: rgba(242, 93, 7, 0.08); border-left: 4px solid var(--ss-brand); padding: 1rem 1.25rem; border-radius: 4px; margin-bottom: 2rem;">
+                        <strong style="color: var(--ss-brand); display: block; font-size: 0.95rem;">Linked Quotation #@orderId</strong>
+                        <span style="font-size: 0.875rem; color: var(--ss-ink-muted);">Your consultation will be prepared with reference to this quote specification.</span>
+                    </div>
+                }
+
+                <div id="booking-status-message" style="display: none; border-radius: 6px; padding: 1rem; margin-bottom: 1.5rem; font-size: 0.95rem;"></div>
+
+                <form id="booking-form" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="booking-order-id" name="orderId" value="@orderId" />
+
+                    @if (!isAuthenticated)
+                    {
+                        <div style="background: var(--ss-surface-solid); padding: 1rem; border-radius: var(--ss-radius-sm); margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--ss-ink-muted);">
+                            Already have an account? <a href="/Auth/Login?returnUrl=@Context.Request.Path@Context.Request.QueryString" style="color: var(--ss-brand); font-weight: 600;">Sign in</a> to automatically link your profile and orders.
+                        </div>
+
+                        <div>
+                            <label for="booking-fullname" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--ss-ink);">Full Name</label>
+                            <input id="booking-fullname" type="text" name="fullName" class="input-field" placeholder="Jane Doe" required />
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            <div>
+                                <label for="booking-email" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--ss-ink);">Email Address</label>
+                                <input id="booking-email" type="email" name="email" class="input-field" placeholder="jane@example.com" required />
+                            </div>
+                            <div>
+                                <label for="booking-phone" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--ss-ink);">Phone Number (Optional)</label>
+                                <input id="booking-phone" type="tel" name="phone" class="input-field" placeholder="+27 82 123 4567" />
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div>
+                            <label for="booking-phone" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--ss-ink);">Contact Phone Number (Optional)</label>
+                            <input id="booking-phone" type="tel" name="phone" class="input-field" placeholder="+27 82 123 4567" />
+                        </div>
+                    }
+
+                    <div>
+                        <label for="booking-datetime" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--ss-ink);">Preferred Date & Time</label>
+                        <input id="booking-datetime" type="datetime-local" name="preferredDateTime" class="input-field" required />
+                        <small style="color: var(--ss-ink-muted); display: block; margin-top: 0.35rem;">Consultations are available Monday to Friday, 09:00 - 17:00 SAST.</small>
+                    </div>
+
+                    <div>
+                        <label for="booking-purpose" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--ss-ink);">Consultation Purpose / Requirements</label>
+                        <textarea id="booking-purpose" name="purpose" class="input-field" rows="4" placeholder="Tell us about your kitchen setup, custom requirements, or questions regarding your quotation..." required></textarea>
+                    </div>
+
+                    <button id="booking-submit-btn" type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 1rem; font-size: 1.05rem;">
+                        <span id="booking-btn-text">Confirm Consultation Booking</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/js/engagement.js" asp-append-version="true"></script>
+}

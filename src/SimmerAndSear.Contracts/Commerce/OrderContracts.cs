@@ -25,6 +25,13 @@ public sealed class CheckoutRequest
 
     [Required, StringLength(12, MinimumLength = 3)]
     public string Postal { get; set; } = string.Empty;
+
+
+    [StringLength(160)]
+    public string? CompanyName { get; set; }
+
+    [StringLength(2000)]
+    public string? CustomerNotes { get; set; }
 }
 
 public sealed record OrderLineResponse(
@@ -48,4 +55,6 @@ public sealed record OrderResponse(
     string CustomerName,
     DateTime PlacedAt,
     bool IsQuotation,
-    string NextStepMessage);
+    string NextStepMessage,
+    string? CompanyName = null,
+    string? CustomerNotes = null);

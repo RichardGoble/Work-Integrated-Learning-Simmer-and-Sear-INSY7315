@@ -1,3 +1,25 @@
+if (typeof window.showTab !== 'function') {
+    window.showTab = function(tabId) {
+        document.querySelectorAll('.admin-tab-content').forEach(function(el) { el.style.display = 'none'; });
+        document.querySelectorAll('.admin-tab-btn').forEach(function(b) {
+            b.classList.remove('btn-secondary');
+            b.classList.add('btn-outline');
+        });
+        var targetContent = document.getElementById('tab-' + tabId);
+        var targetBtn = document.getElementById('btn-' + tabId);
+        if (targetContent) targetContent.style.display = 'block';
+        if (targetBtn) {
+            targetBtn.classList.remove('btn-outline');
+            targetBtn.classList.add('btn-secondary');
+        }
+        if (history.replaceState) {
+            history.replaceState(null, null, '#' + tabId);
+        } else {
+            window.location.hash = tabId;
+        }
+    };
+}
+
 const pageActions = {
     'action1': function(event) { showTab('orders') },
     'action2': function(event) { showTab('bulk') },
@@ -20,7 +42,7 @@ const pageActions = {
     'action19': function(event) { document.getElementById('form-add-partner').style.display='block'; document.getElementById('partners-grid').style.display='none'; },
     'action20': function(event) { document.getElementById('form-add-partner').style.display='none'; document.getElementById('partners-grid').style.display='block'; },
     'action21': function(event) { event.preventDefault(); window.location.href='/Cart/OrderConfirmation'; },
-    'action22': function(event) { event.preventDefault(); alert('Message sent (UI mock)'); },
+    'action22': function(event) { /* Obsolete UI mock removed for S6 */ },
     'action23': function(event) { togglePreference('dark-mode') },
     'action24': function(event) { togglePreference('high-contrast') },
     'action25': function(event) { togglePreference('large-text') },

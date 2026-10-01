@@ -131,6 +131,74 @@ public sealed class CatalogueService(IProductRepository products)
         ];
     }
 
+  
+    public async Task<(ProductDetailResponse? Product, bool Removed)> RemoveImageAsync(
+        string id, string mediaAssetId, CancellationToken ct = default)
+    {
+        var product = await products.GetAsync(id, ct);
+
+        if (product is null)
+        {
+            return (null, false);
+        }
+
+        var image = product.Images.Find(i => i.MediaAssetId == mediaAssetId);
+
+        if (image is null)
+        {
+            return (Describe(product), false);
+        }
+
+        if (product.Images.Count <= 1)
+        {
+            throw new ProductRuleException("A product needs at least one image.");
+        }
+
+        product.Images.Remove(image);
+        Renumber(product);
+
+        await products.UpdateAsync(product, ct);
+        return (Describe(product), true);
+    }
+
+    public async Task<ProductDetailResponse?> SetPrimaryImageAsync(
+        string id, string mediaAssetId, CancellationToken ct = default)
+    {
+        var product = await products.GetAsync(id, ct);
+
+        if (product is null || product.Images.TrueForAll(i => i.MediaAssetId != mediaAssetId))
+        {
+            return null;
+        }
+
+        foreach (var image in product.Images)
+        {
+            image.IsPrimary = image.MediaAssetId == mediaAssetId;
+        }
+
+        Renumber(product);
+
+        await products.UpdateAsync(product, ct);
+        return Describe(product);
+    }
+
+    // The primary image leads the gallery, and exactly one must hold the flag even
+    // after the one that had it is deleted.
+    private static void Renumber(Product product)
+    {
+        var ordered = product.Images.OrderByDescending(i => i.IsPrimary)
+            .ThenBy(i => i.DisplayOrder)
+            .ToList();
+
+        for (var index = 0; index < ordered.Count; index++)
+        {
+            ordered[index].DisplayOrder = index;
+            ordered[index].IsPrimary = index == 0;
+        }
+
+        product.Images = ordered;
+    }
+
     private static string? Clean(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 

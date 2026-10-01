@@ -25,7 +25,7 @@ public static class IdentityRegistration
         {
             options.Cookie.Name = "__Host-SimmerAndSear";
             options.Cookie.HttpOnly = true;
-            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
             options.Cookie.SameSite = SameSiteMode.Lax;
             options.LoginPath = "/Auth/Login";
             options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
@@ -36,7 +36,7 @@ public static class IdentityRegistration
         {
             options.HeaderName = "X-CSRF-TOKEN";
             options.Cookie.Name = "__Host-SimmerAndSear-CSRF";
-            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
             options.Cookie.SameSite = SameSiteMode.Strict;
         });
         services.Configure<MvcOptions>(options => options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));

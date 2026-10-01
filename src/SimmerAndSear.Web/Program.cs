@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using SimmerAndSear.Application.Abstractions;
+using SimmerAndSear.Application.Commerce;
 using SimmerAndSear.Infrastructure;
 using SimmerAndSear.Infrastructure.Persistence;
 using SimmerAndSear.Web.Infrastructure;
@@ -25,6 +26,8 @@ builder.WebHost.ConfigureKestrel(options =>
     options.AddServerHeader = false;
     options.Limits.MaxRequestBodySize = 10 * 1024 * 1024;
 });
+builder.Services.Configure<PaymentOptions>(
+    builder.Configuration.GetSection(PaymentOptions.SectionName));
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddModulesFrom(typeof(Program).Assembly, builder.Configuration);
 builder.Services.Configure<ForwardedHeadersOptions>(o =>

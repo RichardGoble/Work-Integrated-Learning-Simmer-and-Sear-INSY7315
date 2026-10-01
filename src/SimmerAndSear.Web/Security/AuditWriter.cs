@@ -32,4 +32,23 @@ public sealed class AuditWriter(IAuditLogRepository repository, CurrentUser curr
         logger.LogInformation("{SecurityEvent}: actor {ActorId}; {Summary}",
             action == AuditAction.AccessDenied ? "ACCESS_DENIED" : action.ToString(), entry.ActorId, summary);
     }
+
+    public async Task WriteAsync(AuditAction action, string entityType, string? entityId, string summary)
+    {
+        var context = accessor.HttpContext;
+        var entry = AuditLogEntry.Create(current.Id ?? "anonymous", current.Name,
+            current.Role ?? RoleName.Customer, action, entityType, entityId, summary,
+            context?.Connection.RemoteIpAddress?.ToString());
+        try
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            await repository.AppendAsync(entry, timeout.Token);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Audit persistence failed for {Action}, actor {ActorId}", action, entry.ActorId);
+        }
+        logger.LogInformation("{SecurityEvent}: actor {ActorId}; {Summary}",
+            action == AuditAction.AccessDenied ? "ACCESS_DENIED" : action.ToString(), entry.ActorId, summary);
+    }
 }

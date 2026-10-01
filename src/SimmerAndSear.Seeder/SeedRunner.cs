@@ -20,6 +20,7 @@ public sealed class SeedRunner(
     IUserRepository users,
     ISiteSettingsRepository settings,
     IMediaAssetRepository media,
+    IGalleryRepository gallery,
     IFileStore files,
     IPasswordHasher hasher,
     IOptions<SeedOptions> options,
@@ -78,10 +79,16 @@ public sealed class SeedRunner(
             var existing = await users.GetByEmailAsync(account.Email.Trim(), ct);
             if (existing is not null)
             {
-                if (existing.Role != account.Role || existing.UserType != account.Type || !existing.IsActive)
+                if (!string.IsNullOrWhiteSpace(account.Password) && account.Password.Length is >= 12 and <= 128)
                 {
-                    logger.LogError("The configured {Role} account exists with different permissions or is inactive.", account.Role);
-                    problems++;
+                    existing.PasswordHash = hasher.Hash(account.Password);
+                    existing.IsActive = true;
+                    existing.FailedLoginAttempts = 0;
+                    existing.LockedOutUntil = null;
+                    existing.Role = account.Role;
+                    existing.UserType = account.Type;
+                    await users.UpdateAsync(existing, ct);
+                    logger.LogInformation("Updated {Role} account {Email} password.", account.Role, account.Email);
                 }
                 continue;
             }
@@ -195,9 +202,61 @@ public sealed class SeedRunner(
         logger.LogInformation("Catalogue seeded: {Created} new, {Total} in manifest.",
             created, manifest.Count);
 
+        await SeedGalleryAsync(imagesPath, ct);
+
         return problems;
     }
 
+
+    // ── References ──────────────────────────────────────────────────────────────
+    //Microsoft, 2025. Asynchronous programming [Source code].
+    //Available at: <https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/> [Accessed 18 September 2026].
+    // ────────────────────────────────────────────────────────────────────────────
+
+
+    private static readonly (string Image, string Caption)[] GallerySeed =
+    [
+        ("heritage-skillet-26.jpg", "A cast-iron skillet searing over an open flame"),
+        ("signature-saucepan-18.jpg", "A stainless steel saucepan simmering on the hob"),
+        ("heritage-potjie-no3.jpg", "A traditional potjie over coals"),
+        ("signature-set-5pc.jpg", "The five-piece signature set laid out on a kitchen counter")
+    ];
+
+    private async Task SeedGalleryAsync(string imagesPath, CancellationToken ct)
+    {
+        if ((await gallery.ListAsync(ct)).Count > 0)
+        {
+            logger.LogInformation("Home page gallery already set; left untouched.");
+            return;
+        }
+
+        var filled = 0;
+
+        for (var slot = 1; slot <= GalleryImage.SlotCount && slot <= GallerySeed.Length; slot++)
+        {
+            var (image, caption) = GallerySeed[slot - 1];
+            var file = Path.Combine(imagesPath, image);
+
+            if (!File.Exists(file))
+            {
+                logger.LogWarning("Skipping gallery position {Slot}: image {Image} not found.", slot, image);
+                continue;
+            }
+
+            await gallery.SetAsync(new GalleryImage
+            {
+                Slot = slot,
+                MediaAssetId = await UploadImageAsync(file, image, ct),
+                Caption = caption,
+                UpdatedBy = "seeder"
+            }, ct);
+
+            filled++;
+        }
+
+        logger.LogInformation("Home page gallery seeded: {Filled} of {Total} positions.",
+            filled, GalleryImage.SlotCount);
+    }
     private async Task<string> UploadImageAsync(string path, string fileName, CancellationToken ct)
     {
         await using var stream = File.OpenRead(path);

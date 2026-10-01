@@ -4,6 +4,7 @@
     'use strict';
 
     let csrfToken = null;
+    const pendingWishlist = new WeakSet();
 
     async function getCsrfToken() {
         if (csrfToken) return csrfToken;
@@ -32,6 +33,67 @@
         }
 
         return response.json();
+    }
+
+    async function sendWishlist(method, url, body, failure) {
+        const headers = { 'X-CSRF-TOKEN': await getCsrfToken() };
+        if (body) headers['Content-Type'] = 'application/json';
+
+        const response = await fetch(url, {
+            method: method,
+            credentials: 'same-origin',
+            headers: headers,
+            body: body ? JSON.stringify(body) : undefined
+        });
+
+        if (response.status === 401) {
+            window.location.href = '/Auth/Login?ReturnUrl=' + encodeURIComponent(window.location.pathname + window.location.search);
+            return null;
+        }
+
+        if (!response.ok) {
+            const problem = await response.json().catch(() => null);
+            throw new Error(problem && problem.title ? problem.title : failure);
+        }
+
+        return response.json();
+    }
+
+    function addToWishlist(productId) {
+        return sendWishlist('POST', '/api/wishlist/items', { productId: productId }, 'Could not add that to your wishlist.');
+    }
+
+    function removeFromWishlist(productId) {
+        return sendWishlist('DELETE', '/api/wishlist/items/' + encodeURIComponent(productId), null, 'Could not remove that from your wishlist.');
+    }
+
+    function markWishlisted(heart, wishlisted) {
+        heart.classList.toggle('is-wishlisted', wishlisted);
+        heart.setAttribute('aria-pressed', wishlisted ? 'true' : 'false');
+        heart.title = wishlisted ? 'Remove from Wishlist' : 'Add to Wishlist';
+    }
+
+    function updateWishlistBadge(count) {
+        if (typeof count !== 'number') return;
+
+        const link = document.querySelector('a[href="/Wishlist"]');
+        if (!link) return;
+
+        let badge = link.querySelector('.nav-badge');
+
+        if (count === 0) {
+            if (badge) badge.remove();
+            return;
+        }
+
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'nav-badge';
+            link.append(badge);
+        }
+
+        badge.textContent = count;
+        badge.setAttribute('aria-label', count + (count === 1 ? ' item' : ' items') + ' saved to your wishlist');
     }
 
     function confirmOn(button, cart) {
@@ -97,6 +159,28 @@
         const arrow = event.target.closest('[data-gallery-step]');
         if (arrow) {
             showImage(currentImageIndex() + (parseInt(arrow.getAttribute('data-gallery-step'), 10) || 0));
+            return;
+        }
+
+        const heart = event.target.closest('[data-add-to-wishlist]');
+        if (heart) {
+            const wishlistProductId = heart.getAttribute('data-add-to-wishlist');
+            event.preventDefault();
+            if (!wishlistProductId || pendingWishlist.has(heart)) return;
+
+            pendingWishlist.add(heart);
+
+            const wishlisted = heart.classList.contains('is-wishlisted');
+            const request = wishlisted ? removeFromWishlist(wishlistProductId) : addToWishlist(wishlistProductId);
+
+            request
+                .then(function (wishlist) {
+                    if (!wishlist) return;
+                    markWishlisted(heart, !wishlisted);
+                    updateWishlistBadge(wishlist.count);
+                })
+                .catch(function (error) { window.alert(error.message); })
+                .finally(function () { pendingWishlist.delete(heart); });
             return;
         }
 

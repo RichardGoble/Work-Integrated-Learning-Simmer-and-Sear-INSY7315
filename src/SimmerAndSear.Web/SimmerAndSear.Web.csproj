@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
     <ProjectReference Include="..\SimmerAndSear.Application\SimmerAndSear.Application.csproj" />
@@ -10,7 +10,14 @@
     <PackageReference Include="Microsoft.Web.LibraryManager.Build" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\images\home_banner.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
   <PropertyGroup>
+    <UserSecretsId>cfd01553-cb7f-4bdb-9513-688383514b88</UserSecretsId>
   </PropertyGroup>
 
 </Project>

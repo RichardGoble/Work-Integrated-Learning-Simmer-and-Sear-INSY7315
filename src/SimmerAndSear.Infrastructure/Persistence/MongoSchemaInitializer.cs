@@ -80,7 +80,14 @@ public sealed class MongoSchemaInitializer(
                      MongoCollections.SiteSettings,
                      MongoCollections.MediaAssets,
                      MongoCollections.Carts,
-                     MongoCollections.Orders
+                     MongoCollections.Orders,
+                     MongoCollections.Reviews,
+                     MongoCollections.NewsPosts,
+                     MongoCollections.Wishlists,
+                     MongoCollections.QuotationDocuments,
+                     MongoCollections.GalleryImages,
+                     MongoCollections.ContactRequests,
+                     MongoCollections.Bookings
                  })
         {
             try
@@ -168,12 +175,14 @@ public sealed class MongoSchemaInitializer(
                     { "subtotal", new BsonDocument { { "bsonType", "decimal" }, { "minimum", 0 } } },
                     { "shippingCost", new BsonDocument { { "bsonType", "decimal" }, { "minimum", 0 } } },
                     { "total", new BsonDocument { { "bsonType", "decimal" }, { "minimum", 0 } } },
-                    { "placedAt", new BsonDocument("bsonType", "date") }
+                    { "placedAt", new BsonDocument("bsonType", "date") },
+                    { "companyName", new BsonDocument { { "bsonType", "string" }, { "maxLength", 120 } } },
+                    { "customerNotes", new BsonDocument { { "bsonType", "string" }, { "maxLength", 1000 } } }
                 }
             }
         }, ct);
 
-       
+
         await ApplyValidatorAsync(MongoCollections.Carts, new BsonDocument
         {
             { "bsonType", "object" },
@@ -182,6 +191,100 @@ public sealed class MongoSchemaInitializer(
                 "properties", new BsonDocument
                 {
                     { "items", new BsonDocument("bsonType", "array") },
+                    { "updatedAt", new BsonDocument("bsonType", "date") }
+                }
+            }
+        }, ct);
+
+        await ApplyValidatorAsync(MongoCollections.Reviews, new BsonDocument
+        {
+            { "bsonType", "object" },
+            { "required", new BsonArray { "productId", "clientId", "rating", "status", "createdAt" } },
+            {
+                "properties", new BsonDocument
+                {
+                    { "productId", Str(minLength: 1) },
+                    { "clientId", Str(minLength: 1) },
+                    { "rating", new BsonDocument { { "bsonType", "int" }, { "minimum", 1 }, { "maximum", 5 } } },
+                    { "status", Str(minLength: 1) },
+                    { "createdAt", new BsonDocument("bsonType", "date") }
+                }
+            }
+        }, ct);
+
+        await ApplyValidatorAsync(MongoCollections.NewsPosts, new BsonDocument
+        {
+            { "bsonType", "object" },
+            { "required", new BsonArray { "authorId", "status", "createdAt" } },
+            {
+                "properties", new BsonDocument
+                {
+                    { "authorId", Str(minLength: 1) },
+                    { "status", Str(minLength: 1) },
+                    { "createdAt", new BsonDocument("bsonType", "date") }
+                }
+            }
+        }, ct);
+
+        await ApplyValidatorAsync(MongoCollections.Wishlists, new BsonDocument
+        {
+            { "bsonType", "object" },
+            { "required", new BsonArray { "clientId", "items", "updatedAt" } },
+            {
+                "properties", new BsonDocument
+                {
+                    { "clientId", Str(minLength: 1) },
+                    { "items", new BsonDocument { { "bsonType", "array" }, { "maxItems", Wishlist.MaxItems } } },
+                    { "updatedAt", new BsonDocument("bsonType", "date") }
+                }
+            }
+        }, ct);
+
+        await ApplyValidatorAsync(MongoCollections.QuotationDocuments, new BsonDocument
+        {
+            { "bsonType", "object" },
+            {
+                "required", new BsonArray
+                {
+                    "orderId", "orderReference", "clientId", "gridFsId", "fileName", "validUntil", "generatedAt"
+                }
+            },
+            {
+                "properties", new BsonDocument
+                {
+                    { "orderId", Str(minLength: 1) },
+                    { "orderReference", Str(minLength: 1) },
+                    { "clientId", Str(minLength: 1) },
+                    { "gridFsId", Str(minLength: 1) },
+                    { "fileName", Str(minLength: 1) },
+                    { "total", new BsonDocument("bsonType", "decimal") },
+                    { "validUntil", new BsonDocument("bsonType", "date") },
+                    { "generatedAt", new BsonDocument("bsonType", "date") }
+                }
+            }
+        }, ct);
+
+
+        await ApplyValidatorAsync(MongoCollections.GalleryImages, new BsonDocument
+        {
+            { "bsonType", "object" },
+            {
+                "required", new BsonArray { "slot", "mediaAssetId", "caption", "updatedAt" }
+            },
+            {
+                "properties", new BsonDocument
+                {
+                    {
+                        "slot", new BsonDocument
+                        {
+                            { "bsonType", "int" },
+                            { "minimum", 1 },
+                            { "maximum", GalleryImage.SlotCount }
+                        }
+                    },
+                    { "mediaAssetId", Str(minLength: 1) },
+                    { "caption", Str(minLength: 1) },
+                    { "updatedBy", new BsonDocument("bsonType", "string") },
                     { "updatedAt", new BsonDocument("bsonType", "date") }
                 }
             }
@@ -282,7 +385,7 @@ public sealed class MongoSchemaInitializer(
 
         await orders.Indexes.CreateManyAsync(
         [
-            // Serves a customer's order history, which is the common read.
+         
             new CreateIndexModel<Order>(
                 Builders<Order>.IndexKeys.Ascending(o => o.ClientId).Descending(o => o.PlacedAt),
                 new CreateIndexOptions { Name = "ix_orders_client_placed" }),
@@ -298,5 +401,80 @@ public sealed class MongoSchemaInitializer(
                     .Descending(o => o.PlacedAt),
                 new CreateIndexOptions { Name = "ix_orders_type_status_placed" })
         ], ct);
+
+        var reviews = database.GetCollection<Review>(MongoCollections.Reviews);
+
+        await reviews.Indexes.CreateManyAsync(
+        [
+            new CreateIndexModel<Review>(
+                Builders<Review>.IndexKeys.Ascending(r => r.ProductId).Ascending(r => r.Status),
+                new CreateIndexOptions { Name = "ix_reviews_product_status" }),
+
+            new CreateIndexModel<Review>(
+                Builders<Review>.IndexKeys.Ascending(r => r.ClientId).Descending(r => r.CreatedAt),
+                new CreateIndexOptions { Name = "ix_reviews_client_created" }),
+
+            new CreateIndexModel<Review>(
+                Builders<Review>.IndexKeys.Ascending(r => r.Status).Descending(r => r.CreatedAt),
+                new CreateIndexOptions { Name = "ix_reviews_status_created" })
+        ], ct);
+
+        var newsPosts = database.GetCollection<NewsPost>(MongoCollections.NewsPosts);
+
+        await newsPosts.Indexes.CreateManyAsync(
+        [
+            new CreateIndexModel<NewsPost>(
+                Builders<NewsPost>.IndexKeys.Ascending(p => p.Status).Descending(p => p.CreatedAt),
+                new CreateIndexOptions { Name = "ix_newsposts_status_created" }),
+
+            new CreateIndexModel<NewsPost>(
+                Builders<NewsPost>.IndexKeys.Descending(p => p.PublishedAt),
+                new CreateIndexOptions { Name = "ix_newsposts_published", Sparse = true })
+        ], ct);
+
+        var wishlists = database.GetCollection<Wishlist>(MongoCollections.Wishlists);
+
+        await wishlists.Indexes.CreateOneAsync(
+            new CreateIndexModel<Wishlist>(
+                Builders<Wishlist>.IndexKeys.Ascending(w => w.ClientId),
+                new CreateIndexOptions { Name = "ux_wishlists_client", Unique = true }),
+            cancellationToken: ct);
+
+        var quotationDocuments = database.GetCollection<QuotationDocument>(MongoCollections.QuotationDocuments);
+
+        await quotationDocuments.Indexes.CreateOneAsync(
+            new CreateIndexModel<QuotationDocument>(
+                Builders<QuotationDocument>.IndexKeys.Ascending(d => d.OrderId),
+                new CreateIndexOptions { Name = "ux_quotationDocuments_order", Unique = true }),
+            cancellationToken: ct);
+
+        var contacts = database.GetCollection<ContactRequest>(MongoCollections.ContactRequests);
+
+        await contacts.Indexes.CreateOneAsync(
+            new CreateIndexModel<ContactRequest>(
+                Builders<ContactRequest>.IndexKeys.Ascending(c => c.Status).Descending(c => c.SubmittedAt),
+                new CreateIndexOptions { Name = "ix_contact_status_submitted" }),
+            cancellationToken: ct);
+
+        var bookings = database.GetCollection<Booking>(MongoCollections.Bookings);
+
+        await bookings.Indexes.CreateManyAsync(
+        [
+            new CreateIndexModel<Booking>(
+                Builders<Booking>.IndexKeys.Ascending(b => b.Status).Ascending(b => b.PreferredDateTime),
+                new CreateIndexOptions { Name = "ix_bookings_status_preferred" }),
+            new CreateIndexModel<Booking>(
+                Builders<Booking>.IndexKeys.Ascending(b => b.ClientId).Descending(b => b.CreatedAt),
+                new CreateIndexOptions { Name = "ix_bookings_client_created", Sparse = true })
+        ], ct);
+
+        var gallery = database.GetCollection<GalleryImage>(MongoCollections.GalleryImages);
+
+        
+        await gallery.Indexes.CreateOneAsync(
+            new CreateIndexModel<GalleryImage>(
+                Builders<GalleryImage>.IndexKeys.Ascending(g => g.Slot),
+                new CreateIndexOptions { Name = "ux_gallery_slot", Unique = true }),
+            cancellationToken: ct);
     }
 }

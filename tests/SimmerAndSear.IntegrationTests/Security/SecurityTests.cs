@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using SimmerAndSear.Domain.Entities;
 using SimmerAndSear.Domain.Enums;
 using SimmerAndSear.Web.Security;
 
@@ -256,7 +257,7 @@ public sealed class SecurityTests
         {
            
             var expected = permission is Permission.AccountManage or Permission.AuditRead
-                or Permission.CatalogueManage ? master : sales;
+                or Permission.CatalogueManage or Permission.SettingsManage ? master : sales;
             (await authorization.AuthorizeAsync(principal, null, permission.ToString())).Succeeded.ShouldBe(expected);
         }
     }
@@ -301,5 +302,302 @@ public sealed class SecurityTests
         var disabledBody = await disabled.Content.ReadFromJsonAsync<JsonElement>();
         var missingBody = await missing.Content.ReadFromJsonAsync<JsonElement>();
         disabledBody.GetProperty("title").GetString().ShouldBe(missingBody.GetProperty("title").GetString());
+    }
+
+    [Theory]
+    [InlineData("/api/admin/accounts", null, 401)]
+    [InlineData("/api/admin/accounts", RoleName.Customer, 403)]
+    [InlineData("/api/admin/accounts", RoleName.SalesAdmin, 403)]
+    [InlineData("/api/admin/accounts", RoleName.MasterAdmin, 200)]
+    [InlineData("/api/orders", null, 401)]
+    [InlineData("/api/orders", RoleName.SalesAdmin, 403)]
+    [InlineData("/api/orders", RoleName.Customer, 200)]
+    [InlineData("/api/wishlist", null, 401)]
+    [InlineData("/api/wishlist", RoleName.MasterAdmin, 403)]
+    [InlineData("/api/wishlist", RoleName.Customer, 200)]
+    public async Task S5_endpoints_enforce_role_matrix(string path, RoleName? role, int expectedStatus)
+    {
+        using var factory = new SecurityFactory();
+        using var client = factory.Browser();
+        if (role is { } signedInRole)
+        {
+            var user = factory.AddUser(signedInRole);
+            (await Post(client, "/api/accounts/login", new { user.Email, password = Password })).EnsureSuccessStatusCode();
+        }
+        (await client.GetAsync(path)).StatusCode.ShouldBe((HttpStatusCode)expectedStatus);
+        if (expectedStatus == 403)
+        {
+            factory.Audit.Items.ShouldContain(a => a.Action == AuditAction.AccessDenied && a.Summary.Contains("ACCESS_DENIED"));
+        }
+    }
+
+    [Fact]
+    public async Task Customer_gets_404_for_another_customers_order()
+    {
+        using var factory = new SecurityFactory();
+        using var clientA = factory.Browser();
+        using var clientB = factory.Browser();
+        var customerA = factory.AddUser();
+        var customerB = factory.AddUser();
+        const string orderId = "650000000000000000000001";
+        factory.Orders.Items.Add(new Order { Id = orderId, ClientId = customerB.Id, OrderReference = "SS-TEST-0001" });
+        (await Post(clientA, "/api/accounts/login", new { customerA.Email, password = Password })).EnsureSuccessStatusCode();
+        (await Post(clientB, "/api/accounts/login", new { customerB.Email, password = Password })).EnsureSuccessStatusCode();
+        (await clientA.GetAsync($"/api/orders/{orderId}")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await clientB.GetAsync($"/api/orders/{orderId}")).StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Master_admin_creates_and_deactivates_admin_immediately()
+    {
+        using var factory = new SecurityFactory();
+        using var master = factory.Browser();
+        using var sales = factory.Browser();
+        var admin = factory.AddUser(RoleName.MasterAdmin);
+        (await Post(master, "/api/accounts/login", new { admin.Email, password = Password })).EnsureSuccessStatusCode();
+
+        var created = await Post(master, "/api/admin/accounts/sales-admins", new
+        {
+            email = "Sales@Example.com", password = Password, firstName = "Sales", lastName = "Admin",
+            role = "MasterAdmin", userType = "Client", isActive = false
+        });
+        created.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var stored = factory.Users.Items.Single(u => u.Email == "sales@example.com");
+        stored.Role.ShouldBe(RoleName.SalesAdmin);
+        stored.UserType.ShouldBe(UserType.Admin);
+        stored.IsActive.ShouldBeTrue();
+
+        (await Post(sales, "/api/accounts/login", new { stored.Email, password = Password })).EnsureSuccessStatusCode();
+        (await Post(master, $"/api/admin/accounts/{stored.Id}/deactivate", new { })).StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await sales.GetAsync("/api/accounts/me")).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        factory.Audit.Items.ShouldContain(a => a.Action == AuditAction.Update && a.EntityType == "User");
+    }
+
+    [Theory]
+    [InlineData("POST", "/api/wishlist/items/650000000000000000000009/move-to-cart", null, 401)]
+    [InlineData("POST", "/api/wishlist/items/650000000000000000000009/move-to-cart", RoleName.MasterAdmin, 403)]
+    [InlineData("POST", "/api/wishlist/items/650000000000000000000009/move-to-cart", RoleName.Customer, 404)]
+    [InlineData("GET", "/api/orders/650000000000000000000009/quotation", null, 401)]
+    [InlineData("GET", "/api/orders/650000000000000000000009/quotation", RoleName.SalesAdmin, 403)]
+    [InlineData("GET", "/api/orders/650000000000000000000009/quotation", RoleName.Customer, 404)]
+    [InlineData("GET", "/api/admin/orders/650000000000000000000009/quotation", null, 401)]
+    [InlineData("GET", "/api/admin/orders/650000000000000000000009/quotation", RoleName.Customer, 403)]
+    [InlineData("GET", "/api/admin/orders/650000000000000000000009/quotation", RoleName.SalesAdmin, 404)]
+    [InlineData("GET", "/api/admin/orders/650000000000000000000009/quotation", RoleName.MasterAdmin, 404)]
+    [InlineData("POST", "/api/wishlist/quote-request", null, 401)]
+    [InlineData("POST", "/api/wishlist/quote-request", RoleName.SalesAdmin, 403)]
+    [InlineData("POST", "/api/wishlist/quote-request", RoleName.Customer, 400)]
+    public async Task S8_endpoints_enforce_role_matrix(string method, string path, RoleName? role, int expectedStatus)
+    {
+        using var factory = new SecurityFactory();
+        using var client = factory.Browser();
+        if (role is { } signedInRole)
+        {
+            var user = factory.AddUser(signedInRole);
+            (await Post(client, "/api/accounts/login", new { user.Email, password = Password })).EnsureSuccessStatusCode();
+        }
+        var response = method == "POST" ? await Post(client, path, new { }) : await client.GetAsync(path);
+        response.StatusCode.ShouldBe((HttpStatusCode)expectedStatus);
+        if (expectedStatus == 403)
+        {
+            factory.Audit.Items.ShouldContain(a => a.Action == AuditAction.AccessDenied && a.Summary.Contains("ACCESS_DENIED"));
+        }
+    }
+
+    [Fact]
+    public async Task Quotation_downloads_as_pdf_and_is_stored_once()
+    {
+        using var factory = new SecurityFactory();
+        using var clientA = factory.Browser();
+        using var clientB = factory.Browser();
+        using var sales = factory.Browser();
+        var customerA = factory.AddUser();
+        var customerB = factory.AddUser();
+        var salesAdmin = factory.AddUser(RoleName.SalesAdmin);
+        const string quoteId = "650000000000000000000002";
+        const string checkoutId = "650000000000000000000003";
+        factory.Orders.Items.Add(new Order
+        {
+            Id = quoteId, ClientId = customerB.Id, OrderReference = "SS-TEST-0002", OrderType = OrderType.QuoteRequest,
+            Items = [new OrderItem { ProductId = "650000000000000000000100", ProductName = "Cast Iron Skillet", UnitPrice = 450m, Quantity = 2 }],
+            Subtotal = 900m, Total = 900m,
+            ShippingDetails = new ShippingDetails { FullName = "Customer B", Email = customerB.Email }
+        });
+        factory.Orders.Items.Add(new Order
+        {
+            Id = checkoutId, ClientId = customerB.Id, OrderReference = "SS-TEST-0003", OrderType = OrderType.Checkout
+        });
+        (await Post(clientA, "/api/accounts/login", new { customerA.Email, password = Password })).EnsureSuccessStatusCode();
+        (await Post(clientB, "/api/accounts/login", new { customerB.Email, password = Password })).EnsureSuccessStatusCode();
+        (await Post(sales, "/api/accounts/login", new { salesAdmin.Email, password = Password })).EnsureSuccessStatusCode();
+
+        var first = await clientB.GetAsync($"/api/orders/{quoteId}/quotation");
+        first.StatusCode.ShouldBe(HttpStatusCode.OK);
+        first.Content.Headers.ContentType!.MediaType.ShouldBe("application/pdf");
+        first.Content.Headers.ContentDisposition!.ToString().ShouldContain("Quotation-SS-TEST-0002.pdf");
+        System.Text.Encoding.ASCII.GetString(await first.Content.ReadAsByteArrayAsync()).ShouldStartWith("%PDF");
+
+        (await clientB.GetAsync($"/api/orders/{quoteId}/quotation")).StatusCode.ShouldBe(HttpStatusCode.OK);
+        factory.Files.Items.Count.ShouldBe(1);
+        factory.Quotations.Items.Count.ShouldBe(1);
+
+        (await clientB.GetAsync($"/api/orders/{checkoutId}/quotation")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await clientA.GetAsync($"/api/orders/{quoteId}/quotation")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
+        var staff = await sales.GetAsync($"/api/admin/orders/{quoteId}/quotation");
+        staff.StatusCode.ShouldBe(HttpStatusCode.OK);
+        staff.Content.Headers.ContentType!.MediaType.ShouldBe("application/pdf");
+    }
+
+    [Fact]
+    public async Task Wishlist_quote_request_raises_a_quotation_and_keeps_the_wishlist()
+    {
+        using var factory = new SecurityFactory();
+        using var client = factory.Browser();
+        var customer = factory.AddUser();
+        var request = new { name = "Quote Customer", email = customer.Email, company = "Acme Kitchens", notes = "Need these by March." };
+
+        string productId;
+        using (var scope = factory.Services.CreateScope())
+        {
+            productId = await scope.ServiceProvider.GetRequiredService<SimmerAndSear.Application.Abstractions.IProductRepository>()
+                .CreateAsync(new Product
+                {
+                    Name = "Quote Test Skillet", Sku = $"QT-{Guid.NewGuid():N}", Brand = "Heritage",
+                    Price = 650m, StockQuantity = 5, IsPublished = true
+                });
+        }
+
+        (await Post(client, "/api/accounts/login", new { customer.Email, password = Password })).EnsureSuccessStatusCode();
+        (await Post(client, "/api/wishlist/quote-request", request)).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
+        (await Post(client, "/api/wishlist/items", new { productId })).EnsureSuccessStatusCode();
+        var placed = await Post(client, "/api/wishlist/quote-request", request);
+        placed.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        var order = factory.Orders.Items.ShouldHaveSingleItem();
+        order.OrderType.ShouldBe(OrderType.QuoteRequest);
+        order.ClientId.ShouldBe(customer.Id);
+        order.CompanyName.ShouldBe("Acme Kitchens");
+        order.CustomerNotes.ShouldBe("Need these by March.");
+        order.Items.ShouldHaveSingleItem().Quantity.ShouldBe(1);
+        order.Total.ShouldBe(650m);
+        factory.Wishlists.Items.Single(w => w.ClientId == customer.Id).Items.ShouldHaveSingleItem();
+
+        var pdf = await client.GetAsync($"/api/orders/{order.Id}/quotation");
+        pdf.StatusCode.ShouldBe(HttpStatusCode.OK);
+        pdf.Content.Headers.ContentType!.MediaType.ShouldBe("application/pdf");
+    }
+
+    [Theory]
+    [InlineData("GET", "/api/admin/contact", null, 401)]
+    [InlineData("GET", "/api/admin/contact", RoleName.Customer, 403)]
+    [InlineData("GET", "/api/admin/contact", RoleName.SalesAdmin, 200)]
+    [InlineData("GET", "/api/admin/contact", RoleName.MasterAdmin, 200)]
+    [InlineData("GET", "/api/admin/bookings", null, 401)]
+    [InlineData("GET", "/api/admin/bookings", RoleName.Customer, 403)]
+    [InlineData("GET", "/api/admin/bookings", RoleName.SalesAdmin, 200)]
+    [InlineData("GET", "/api/admin/bookings", RoleName.MasterAdmin, 200)]
+    [InlineData("PUT", "/api/admin/contact/650000000000000000000009", null, 401)]
+    [InlineData("PUT", "/api/admin/contact/650000000000000000000009", RoleName.Customer, 403)]
+    [InlineData("PUT", "/api/admin/contact/650000000000000000000009", RoleName.SalesAdmin, 404)]
+    [InlineData("PUT", "/api/admin/contact/650000000000000000000009", RoleName.MasterAdmin, 404)]
+    public async Task S6_admin_endpoints_enforce_role_matrix(string method, string path, RoleName? role, int expectedStatus)
+    {
+        using var factory = new SecurityFactory();
+        using var client = factory.Browser();
+        if (role is { } signedInRole)
+        {
+            var user = factory.AddUser(signedInRole);
+            (await Post(client, "/api/accounts/login", new { user.Email, password = Password })).EnsureSuccessStatusCode();
+        }
+
+        HttpResponseMessage response;
+        if (method == "PUT")
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Put, path) { Content = JsonContent.Create(new { status = "InProgress" }) };
+            request.Headers.Add("X-CSRF-TOKEN", await Token(client));
+            response = await client.SendAsync(request);
+        }
+        else
+        {
+            response = await client.GetAsync(path);
+        }
+
+        response.StatusCode.ShouldBe((HttpStatusCode)expectedStatus);
+        if (expectedStatus == 403)
+        {
+            factory.Audit.Items.ShouldContain(a => a.Action == AuditAction.AccessDenied && a.Summary.Contains("ACCESS_DENIED"));
+        }
+    }
+
+    [Fact]
+    public async Task S6_contact_submission_allows_anonymous_and_stores_request()
+    {
+        using var factory = new SecurityFactory();
+        using var client = factory.Browser();
+
+        var validContact = new
+        {
+            fullName = "Test Lead",
+            email = "lead@example.com",
+            phone = "0821234567",
+            inquiryType = "ProductInquiry",
+            message = "Hello, I would like more information on knives."
+        };
+
+        var response = await Post(client, "/api/contact", validContact);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        factory.Contacts.Items.ShouldHaveSingleItem();
+        factory.Contacts.Items[0].FullName.ShouldBe("Test Lead");
+        factory.Contacts.Items[0].NotificationStatus.ShouldBeOneOf(ContactNotificationStatus.Pending, ContactNotificationStatus.Sent);
+    }
+
+    [Fact]
+    public async Task S6_booking_submission_allows_anonymous_and_authenticated_customer()
+    {
+        using var factory = new SecurityFactory();
+        using var client = factory.Browser();
+
+        var bookingTime = DateTime.UtcNow.AddDays(3);
+        var anonBooking = new
+        {
+            fullName = "Anon Buyer",
+            email = "buyer@example.com",
+            phone = "0829876543",
+            preferredDateTime = bookingTime,
+            purpose = "Need consultation on cookware range."
+        };
+
+        var responseAnon = await Post(client, "/api/bookings", anonBooking);
+        responseAnon.StatusCode.ShouldBe(HttpStatusCode.Created);
+        factory.Bookings.Items.ShouldHaveSingleItem();
+
+        var customer = factory.AddUser(RoleName.Customer);
+        (await Post(client, "/api/accounts/login", new { customer.Email, password = Password })).EnsureSuccessStatusCode();
+
+        var customerBooking = new
+        {
+            fullName = "Logged In",
+            email = customer.Email,
+            phone = "0825551234",
+            preferredDateTime = bookingTime.AddHours(2),
+            purpose = "Existing customer booking."
+        };
+
+        var responseAuth = await Post(client, "/api/bookings", customerBooking);
+        responseAuth.StatusCode.ShouldBe(HttpStatusCode.Created);
+        factory.Bookings.Items.Count.ShouldBe(2);
+        factory.Bookings.Items.ShouldContain(b => b.ClientId == customer.Id);
+    }
+
+    [Fact]
+    public async Task S6_public_reviews_endpoint_allows_anonymous_access()
+    {
+        using var factory = new SecurityFactory();
+        using var client = factory.Browser();
+
+        var response = await client.GetAsync("/api/products/650000000000000000000009/reviews");
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 }

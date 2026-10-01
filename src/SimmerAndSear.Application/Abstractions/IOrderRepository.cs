@@ -18,4 +18,8 @@ public interface IOrderRepository
     Task<string> CreateAsync(Order order, CancellationToken ct = default);
 
     Task UpdateAsync(Order order, CancellationToken ct = default);
+
+    Task DeleteAsync(string id, CancellationToken ct = default);
+
+    Task<bool> HasDeliveredOrderWithProductAsync(string clientId, string productId, CancellationToken ct = default);
 }

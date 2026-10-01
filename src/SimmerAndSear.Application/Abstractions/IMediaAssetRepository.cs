@@ -15,6 +15,7 @@ public interface IMediaAssetRepository
     Task<string> CreateAsync(MediaAsset asset, CancellationToken ct = default);
 
     Task DeleteAsync(string id, CancellationToken ct = default);
+    Task<IReadOnlyList<MediaAsset>> ListAsync(int limit = 50, CancellationToken ct = default);
     Task<IReadOnlyList<MediaAsset>> FindOrphansAsync(DateTime olderThanUtc, CancellationToken ct = default);
 }
 // ── References ──────────────────────────────────────────────────────────────

@@ -16,6 +16,8 @@ public interface IUserRepository
 
     Task<Page<User>> ListAsync(int pageNumber, int pageSize, CancellationToken ct = default);
 
+    Task<Page<User>> ListAdminsAsync(int pageNumber, int pageSize, CancellationToken ct = default);
+
     Task<bool> AnyAdminExistsAsync(CancellationToken ct = default);
 
     Task<string> CreateAsync(User user, CancellationToken ct = default);
@@ -24,4 +26,5 @@ public interface IUserRepository
     Task RecordFailedLoginAsync(string userId, int lockoutThreshold, TimeSpan lockoutDuration, CancellationToken ct = default);
 
     Task RecordSuccessfulLoginAsync(string userId, CancellationToken ct = default);
+    Task DeleteAsync(string id, CancellationToken ct = default);
 }

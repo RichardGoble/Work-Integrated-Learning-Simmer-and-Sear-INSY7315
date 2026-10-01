@@ -400,3 +400,23 @@ main {
 }
 
 .wishlist-card-button:hover { transform: scale(1.1); }
+
+[data-add-to-wishlist].is-wishlisted svg { fill: #ef4444; stroke: #ef4444; }
+
+
+.nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--ss-brand);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+
+  flex: 0 0 auto;
+}

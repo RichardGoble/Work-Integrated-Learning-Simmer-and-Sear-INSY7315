@@ -87,7 +87,7 @@
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg> @(Model.InStock ? "Add to Cart" : "Out of Stock")
                         </button>
                         
-                        <button type="button" class="btn btn-outline" style="width: 60px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Add to Wishlist">
+                        <button type="button" class="btn btn-outline" style="width: 60px; padding: 0; display: flex; align-items: center; justify-content: center;" data-add-to-wishlist="@Model.Id" title="Add to Wishlist">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
                         </button>
                     </form>
@@ -95,35 +95,48 @@
                     <!-- Reviews Section -->
                     <div style="border-top: 1px solid var(--ss-border); padding-top: 2rem;">
                         <h3 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg> Customer Reviews (1)
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg> Customer Reviews (<span id="reviews-count">0</span>)
                         </h3>
                         
-                        <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; max-height: 300px; overflow-y: auto;">
-                            <div style="background: var(--ss-surface); border: 1px solid var(--ss-border); padding: 1rem; border-radius: var(--ss-radius-sm);">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                                    <strong style="font-weight: 600;">Sarah J.</strong>
-                                    <div style="display: flex; color: #f59e0b;">
-                                        ★★★★★
-                                    </div>
-                                </div>
-                                <p style="margin: 0; color: var(--ss-ink);">Absolutely love this skillet! I use it almost every day for everything from eggs to searing steaks.</p>
-                            </div>
+                        <div id="product-reviews-container" data-product-id="@Model.Id" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; max-height: 350px; overflow-y: auto;">
+                            <div id="reviews-loading" style="color: var(--ss-ink-muted); font-size: 0.95rem;">Loading reviews...</div>
                         </div>
 
-                        <div class="card" style="padding: 1.5rem; background: var(--ss-surface-solid);">
-                            <h4 style="margin-bottom: 1rem;">Write a Review</h4>
-                            <form style="display: flex; flex-direction: column; gap: 1rem;">
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span style="font-weight: 500;">Rating:</span>
-                                    <select class="input-field" style="width: auto; padding: 0.5rem 2rem 0.5rem 1rem;">
-                                        <option value="5">5 Stars</option>
-                                        <option value="4">4 Stars</option>
-                                    </select>
-                                </div>
-                                <textarea class="input-field" rows="3" placeholder="Share your thoughts on this product..." required></textarea>
-                                <button type="button" class="btn btn-secondary">Submit Review</button>
-                            </form>
-                        </div>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <div class="card" style="padding: 1.5rem; background: var(--ss-surface-solid);">
+                                <h4 style="margin-bottom: 1rem; margin-top: 0;">Write a Review</h4>
+                                <div id="review-feedback" style="display: none; padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.95rem;"></div>
+                                <form id="product-review-form" data-product-id="@Model.Id" style="display: flex; flex-direction: column; gap: 1rem;">
+                                    @Html.AntiForgeryToken()
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <label for="review-rating" style="font-weight: 500;">Rating:</label>
+                                        <select id="review-rating" name="rating" class="input-field" style="width: auto; padding: 0.5rem 2rem 0.5rem 1rem;">
+                                            <option value="5">★★★★★ (5 Stars)</option>
+                                            <option value="4">★★★★☆ (4 Stars)</option>
+                                            <option value="3">★★★☆☆ (3 Stars)</option>
+                                            <option value="2">★★☆☆☆ (2 Stars)</option>
+                                            <option value="1">★☆☆☆☆ (1 Star)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <input type="text" id="review-title" name="title" class="input-field" placeholder="Review headline or summary" required maxlength="160" minlength="2" />
+                                    </div>
+                                    <textarea id="review-body" name="body" class="input-field" rows="3" placeholder="Share your experience with this cookware..." required maxlength="4000" minlength="10"></textarea>
+                                    <button id="review-submit-btn" type="submit" class="btn btn-secondary" style="align-self: flex-start;">
+                                        <span>Submit Review</span>
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="card" style="padding: 1.5rem; background: var(--ss-surface-solid); text-align: center;">
+                                <p style="margin: 0; color: var(--ss-ink-muted); font-size: 0.95rem;">
+                                    Purchased this product? <a href="/Auth/Login?returnUrl=@Context.Request.Path" style="color: var(--ss-brand); font-weight: 600;">Sign in</a> to share your review.
+                                </p>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -133,4 +146,5 @@
 
 @section Scripts {
     <script src="~/js/catalogue.js" asp-append-version="true"></script>
+    <script src="~/js/engagement.js" asp-append-version="true"></script>
 }
