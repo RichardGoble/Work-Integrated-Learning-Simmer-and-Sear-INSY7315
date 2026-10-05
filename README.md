@@ -36,6 +36,10 @@ Demo Video Link: https://youtu.be/xzl3hU827Wg
 - [Known Limitations](#known-limitations)
 - [System Requirements](#system-requirements)
 - [Academic Project Disclaimer](#academic-project-disclaimer)
+- [AI Usage Disclaimer] (#ai-usage-disclaimer)
+- [References] 
+(#references)
+
 
 <br>
 
@@ -176,11 +180,13 @@ This repository was created solely as a university assignment (module INSY7315, 
 
 Brand names, logos and product names, including ELO, Fissler and Sambonet, belong to their respective owners and are used here for demonstration and educational purposes only. This project is not affiliated with, endorsed by, or sponsored by any of these brands.
 
-# AI Usage Disclaimer
+<br>
+
+## AI Usage Disclaimer
 
 Claude Opus and Google Gemini were used to generate many of the media resources used for the website and to assist with general debugging throughout the application
 
-# References
+## References
 
 MDN Web Docs, n.d. *Using the Fetch API*. [online] Available at: \<https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch\> [Accessed 21 September 2026].
 
