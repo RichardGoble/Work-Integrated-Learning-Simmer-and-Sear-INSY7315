@@ -4,7 +4,6 @@
   <h1>Simmer & Sear</h1>
   <p><i>Premium cookware e-commerce platform and administrative dashboard.</i></p>
   <br>
-  <!-- You can replace the src link below with the actual URL to your logo -->
   <img width="500" height="300" alt="Simmer & Sear Logo" src="https://github.com/user-attachments/assets/12a23b84-269e-40a8-ad83-596e72972ab2">
 </div>
 
@@ -27,18 +26,16 @@ Demo Video Link: https://youtu.be/xzl3hU827Wg
 ## Table of Contents
 - [Purpose of the Web App](#purpose-of-the-web-app)
 - [System Architecture & Infrastructure](#system-architecture--infrastructure)
-- [Architecture Decision Records](#architecture-decision-records)
 - [Design Considerations](#design-considerations)
 - [Key Features](#key-features)
-- [Project Structure](#project-structure)
+- [Project Structure & Architecture](#project-structure--architecture)
 - [How to Set up and Run Application](#how-to-set-up-and-run-application)
 - [Running Tests](#running-tests)
 - [Known Limitations](#known-limitations)
 - [System Requirements](#system-requirements)
 - [Academic Project Disclaimer](#academic-project-disclaimer)
-- [AI Usage Disclaimer] (#ai-usage-disclaimer)
-- [References] 
-(#references)
+- [AI Usage Disclaimer](#ai-usage-disclaimer)
+- [References](#references)
 
 
 <br>
@@ -115,37 +112,63 @@ Simmer & Sear is built using a modern **Clean Architecture** approach. This ensu
 
 ## How to Set up and Run Application
 
-**Azure Hosted Webapp**
+### Azure Hosted Web Application
 
-The full webapp is hosted on Azure and available at: https://app-simmersear-cscecufmdff2a3fs.spaincentral-01.azurewebsites.net/
+The application is deployed and publicly available on Azure:
 
-Test Admin Credentials:
+**URL:** https://app-simmersear-cscecufmdff2a3fs.spaincentral-01.azurewebsites.net/
 
-master@simmerandsear.local || MasterPass47849@#
-sales@simmerandsear.local || SalesPass48231!##
-customer@simmerandsear.local ||CustomerPass52879!@*
+#### Test Credentials
 
-**Using the Command Line (Terminal):**
-1. Clone this repository to your local machine.
-2. Ensure you have a MongoDB instance running locally (e.g., via Docker: `docker run -d -p 27017:27017 --name mongo mongo`).
-3. Open your terminal and navigate to the web project directory:
-   ```bash
+| Role | Email | Password |
+|------|-------|----------|
+| Master Admin | master@simmerandsear.local | MasterPass47849@# |
+| Sales Admin | sales@simmerandsear.local | SalesPass48231!## |
+| Customer | customer@simmerandsear.local | CustomerPass52879!@* |
+
+---
+
+### Local Development Setup
+
+#### Option 1: Command Line
+
+1. Clone the repository:
+```bash
+   git clone <repository-url>
+```
+
+2. Ensure MongoDB is running locally:
+```bash
+   docker run -d -p 27017:27017 --name mongo mongo
+```
+
+3. Navigate to the web project:
+```bash
    cd src/SimmerAndSear.Web
-   ```
+```
+
 4. Build and run the application:
-   ```bash
+```bash
    dotnet run
-   ```
-5. Open your web browser and navigate to the URL provided in the terminal (typically `http://localhost:5100`).
+```
 
-**Alternatively (Using an IDE):**
-1. Clone this repository to your local machine.
-2. Open the solution file in **Visual Studio** or **JetBrains Rider**.
-3. Ensure you have MongoDB running locally.
-4. Set `SimmerAndSear.Web` as your Startup Project.
-5. Click the **Run/Play** button to automatically build and launch the application in your browser.
+5. Access the application at `http://localhost:5100` (or the URL displayed in the terminal).
 
-On first run, the application seeds a Master Admin account from configuration and a small catalogue of demo products, so you can sign in and explore immediately.
+#### Option 2: IDE (Visual Studio or JetBrains Rider)
+
+1. Clone the repository to your local machine.
+2. Open `SimmerAndSear.slnx` in **Visual Studio** or **JetBrains Rider**.
+3. Ensure MongoDB is running locally on port `27017`.
+4. Set `SimmerAndSear.Web` as the Startup Project.
+5. Click the **Run** button to build and launch the application.
+
+#### Initial Setup
+
+On first run, the application automatically seeds:
+- A Master Admin account from configuration
+- A sample product catalogue for demonstration
+
+You can immediately sign in using the test credentials above to explore all features.
 
 <br>
 
